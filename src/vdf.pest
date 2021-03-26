@@ -4,9 +4,9 @@ vdf = _{ SOI ~ pair ~ EOI }
 
 pair = { string ~ value }
 
-value = _{ string | map }
+value = _{ string | obj }
 
-map = { "{" ~ pair* ~ "}" }
+obj = { "{" ~ pair* ~ "}" }
 
 string = ${ "\"" ~ inner ~ "\"" }
 inner = @{ char* }
