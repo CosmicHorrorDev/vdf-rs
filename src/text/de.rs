@@ -2,12 +2,11 @@ use pest::{error::Error as PestError, iterators::Pair, Parser};
 
 use std::convert::TryFrom;
 
-#[derive(Parser)]
-#[grammar = "vdf.pest"]
-struct VdfParser;
+use crate::common::{Vdf, VdfPair, VdfValue};
 
-#[derive(Debug)]
-struct Vdf<'a>(VdfPair<'a>);
+#[derive(Parser)]
+#[grammar = "grammars/text.pest"]
+struct VdfParser;
 
 impl<'a> TryFrom<&'a str> for Vdf<'a> {
     type Error = PestError<Rule>;
@@ -16,9 +15,6 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
         VdfPair::try_from(s).map(Self)
     }
 }
-
-#[derive(Debug)]
-struct VdfPair<'a>(&'a str, VdfValue<'a>);
 
 impl<'a> TryFrom<&'a str> for VdfPair<'a> {
     type Error = PestError<Rule>;
@@ -42,17 +38,11 @@ impl<'a> From<Pair<'a, Rule>> for VdfPair<'a> {
                 .as_str();
             let value = VdfValue::from(inner_rules.next().unwrap());
 
-            VdfPair(key, value)
+            Self(key, value)
         } else {
             unreachable!("Prevented by grammar")
         }
     }
-}
-
-#[derive(Debug)]
-enum VdfValue<'a> {
-    Str(&'a str),
-    Obj(Vec<VdfPair<'a>>),
 }
 
 impl<'a> From<Pair<'a, Rule>> for VdfValue<'a> {
