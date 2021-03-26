@@ -1,0 +1,16 @@
+WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+
+vdf = _{ SOI ~ pair ~ EOI }
+
+pair = { string ~ value }
+
+value = _{ string | map }
+
+map = { "{" ~ pair* ~ "}" }
+
+string = ${ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+char = {
+    !("\"" | "\\")  ~ ANY
+    | "\\" ~ ("\"" | "\\" | "n" | "r" | "t")
+}
