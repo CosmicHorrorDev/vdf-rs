@@ -1,8 +1,8 @@
-use pest::{error::Error as PestError, iterators::Pair, Parser};
+use pest::{error::Error as PestError, iterators::Pair as PestPair, Parser};
 
 use std::convert::TryFrom;
 
-use crate::common::{Vdf, VdfPair, VdfValue};
+use crate::common::{Pair, Value, Vdf};
 
 #[derive(Parser)]
 #[grammar = "grammars/text.pest"]
@@ -12,11 +12,11 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
     type Error = PestError<Rule>;
 
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
-        VdfPair::try_from(s).map(Self)
+        Pair::try_from(s).map(Self)
     }
 }
 
-impl<'a> TryFrom<&'a str> for VdfPair<'a> {
+impl<'a> TryFrom<&'a str> for Pair<'a> {
     type Error = PestError<Rule>;
 
     fn try_from(s: &'a str) -> Result<Self, Self::Error> {
@@ -25,8 +25,8 @@ impl<'a> TryFrom<&'a str> for VdfPair<'a> {
     }
 }
 
-impl<'a> From<Pair<'a, Rule>> for VdfPair<'a> {
-    fn from(pair: Pair<'a, Rule>) -> Self {
+impl<'a> From<PestPair<'a, Rule>> for Pair<'a> {
+    fn from(pair: PestPair<'a, Rule>) -> Self {
         if let Rule::pair = pair.as_rule() {
             let mut inner_rules = pair.into_inner();
             let key = inner_rules
@@ -36,7 +36,7 @@ impl<'a> From<Pair<'a, Rule>> for VdfPair<'a> {
                 .next()
                 .unwrap()
                 .as_str();
-            let value = VdfValue::from(inner_rules.next().unwrap());
+            let value = Value::from(inner_rules.next().unwrap());
 
             Self(key, value)
         } else {
@@ -45,11 +45,11 @@ impl<'a> From<Pair<'a, Rule>> for VdfPair<'a> {
     }
 }
 
-impl<'a> From<Pair<'a, Rule>> for VdfValue<'a> {
-    fn from(pair: Pair<'a, Rule>) -> Self {
+impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
+    fn from(pair: PestPair<'a, Rule>) -> Self {
         match pair.as_rule() {
-            Rule::string => VdfValue::Str(pair.into_inner().next().unwrap().as_str()),
-            Rule::obj => VdfValue::Obj(pair.into_inner().map(VdfPair::from).collect()),
+            Rule::string => Value::Str(pair.into_inner().next().unwrap().as_str()),
+            Rule::obj => Value::Obj(pair.into_inner().map(Pair::from).collect()),
             _ => unreachable!("Prevented by grammar"),
         }
     }

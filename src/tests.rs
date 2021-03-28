@@ -2,22 +2,22 @@ use once_cell::sync::Lazy;
 
 use std::{convert::TryFrom, fs, path::Path};
 
-use crate::common::{Vdf, VdfPair, VdfValue};
+use crate::common::{Pair, Value, Vdf};
 
 static SAMPLE_VDF: Lazy<Vdf> = Lazy::new(|| {
-    Vdf(VdfPair(
+    Vdf(Pair(
         "controller_mappings",
-        VdfValue::Obj(vec![
-            VdfPair("version", VdfValue::Str("2")),
-            VdfPair(
+        Value::Obj(vec![
+            Pair("version", Value::Str("2")),
+            Pair(
                 "group",
-                VdfValue::Obj(vec![VdfPair("mode", VdfValue::Str("four_buttons"))]),
+                Value::Obj(vec![Pair("mode", Value::Str("four_buttons"))]),
             ),
-            VdfPair(
+            Pair(
                 "group",
-                VdfValue::Obj(vec![VdfPair(
+                Value::Obj(vec![Pair(
                     "settings",
-                    VdfValue::Obj(vec![VdfPair("requires_click", VdfValue::Str("0"))]),
+                    Value::Obj(vec![Pair("requires_click", Value::Str("0"))]),
                 )]),
             ),
         ]),

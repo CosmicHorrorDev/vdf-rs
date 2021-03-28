@@ -1,6 +1,6 @@
 use std::fmt;
 
-use crate::common::{Vdf, VdfPair, VdfValue};
+use crate::common::{Pair, Value, Vdf};
 
 trait StringExt {
     fn push_multiple(&mut self, c: char, num_times: u16);
@@ -26,7 +26,7 @@ impl<'a> Vdf<'a> {
     }
 }
 
-impl<'a> VdfPair<'a> {
+impl<'a> Pair<'a> {
     pub fn to_string(&self, num_tabs: u16) -> String {
         let mut formatted = String::new();
 
@@ -38,15 +38,15 @@ impl<'a> VdfPair<'a> {
     }
 }
 
-impl<'a> VdfValue<'a> {
+impl<'a> Value<'a> {
     pub fn to_string(&self, num_tabs: u16) -> String {
         let mut formatted = String::new();
 
         match self {
-            VdfValue::Str(s) => {
+            Value::Str(s) => {
                 formatted.push_str(&format!("\t\"{}\"\n", s));
             }
-            VdfValue::Obj(obj) => {
+            Value::Obj(obj) => {
                 formatted.push('\n');
                 formatted.push_multiple('\t', num_tabs);
                 formatted.push_str("{\n");
