@@ -1,4 +1,5 @@
 use pest::{error::Error as PestError, iterators::Pair as PestPair, Parser};
+use pest_derive::Parser;
 
 use std::convert::TryFrom;
 
@@ -7,6 +8,12 @@ use crate::common::{Pair, Value, Vdf};
 #[derive(Parser)]
 #[grammar = "grammars/text.pest"]
 struct VdfParser;
+
+impl<'a> Vdf<'a> {
+    pub fn parse(s: &'a str) -> Result<Self, PestError<Rule>> {
+        Self::try_from(s)
+    }
+}
 
 impl<'a> TryFrom<&'a str> for Vdf<'a> {
     type Error = PestError<Rule>;
@@ -26,9 +33,9 @@ impl<'a> TryFrom<&'a str> for Pair<'a> {
 }
 
 impl<'a> From<PestPair<'a, Rule>> for Pair<'a> {
-    fn from(pair: PestPair<'a, Rule>) -> Self {
-        if let Rule::pair = pair.as_rule() {
-            let mut inner_rules = pair.into_inner();
+    fn from(pest_pair: PestPair<'a, Rule>) -> Self {
+        if let Rule::pair = pest_pair.as_rule() {
+            let mut inner_rules = pest_pair.into_inner();
             let key = inner_rules
                 .next()
                 .unwrap()
@@ -46,10 +53,10 @@ impl<'a> From<PestPair<'a, Rule>> for Pair<'a> {
 }
 
 impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
-    fn from(pair: PestPair<'a, Rule>) -> Self {
-        match pair.as_rule() {
-            Rule::string => Value::Str(pair.into_inner().next().unwrap().as_str()),
-            Rule::obj => Value::Obj(pair.into_inner().map(Pair::from).collect()),
+    fn from(pest_pair: PestPair<'a, Rule>) -> Self {
+        match pest_pair.as_rule() {
+            Rule::string => Self::Str(pest_pair.into_inner().next().unwrap().as_str()),
+            Rule::obj => Self::Obj(pest_pair.into_inner().map(Pair::from).collect()),
             _ => unreachable!("Prevented by grammar"),
         }
     }

@@ -3,12 +3,12 @@ use std::fmt;
 use crate::common::{Pair, Value, Vdf};
 
 trait StringExt {
-    fn push_multiple(&mut self, c: char, num_times: u16);
+    fn push_multiple(&mut self, c: char, amount: u16);
 }
 
 impl StringExt for String {
-    fn push_multiple(&mut self, c: char, num_times: u16) {
-        for _ in 0..num_times {
+    fn push_multiple(&mut self, c: char, amount: u16) {
+        for _ in 0..amount {
             self.push(c);
         }
     }

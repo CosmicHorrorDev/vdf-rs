@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 
-use std::{convert::TryFrom, fs, path::Path};
+use std::{fs, path::Path};
 
 use crate::common::{Pair, Value, Vdf};
 
@@ -30,7 +30,7 @@ fn deserialization() {
         .join("samples")
         .join("controller_mappings.vdf");
     let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let vdf = Vdf::try_from(unparsed.as_str()).unwrap();
+    let vdf = Vdf::parse(&unparsed).unwrap();
 
     println!("Vdf: {:#?}", vdf);
     println!("Ideal: {:#?}", SAMPLE_VDF);
@@ -53,6 +53,6 @@ fn serialization() {
 fn round_trip() {
     let sample_file = Path::new("tests").join("samples").join("app_manifest.vdf");
     let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let vdf = Vdf::try_from(unparsed.as_str()).unwrap();
+    let vdf = Vdf::parse(&unparsed).unwrap();
     assert_eq!(unparsed, vdf.to_string());
 }
