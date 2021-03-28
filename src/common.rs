@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Vdf<'a>(pub VdfPair<'a>);
 
 impl<'a> Vdf<'a> {
@@ -17,7 +17,7 @@ impl<'a> Deref for Vdf<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct VdfPair<'a>(pub &'a str, pub VdfValue<'a>);
 
 impl<'a> VdfPair<'a> {
@@ -25,12 +25,12 @@ impl<'a> VdfPair<'a> {
         &self.0
     }
 
-    pub fn value(&self) -> &VdfValue {
+    pub fn value(&self) -> &'a VdfValue {
         &self.1
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum VdfValue<'a> {
     Str(&'a str),
     Obj(Vec<VdfPair<'a>>),
@@ -38,18 +38,36 @@ pub enum VdfValue<'a> {
 
 impl<'a> VdfValue<'a> {
     pub fn is_str(&self) -> bool {
-        if let Self::Str(_) = &self {
-            true
-        } else {
-            false
-        }
+        self.get_str().is_some()
     }
 
     pub fn is_obj(&self) -> bool {
-        if let Self::Obj(_) = &self {
-            true
+        self.get_obj().is_some()
+    }
+
+    pub fn get_str(&self) -> Option<&str> {
+        if let VdfValue::Str(s) = self {
+            Some(s)
         } else {
-            false
+            None
         }
+    }
+
+    pub fn get_obj(&self) -> Option<&[VdfPair]> {
+        if let VdfValue::Obj(obj) = self {
+            Some(&obj)
+        } else {
+            None
+        }
+    }
+
+    // TODO: get the error situation worked out here
+    pub fn try_get_str(&self) -> Result<&str, ()> {
+        self.get_str().ok_or(())
+    }
+
+    // TODO: get the error situation worked out here
+    pub fn try_get_obj(&self) -> Result<&[VdfPair], ()> {
+        self.get_obj().ok_or(())
     }
 }
