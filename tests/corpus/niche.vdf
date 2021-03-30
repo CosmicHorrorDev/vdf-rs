@@ -1,0 +1,5 @@
+"#base"    "file"
+"Outer Key"
+{
+    "Inner Key"    "Value"
+}

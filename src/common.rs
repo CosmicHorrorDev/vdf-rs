@@ -1,24 +1,20 @@
-use std::ops::Deref;
-
 #[derive(Debug, PartialEq)]
-pub struct Vdf<'a>(pub Pair<'a>);
-
-impl<'a> Vdf<'a> {
-    pub fn inner(&self) -> &Pair {
-        &self
-    }
-}
-
-impl<'a> Deref for Vdf<'a> {
-    type Target = Pair<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
+pub struct Vdf<'a>(pub Vec<Pair<'a>>);
 
 #[derive(Debug, PartialEq)]
 pub struct Pair<'a>(pub &'a str, pub Value<'a>);
+
+#[derive(Debug, PartialEq)]
+pub enum Value<'a> {
+    Str(&'a str),
+    Obj(Vec<Pair<'a>>),
+}
+
+impl<'a> Vdf<'a> {
+    pub fn inner(&self) -> &Vec<Pair> {
+        &self.0
+    }
+}
 
 impl<'a> Pair<'a> {
     pub fn key(&self) -> &str {
@@ -28,12 +24,6 @@ impl<'a> Pair<'a> {
     pub fn value(&self) -> &'a Value {
         &self.1
     }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum Value<'a> {
-    Str(&'a str),
-    Obj(Vec<Pair<'a>>),
 }
 
 impl<'a> Value<'a> {

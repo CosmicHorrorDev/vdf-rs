@@ -22,7 +22,12 @@ impl<'a> fmt::Display for Vdf<'a> {
 
 impl<'a> Vdf<'a> {
     pub fn to_string(&self) -> String {
-        self.0.to_string(0)
+        // self.0.to_string(0)
+        self.0
+            .iter()
+            .map(|pair| pair.to_string(0))
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
 

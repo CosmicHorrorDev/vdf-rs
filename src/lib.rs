@@ -4,4 +4,6 @@
 pub mod common;
 #[cfg(test)]
 mod tests;
-pub mod text;
+mod text;
+#[cfg(feature = "unstable")]
+pub mod unstable;
