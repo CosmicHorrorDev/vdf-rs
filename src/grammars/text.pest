@@ -4,11 +4,13 @@ vdf = _{ SOI ~ pairs ~ EOI }
 
 pairs = { pair* }
 
-pair = { string ~ value }
+pair = { key ~ value }
+
+key = _{ string }
 
 value = _{ string | obj }
 
-obj = { "{" ~ pair* ~ "}" }
+obj = { "{" ~ pairs ~ "}" }
 
 string = ${ "\"" ~ inner ~ "\"" }
 inner = @{ char* }

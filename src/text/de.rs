@@ -3,7 +3,7 @@ use pest_derive::Parser;
 
 use std::convert::TryFrom;
 
-use crate::common::{Pair, Value, Vdf};
+use crate::common::{KeyValues, Value, Vdf};
 
 #[derive(Parser)]
 #[grammar = "grammars/text.pest"]
@@ -29,34 +29,37 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
 }
 
 impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
-    fn from(pest_pair: PestPair<'a, Rule>) -> Self {
+    fn from(grammar_pairs: PestPair<'a, Rule>) -> Self {
         // Structure: pairs
         //            \ pair* <- Desired
-        if let Rule::pairs = pest_pair.as_rule() {
-            Self(pest_pair.into_inner().map(Pair::from).collect())
-        } else {
-            unreachable!("Prevented by grammar");
-        }
-    }
-}
+        if let Rule::pairs = grammar_pairs.as_rule() {
+            let mut container = KeyValues::new();
+            for grammar_pair in grammar_pairs.into_inner() {
+                // Structure: pair
+                //            \ key <- Desired
+                //            \ value        <- Desired
+                if let Rule::pair = grammar_pair.as_rule() {
+                    // Parse out the key and value
+                    let mut grammar_pair_innards = grammar_pair.into_inner();
+                    let key = grammar_pair_innards
+                        .next()
+                        .unwrap()
+                        .into_inner()
+                        .next()
+                        .unwrap()
+                        .as_str();
+                    let grammar_value = grammar_pair_innards.next().unwrap();
+                    let value = Value::from(grammar_value);
 
-impl<'a> From<PestPair<'a, Rule>> for Pair<'a> {
-    fn from(pest_pair: PestPair<'a, Rule>) -> Self {
-        // Structure: pair
-        //            \ string (key) <- Desired
-        //            \ value        <- Desired
-        if let Rule::pair = pest_pair.as_rule() {
-            let mut inner_rules = pest_pair.into_inner();
-            let key = inner_rules
-                .next()
-                .unwrap()
-                .into_inner()
-                .next()
-                .unwrap()
-                .as_str();
-            let value = Value::from(inner_rules.next().unwrap());
+                    // Insert pair into `KeyValues`
+                    let entry = container.entry(key).or_insert(Vec::new());
+                    (*entry).push(value);
+                } else {
+                    unreachable!("Prevented by grammar");
+                }
+            }
 
-            Self(key, value)
+            Self(container)
         } else {
             unreachable!("Prevented by grammar");
         }
@@ -64,15 +67,35 @@ impl<'a> From<PestPair<'a, Rule>> for Pair<'a> {
 }
 
 impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
-    fn from(pest_pair: PestPair<'a, Rule>) -> Self {
-        match pest_pair.as_rule() {
+    fn from(grammar_value: PestPair<'a, Rule>) -> Self {
+        // Structure: value is ( string | obj )
+        match grammar_value.as_rule() {
             // Structure: string
             //            \ inner <- Desired
-            Rule::string => Self::Str(pest_pair.into_inner().next().unwrap().as_str()),
+            Rule::string => Self::Str(grammar_value.into_inner().next().unwrap().as_str()),
             // Structure: obj
-            //            \ pair* <- Desired
-            Rule::obj => Self::Obj(pest_pair.into_inner().map(Pair::from).collect()),
+            //            \ pairs <- Desired
+            Rule::obj => Self::Obj(Vdf::from(grammar_value.into_inner().next().unwrap())),
             _ => unreachable!("Prevented by grammar"),
         }
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn checking() {
+        let sample_vdf = r#"
+"Key" "Value"
+"Key" "Value2"
+"Key"
+{
+    "Inner Key" "Inner Value"
+}
+        "#;
+        let vdf = Vdf::parse(sample_vdf);
+        println!("{:#?}", vdf);
+        panic!();
     }
 }

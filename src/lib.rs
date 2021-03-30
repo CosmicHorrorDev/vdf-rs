@@ -2,8 +2,8 @@
 // extern crate pest_derive;
 
 pub mod common;
-#[cfg(test)]
-mod tests;
+// #[cfg(test)]
+// mod tests;
 mod text;
-#[cfg(feature = "unstable")]
-pub mod unstable;
+// #[cfg(feature = "unstable")]
+// pub mod unstable;
