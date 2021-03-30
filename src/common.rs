@@ -53,7 +53,14 @@ impl<'a> Vdf<'a> {
     }
 }
 
-// TODO: should now be able to do indexing for everything
+impl<'a> std::ops::Index<Key<'_>> for Vdf<'a> {
+    type Output = Vec<Value<'a>>;
+
+    fn index(&self, key: Key) -> &Self::Output {
+        &self.0[key]
+    }
+}
+
 impl<'a> Value<'a> {
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()

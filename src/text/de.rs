@@ -94,8 +94,13 @@ mod tests {
     "Inner Key" "Inner Value"
 }
         "#;
-        let vdf = Vdf::parse(sample_vdf);
-        println!("{:#?}", vdf);
+        let vdf = Vdf::parse(sample_vdf).unwrap();
+        println!(
+            "{:#?}",
+            vdf["Key"][2]
+                .get_obj()
+                .and_then(|obj| obj["Inner Key"][0].get_str())
+        );
         panic!();
     }
 }
