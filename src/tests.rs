@@ -1,8 +1,10 @@
 use once_cell::sync::Lazy;
 
-use std::{fs, path::Path};
+use std::{error::Error, fs, path::Path};
 
 use crate::common::{Pair, Value, Vdf};
+
+type TestResult<T> = Result<T, Box<dyn Error>>;
 
 static CONTROLLER_MAPPINGS_VDF: Lazy<Vdf> = Lazy::new(|| {
     Vdf(vec![Pair(
@@ -34,45 +36,46 @@ static NICHE_VDF: Lazy<Vdf> = Lazy::new(|| {
     ])
 });
 
-#[test]
-fn basic_deserialization() {
-    let sample_file = Path::new("tests")
-        .join("samples")
-        .join("controller_mappings.vdf");
-    let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let vdf = Vdf::parse(&unparsed).unwrap();
-
-    println!("Vdf: {:#?}", vdf);
-    println!("Ideal: {:#?}", CONTROLLER_MAPPINGS_VDF);
-    assert_eq!(vdf, *CONTROLLER_MAPPINGS_VDF);
+fn read_corpus_file(file_name: &str) -> TestResult<String> {
+    let corpus_file_path = Path::new("tests").join("corpus").join(file_name);
+    let contents = fs::read_to_string(&corpus_file_path)?;
+    Ok(contents)
 }
 
 #[test]
-fn basic_serialization() {
-    let sample_file = Path::new("tests")
-        .join("samples")
-        .join("controller_mappings.vdf");
-    let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let serialized = CONTROLLER_MAPPINGS_VDF.to_string();
+fn basic_deserialization() -> TestResult<()> {
+    let unparsed = read_corpus_file("controller_mappings.vdf")?;
+    let vdf = Vdf::parse(&unparsed)?;
+    assert_eq!(vdf, *CONTROLLER_MAPPINGS_VDF);
 
+    Ok(())
+}
+
+#[test]
+fn basic_serialization() -> TestResult<()> {
+    let unparsed = read_corpus_file("controller_mappings.vdf")?;
+    let serialized = CONTROLLER_MAPPINGS_VDF.to_string();
     assert_eq!(unparsed, serialized);
+
+    Ok(())
 }
 
 // Serialization isn't guaranteed to be exactly the same as the origin text, but it should have
 // equivalent meaning
 #[test]
-fn round_trip() {
-    let sample_file = Path::new("tests").join("samples").join("app_manifest.vdf");
-    let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let vdf = Vdf::parse(&unparsed).unwrap();
+fn round_trip() -> TestResult<()> {
+    let unparsed = read_corpus_file("app_manifest.vdf")?;
+    let vdf = Vdf::parse(&unparsed)?;
     assert_eq!(unparsed, vdf.to_string());
+
+    Ok(())
 }
 
 #[test]
-fn multiple_outer_pairs_serialization() {
-    let sample_file = Path::new("tests").join("samples").join("niche.vdf");
-    let unparsed = fs::read_to_string(&sample_file).unwrap();
-    let vdf = Vdf::parse(&unparsed).unwrap();
-
+fn multiple_outer_pairs_serialization() -> TestResult<()> {
+    let unparsed = read_corpus_file("niche.vdf")?;
+    let vdf = Vdf::parse(&unparsed)?;
     assert_eq!(vdf, *NICHE_VDF);
+
+    Ok(())
 }
