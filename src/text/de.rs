@@ -9,16 +9,16 @@ use crate::common::{KeyValues, Value, Vdf};
 #[grammar = "grammars/text.pest"]
 struct VdfParser;
 
-impl<'a> Vdf<'a> {
-    pub fn parse(s: &'a str) -> Result<Self, PestError<Rule>> {
+impl Vdf {
+    pub fn parse(s: &str) -> Result<Self, PestError<Rule>> {
         Self::try_from(s)
     }
 }
 
-impl<'a> TryFrom<&'a str> for Vdf<'a> {
+impl TryFrom<&str> for Vdf {
     type Error = PestError<Rule>;
 
-    fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         // Structure: vdf
         //            \ SOI
         //            \ pairs <- Desired
@@ -28,7 +28,7 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
     }
 }
 
-impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
+impl<'a> From<PestPair<'a, Rule>> for Vdf {
     fn from(grammar_pairs: PestPair<'a, Rule>) -> Self {
         // Structure: pairs
         //            \ pair* <- Desired
@@ -47,7 +47,8 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
                         .into_inner()
                         .next()
                         .unwrap()
-                        .as_str();
+                        .as_str()
+                        .to_string();
                     let grammar_value = grammar_pair_innards.next().unwrap();
                     let value = Value::from(grammar_value);
 
@@ -66,13 +67,20 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
     }
 }
 
-impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
+impl<'a> From<PestPair<'a, Rule>> for Value {
     fn from(grammar_value: PestPair<'a, Rule>) -> Self {
         // Structure: value is ( string | obj )
         match grammar_value.as_rule() {
             // Structure: string
             //            \ inner <- Desired
-            Rule::string => Self::Str(grammar_value.into_inner().next().unwrap().as_str()),
+            Rule::string => Self::Str(
+                grammar_value
+                    .into_inner()
+                    .next()
+                    .unwrap()
+                    .as_str()
+                    .to_string(),
+            ),
             // Structure: obj
             //            \ pairs <- Desired
             Rule::obj => Self::Obj(Vdf::from(grammar_value.into_inner().next().unwrap())),

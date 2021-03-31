@@ -6,13 +6,13 @@ fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
 }
 
-impl<'a> fmt::Display for Vdf<'a> {
+impl fmt::Display for Vdf {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.to_string())
     }
 }
 
-impl<'a> Vdf<'a> {
+impl Vdf {
     pub fn to_string(&self) -> String {
         self.to_indented_string(0)
     }
@@ -30,7 +30,13 @@ impl<'a> Vdf<'a> {
     }
 }
 
-impl<'a> Value<'a> {
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.to_string())
+    }
+}
+
+impl Value {
     pub fn to_string(&self) -> String {
         self.to_indented_string(0)
     }

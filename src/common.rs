@@ -3,32 +3,32 @@ use std::collections::{
     BTreeMap,
 };
 
-pub type Key<'a> = &'a str;
-pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
+pub type Key = String;
+pub type KeyValues = BTreeMap<Key, Vec<Value>>;
 
 #[derive(Debug, PartialEq, Default)]
-pub struct Vdf<'a>(pub KeyValues<'a>);
+pub struct Vdf(pub KeyValues);
 
 #[derive(Debug, PartialEq)]
-pub enum Value<'a> {
-    Str(&'a str),
-    Obj(Vdf<'a>),
+pub enum Value {
+    Str(String),
+    Obj(Vdf),
 }
 
-impl<'a> Vdf<'a> {
+impl Vdf {
     pub fn inner(&self) -> &KeyValues {
         &self.0
     }
 
-    pub fn contains_key(&self, key: Key) -> bool {
+    pub fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
     }
 
-    pub fn get(&self, key: Key) -> Option<&Vec<Value>> {
+    pub fn get(&self, key: &str) -> Option<&Vec<Value>> {
         self.0.get(key)
     }
 
-    pub fn get_key_value(&self, key: Key) -> Option<(&Key, &Vec<Value>)> {
+    pub fn get_key_value(&self, key: &str) -> Option<(&Key, &Vec<Value>)> {
         self.0.get_key_value(key)
     }
 
@@ -53,15 +53,15 @@ impl<'a> Vdf<'a> {
     }
 }
 
-impl<'a> std::ops::Index<Key<'_>> for Vdf<'a> {
-    type Output = Vec<Value<'a>>;
+impl std::ops::Index<&str> for Vdf {
+    type Output = Vec<Value>;
 
-    fn index(&self, key: Key) -> &Self::Output {
-        &self.0[key]
+    fn index(&self, needle: &str) -> &Self::Output {
+        &self.0[needle]
     }
 }
 
-impl<'a> Value<'a> {
+impl Value {
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
