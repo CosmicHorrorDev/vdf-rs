@@ -1,79 +1,50 @@
-use std::ops::Index;
+use std::collections::BTreeMap;
 
-use crate::common::{Pair, Value, Vdf};
+use crate::common::{Value, Vdf};
 
 // TODO: implement Borrow and ToOwned so that we can switch around easier
 
-#[derive(Debug, PartialEq)]
-pub struct OwnedVdf(pub Vec<OwnedPair>);
+pub type Key = String;
+pub type KeyValues = BTreeMap<Key, Vec<OwnedValue>>;
 
-#[derive(Debug, PartialEq)]
-pub struct OwnedPair(pub String, pub OwnedValue);
+#[derive(Debug, PartialEq, Default)]
+pub struct OwnedVdf(pub KeyValues);
 
 #[derive(Debug, PartialEq)]
 pub enum OwnedValue {
     Str(String),
-    Obj(Vec<OwnedPair>),
+    Obj(OwnedVdf),
 }
 
 impl<'a> From<Vdf<'a>> for OwnedVdf {
     fn from(vdf: Vdf<'a>) -> Self {
-        Self(vdf.inner().into_iter().map(OwnedPair::from).collect())
+        Self::from(&vdf)
     }
 }
 
-impl<'a> From<&'a Pair<'a>> for OwnedPair {
-    fn from(pair: &'a Pair) -> Self {
-        OwnedPair(pair.0.to_string(), OwnedValue::from(&pair.1))
+impl<'a> From<&Vdf<'a>> for OwnedVdf {
+    fn from(vdf: &Vdf<'a>) -> Self {
+        let mut container = KeyValues::new();
+        for (key, values) in vdf.inner().iter() {
+            let owned_key = key.to_string();
+            container.insert(owned_key, values.iter().map(OwnedValue::from).collect());
+        }
+
+        Self(container)
     }
 }
 
-impl<'a> From<&'a Value<'a>> for OwnedValue {
-    fn from(value: &'a Value) -> Self {
+impl<'a> From<Value<'a>> for OwnedValue {
+    fn from(value: Value<'a>) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl<'a> From<&Value<'a>> for OwnedValue {
+    fn from(value: &Value<'a>) -> Self {
         match value {
             Value::Str(s) => Self::Str(s.to_string()),
-            Value::Obj(obj) => Self::Obj(obj.iter().map(OwnedPair::from).collect()),
-        }
-    }
-}
-
-impl Index<&str> for OwnedVdf {
-    type Output = OwnedValue;
-
-    fn index(&self, needle: &str) -> &Self::Output {
-        &self
-            .0
-            .iter()
-            .find(|OwnedPair(key, _)| needle == key)
-            .unwrap()
-            .1
-    }
-}
-
-impl Index<&str> for OwnedPair {
-    type Output = OwnedValue;
-
-    fn index(&self, needle: &str) -> &Self::Output {
-        if self.0 == needle {
-            &self.1
-        } else {
-            unreachable!()
-        }
-    }
-}
-
-impl Index<&str> for OwnedValue {
-    type Output = OwnedValue;
-
-    fn index(&self, needle: &str) -> &Self::Output {
-        if let Self::Obj(haystack) = self {
-            &haystack
-                .iter()
-                .find(|OwnedPair(key, _)| needle == key)
-                .unwrap()
-                .1
-        } else {
-            unreachable!()
+            Value::Obj(obj) => Self::Obj(obj.into()),
         }
     }
 }
@@ -82,15 +53,18 @@ impl Index<&str> for OwnedValue {
 mod tests {
     use super::*;
 
-    use std::{fs, path::Path};
+    use std::{error::Error, fs, path::Path};
+
+    type TestResult<T> = Result<T, Box<dyn Error>>;
 
     #[test]
-    fn extracting() {
+    fn extracting() -> TestResult<()> {
         let sample_file = Path::new("tests").join("corpus").join("app_manifest.vdf");
-        let unparsed = fs::read_to_string(&sample_file).unwrap();
-        let vdf = Vdf::parse(&unparsed).unwrap();
-        let owned = OwnedVdf::from(vdf);
+        let owned = OwnedVdf::from(Vdf::parse(&fs::read_to_string(&sample_file)?)?);
 
-        println!("thing: {:#?}", owned["AppState"]["buildid"]);
+        println!("thing: {:#?}", owned);
+        panic!();
+
+        Ok(())
     }
 }

@@ -80,6 +80,7 @@ impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
         }
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,15 +93,17 @@ mod tests {
 "Key"
 {
     "Inner Key" "Inner Value"
+    "Inner Key"
+    {
+        "Rar" "Bar"
+    }
 }
         "#;
         let vdf = Vdf::parse(sample_vdf).unwrap();
-        println!(
-            "{:#?}",
-            vdf["Key"][2]
-                .get_obj()
-                .and_then(|obj| obj["Inner Key"][0].get_str())
-        );
+        // let desired_value = vdf["Key"][2]
+        //     .get_obj()
+        //     .and_then(|obj| obj["Inner Key"][0].get_str());
+        println!("{}", vdf);
         panic!();
     }
 }

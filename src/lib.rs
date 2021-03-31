@@ -5,5 +5,5 @@ pub mod common;
 // #[cfg(test)]
 // mod tests;
 mod text;
-// #[cfg(feature = "unstable")]
-// pub mod unstable;
+#[cfg(feature = "unstable")]
+pub mod unstable;

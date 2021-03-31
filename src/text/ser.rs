@@ -1,17 +1,9 @@
 use std::fmt;
 
-use crate::common::{Pair, Value, Vdf};
+use crate::common::{Value, Vdf};
 
-trait StringExt {
-    fn push_multiple(&mut self, c: char, amount: u16);
-}
-
-impl StringExt for String {
-    fn push_multiple(&mut self, c: char, amount: u16) {
-        for _ in 0..amount {
-            self.push(c);
-        }
-    }
+fn multiple_char(c: char, amount: usize) -> String {
+    std::iter::repeat(c).take(amount).collect()
 }
 
 impl<'a> fmt::Display for Vdf<'a> {
@@ -22,49 +14,39 @@ impl<'a> fmt::Display for Vdf<'a> {
 
 impl<'a> Vdf<'a> {
     pub fn to_string(&self) -> String {
-        // self.0.to_string(0)
-        self.0
-            .iter()
-            .map(|pair| pair.to_string(0))
-            .collect::<Vec<_>>()
-            .join("\n")
+        self.to_indented_string(0)
     }
-}
 
-impl<'a> Pair<'a> {
-    pub fn to_string(&self, num_tabs: u16) -> String {
-        let mut formatted = String::new();
+    pub fn to_indented_string(&self, num_indents: usize) -> String {
+        let mut fmt = String::new();
 
-        formatted.push_multiple('\t', num_tabs);
-        formatted.push_str(&format!("\"{}\"", self.key()));
-        formatted.push_str(&self.value().to_string(num_tabs));
-
-        formatted
+        for (key, values) in self.iter() {
+            let key_fmt = format!("{}\"{}\"", multiple_char('\t', num_indents), key);
+            for value in values.iter() {
+                fmt += &format!("{}{}", key_fmt, value.to_indented_string(num_indents));
+            }
+        }
+        fmt
     }
 }
 
 impl<'a> Value<'a> {
-    pub fn to_string(&self, num_tabs: u16) -> String {
-        let mut formatted = String::new();
+    pub fn to_string(&self) -> String {
+        self.to_indented_string(0)
+    }
 
+    pub fn to_indented_string(&self, num_indents: usize) -> String {
         match self {
-            Value::Str(s) => {
-                formatted.push_str(&format!("\t\"{}\"\n", s));
-            }
+            Value::Str(s) => format!("\t\"{}\"\n", s),
             Value::Obj(obj) => {
-                formatted.push('\n');
-                formatted.push_multiple('\t', num_tabs);
-                formatted.push_str("{\n");
-
-                for pair in obj {
-                    formatted.push_str(&pair.to_string(num_tabs + 1));
-                }
-
-                formatted.push_multiple('\t', num_tabs);
-                formatted.push_str("}\n");
+                let indent = multiple_char('\t', num_indents);
+                format!(
+                    "\n{}{{\n{}{}}}\n",
+                    indent,
+                    obj.to_indented_string(num_indents + 1),
+                    indent
+                )
             }
         }
-
-        formatted
     }
 }
