@@ -36,8 +36,8 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf {
             let mut container = KeyValues::new();
             for grammar_pair in grammar_pairs.into_inner() {
                 // Structure: pair
-                //            \ key <- Desired
-                //            \ value        <- Desired
+                //            \ key   <- Desired
+                //            \ value <- Desired
                 if let Rule::pair = grammar_pair.as_rule() {
                     // Parse out the key and value
                     let mut grammar_pair_innards = grammar_pair.into_inner();
