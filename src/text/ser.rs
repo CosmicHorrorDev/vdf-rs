@@ -6,53 +6,41 @@ fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
 }
 
-// TODO: this can be implemented for just `Vdf` instead of needing to be owned
 impl<'a> fmt::Display for Vdf<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_string())
+        self.write_indented(f, 0)
     }
 }
 
 impl<'a> Vdf<'a> {
-    pub fn to_string(&self) -> String {
-        self.to_indented_string(0)
-    }
-
-    pub fn to_indented_string(&self, num_indents: usize) -> String {
-        let mut fmt = String::new();
-
+    pub fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
         for (key, values) in self.iter() {
-            let key_fmt = format!("{}\"{}\"", multiple_char('\t', num_indents), key);
-            for value in values.iter() {
-                fmt += &format!("{}{}", key_fmt, value.to_indented_string(num_indents));
+            for value in values {
+                write!(f, "{}\"{}\"", multiple_char('\t', num_indents), key)?;
+                match value {
+                    Value::Str(s) => write!(f, "\t\"{}\"", s)?,
+                    Value::Obj(obj) => {
+                        write!(f, "\n{}{{\n", multiple_char('\t', num_indents))?;
+                        obj.write_indented(f, num_indents + 1)?;
+                        write!(f, "{}}}", multiple_char('\t', num_indents))?;
+                    }
+                }
+                f.write_str("\n")?;
             }
         }
-        fmt
+
+        Ok(())
     }
 }
 
 impl<'a> fmt::Display for Value<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(&self.to_string())
-    }
-}
-
-impl<'a> Value<'a> {
-    pub fn to_string(&self) -> String {
-        self.to_indented_string(0)
-    }
-
-    pub fn to_indented_string(&self, num_indents: usize) -> String {
         match self {
-            Value::Str(s) => format!("\t\"{}\"\n", s),
+            Value::Str(s) => write!(f, "\"{}\"", s),
             Value::Obj(obj) => {
-                let indent = multiple_char('\t', num_indents);
-                format!(
-                    "\n{}{{\n{}{}}}\n",
-                    indent,
-                    obj.to_indented_string(num_indents + 1),
-                    indent
-                )
+                f.write_str("{\n")?;
+                obj.write_indented(f, 1)?;
+                f.write_str("}")
             }
         }
     }
