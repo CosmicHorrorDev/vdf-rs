@@ -1,4 +1,4 @@
-use std::fmt;
+use std::fmt::{self, Write};
 
 use crate::common::{Value, Vdf};
 
@@ -13,19 +13,21 @@ impl<'a> fmt::Display for Vdf<'a> {
 }
 
 impl<'a> Vdf<'a> {
-    pub fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
+    fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
         for (key, values) in self.iter() {
             for value in values {
+                // Write the indented key
                 write!(f, "{}\"{}\"", multiple_char('\t', num_indents), key)?;
-                match value {
-                    Value::Str(s) => write!(f, "\t\"{}\"", s)?,
-                    Value::Obj(obj) => {
-                        write!(f, "\n{}{{\n", multiple_char('\t', num_indents))?;
-                        obj.write_indented(f, num_indents + 1)?;
-                        write!(f, "{}}}", multiple_char('\t', num_indents))?;
-                    }
+
+                // Followed by the value
+                if value.is_str() {
+                    f.write_char('\t')?;
+                } else {
+                    f.write_char('\n')?;
                 }
-                f.write_str("\n")?;
+                value.write_indented(f, num_indents)?;
+
+                f.write_char('\n')?;
             }
         }
 
@@ -35,12 +37,19 @@ impl<'a> Vdf<'a> {
 
 impl<'a> fmt::Display for Value<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.write_indented(f, 0)
+    }
+}
+
+impl<'a> Value<'a> {
+    fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
+        // Only `Obj` gets indented
         match self {
             Value::Str(s) => write!(f, "\"{}\"", s),
             Value::Obj(obj) => {
-                f.write_str("{\n")?;
-                obj.write_indented(f, 1)?;
-                f.write_str("}")
+                write!(f, "{}{{\n", multiple_char('\t', num_indents))?;
+                obj.write_indented(f, num_indents + 1)?;
+                write!(f, "{}}}", multiple_char('\t', num_indents))
             }
         }
     }

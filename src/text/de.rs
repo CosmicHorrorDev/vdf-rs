@@ -103,7 +103,7 @@ mod tests {
         // let desired_value = vdf["Key"][2]
         //     .get_obj()
         //     .and_then(|obj| obj["Inner Key"][0].get_str());
-        println!("{}", vdf["Key"][0]);
+        println!("{}", vdf);
         panic!();
     }
 }
