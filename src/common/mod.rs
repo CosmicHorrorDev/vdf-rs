@@ -1,23 +1,22 @@
-use std::collections::{
-    btree_map::{Iter, Keys, Values},
-    BTreeMap,
+pub mod owned;
+
+use std::{
+    collections::{
+        btree_map::{Iter, Keys, Values},
+        BTreeMap,
+    },
+    ops::Index,
 };
 
-pub type Key = String;
-pub type KeyValues = BTreeMap<Key, Vec<Value>>;
+pub type Key<'a> = &'a str;
+pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
 #[derive(Debug, PartialEq, Default)]
-pub struct Vdf(pub KeyValues);
+pub struct Vdf<'a>(pub KeyValues<'a>);
 
-#[derive(Debug, PartialEq)]
-pub enum Value {
-    Str(String),
-    Obj(Vdf),
-}
-
-impl Vdf {
+impl<'a> Vdf<'a> {
     pub fn inner(&self) -> &KeyValues {
-        &self.0
+        todo!()
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
@@ -53,15 +52,13 @@ impl Vdf {
     }
 }
 
-impl std::ops::Index<&str> for Vdf {
-    type Output = Vec<Value>;
-
-    fn index(&self, needle: &str) -> &Self::Output {
-        &self.0[needle]
-    }
+#[derive(Debug, PartialEq)]
+pub enum Value<'a> {
+    Str(&'a str),
+    Obj(Vdf<'a>),
 }
 
-impl Value {
+impl<'a> Value<'a> {
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
@@ -86,13 +83,21 @@ impl Value {
         }
     }
 
-    // TODO: get the error situation worked out here
+    // TODO: work out error situation
     pub fn try_get_str(&self) -> Result<&str, ()> {
         self.get_str().ok_or(())
     }
 
-    // TODO: get the error situation worked out here
+    // TODO: work out error situation
     pub fn try_get_obj(&self) -> Result<&Vdf, ()> {
         self.get_obj().ok_or(())
+    }
+}
+
+impl<'a> Index<&str> for Vdf<'a> {
+    type Output = Vec<Value<'a>>;
+
+    fn index(&self, needle: &str) -> &Self::Output {
+        &self.0[needle]
     }
 }
