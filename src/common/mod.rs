@@ -8,6 +8,8 @@ use std::{
     ops::Index,
 };
 
+use crate::common::owned::{ValueBuf, VdfBuf};
+
 pub type Key<'a> = &'a str;
 pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
@@ -15,8 +17,17 @@ pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 pub struct Vdf<'a>(pub KeyValues<'a>);
 
 impl<'a> Vdf<'a> {
-    pub fn inner(&self) -> &KeyValues {
-        todo!()
+    pub fn to_vdf_buf(&self) -> VdfBuf {
+        let inner = self
+            .0
+            .iter()
+            .map(|(key, values)| {
+                let key_buf = key.to_string();
+                let values_buf = values.iter().map(|val| val.to_value_buf()).collect();
+                (key_buf, values_buf)
+            })
+            .collect();
+        VdfBuf(inner)
     }
 
     pub fn contains_key(&self, key: &str) -> bool {
@@ -59,6 +70,10 @@ pub enum Value<'a> {
 }
 
 impl<'a> Value<'a> {
+    pub fn to_value_buf(&self) -> ValueBuf {
+        todo!()
+    }
+
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
