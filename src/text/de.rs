@@ -10,6 +10,7 @@ use crate::core::{KeyValues, Value, Vdf};
 struct VdfParser;
 
 impl<'a> Vdf<'a> {
+    // TODO: implement this as fromstr instead?
     pub fn parse(s: &'a str) -> Result<Self, PestError<Rule>> {
         Self::try_from(s)
     }

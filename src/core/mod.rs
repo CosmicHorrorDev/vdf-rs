@@ -63,6 +63,12 @@ impl<'a> Vdf<'a> {
     }
 }
 
+impl<'a> From<&'a VdfBuf> for Vdf<'a> {
+    fn from(buf: &'a VdfBuf) -> Self {
+        buf.to_vdf()
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Value<'a> {
     Str(&'a str),
