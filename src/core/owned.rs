@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use crate::common::{Value, Vdf};
+use crate::core::{Value, Vdf};
 
 pub type KeyBuf = String;
 pub type KeyValuesBuf = BTreeMap<KeyBuf, Vec<ValueBuf>>;

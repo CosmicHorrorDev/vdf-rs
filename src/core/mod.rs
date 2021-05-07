@@ -8,7 +8,7 @@ use std::{
     ops::Index,
 };
 
-use crate::common::owned::{ValueBuf, VdfBuf};
+use crate::core::owned::{ValueBuf, VdfBuf};
 
 pub type Key<'a> = &'a str;
 pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;

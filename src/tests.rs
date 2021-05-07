@@ -2,7 +2,7 @@ use once_cell::sync::Lazy;
 
 use std::{error::Error, fs, path::Path};
 
-use crate::common::{Pair, Value, Vdf};
+use crate::core::{Pair, Value, Vdf};
 
 type TestResult<T> = Result<T, Box<dyn Error>>;
 

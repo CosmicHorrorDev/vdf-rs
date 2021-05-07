@@ -1,7 +1,7 @@
 // #[macro_use]
 // extern crate pest_derive;
 
-pub mod common;
+pub mod core;
 // #[cfg(test)]
 // mod tests;
 mod text;

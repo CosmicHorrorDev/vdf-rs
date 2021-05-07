@@ -1,6 +1,6 @@
 use std::fmt::{self, Write};
 
-use crate::common::{Value, Vdf};
+use crate::core::{Value, Vdf};
 
 fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()

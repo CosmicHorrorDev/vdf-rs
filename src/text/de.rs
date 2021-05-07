@@ -3,7 +3,7 @@ use pest_derive::Parser;
 
 use std::convert::TryFrom;
 
-use crate::common::{KeyValues, Value, Vdf};
+use crate::core::{KeyValues, Value, Vdf};
 
 #[derive(Parser)]
 #[grammar = "grammars/text.pest"]
