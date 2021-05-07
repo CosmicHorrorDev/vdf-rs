@@ -1,7 +1,7 @@
 use pest::{error::Error as PestError, iterators::Pair as PestPair, Parser};
 use pest_derive::Parser;
 
-use std::convert::TryFrom;
+use std::{borrow::Cow, convert::TryFrom};
 
 use crate::core::{KeyValues, Value, Vdf};
 
@@ -53,7 +53,7 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
                     let value = Value::from(grammar_value);
 
                     // Insert pair into `KeyValues`
-                    let entry = container.entry(key).or_insert(Vec::new());
+                    let entry = container.entry(Cow::from(key)).or_insert(Vec::new());
                     (*entry).push(value);
                 } else {
                     unreachable!("Prevented by grammar");
@@ -73,7 +73,10 @@ impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
         match grammar_value.as_rule() {
             // Structure: string
             //            \ inner <- Desired
-            Rule::string => Self::Str(grammar_value.into_inner().next().unwrap().as_str()),
+            Rule::string => {
+                let value = grammar_value.into_inner().next().unwrap().as_str();
+                Self::Str(Cow::from(value))
+            }
             // Structure: obj
             //            \ pairs <- Desired
             Rule::obj => Self::Obj(Vdf::from(grammar_value.into_inner().next().unwrap())),
@@ -100,10 +103,12 @@ mod tests {
     }
 }
         "#;
-        let vdf = Vdf::parse(sample_vdf).unwrap();
-        // let desired_value = vdf["Key"][2]
-        //     .get_obj()
-        //     .and_then(|obj| obj["Inner Key"][0].get_str());
+        let mut vdf = Vdf::parse(sample_vdf).unwrap();
+        vdf.get_mut("Key").map(|values| {
+            if let Value::Str(s) = &mut values[1] {
+                *s = Cow::from(s.to_mut().to_uppercase());
+            }
+        });
         println!("{}", vdf);
         panic!();
     }

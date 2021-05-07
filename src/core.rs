@@ -1,41 +1,34 @@
-pub mod owned;
-
 use std::{
+    borrow::Cow,
     collections::{
-        btree_map::{Iter, Keys, Values},
+        btree_map::{Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut},
         BTreeMap,
     },
     ops::Index,
+    ops::RangeBounds,
 };
 
-use crate::core::owned::{ValueBuf, VdfBuf};
-
-pub type Key<'a> = &'a str;
+pub type Key<'a> = Cow<'a, str>;
 pub type KeyValues<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
-#[derive(Debug, PartialEq, Default)]
+// TODO: handle `Extend`, `FromIterator` and `IntoIterator` as well
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Vdf<'a>(pub KeyValues<'a>);
 
+// TODO: is there anything for generating delegate methods? All of these so far are just delegate
+// methods
+// TODO: implement some of the traits that `BTreeMap` has too
 impl<'a> Vdf<'a> {
-    pub fn to_vdf_buf(&self) -> VdfBuf {
-        let inner = self
-            .0
-            .iter()
-            .map(|(key, values)| {
-                let key_buf = key.to_string();
-                let values_buf = values.iter().map(|val| val.to_value_buf()).collect();
-                (key_buf, values_buf)
-            })
-            .collect();
-        VdfBuf(inner)
-    }
-
     pub fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
     }
 
     pub fn get(&self, key: &str) -> Option<&Vec<Value>> {
         self.0.get(key)
+    }
+
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut Vec<Value<'a>>> {
+        self.0.get_mut(key)
     }
 
     pub fn get_key_value(&self, key: &str) -> Option<(&Key, &Vec<Value>)> {
@@ -46,12 +39,20 @@ impl<'a> Vdf<'a> {
         self.0.iter()
     }
 
+    pub fn iter_mut(&mut self) -> IterMut<'_, Key<'a>, Vec<Value<'a>>> {
+        self.0.iter_mut()
+    }
+
     pub fn keys(&self) -> Keys<'_, Key, Vec<Value>> {
         self.0.keys()
     }
 
     pub fn values(&self) -> Values<'_, Key, Vec<Value>> {
         self.0.values()
+    }
+
+    pub fn values_mut(&mut self) -> ValuesMut<'_, Key<'a>, Vec<Value<'a>>> {
+        self.0.values_mut()
     }
 
     pub fn len(&self) -> usize {
@@ -61,25 +62,37 @@ impl<'a> Vdf<'a> {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
-}
 
-impl<'a> From<&'a VdfBuf> for Vdf<'a> {
-    fn from(buf: &'a VdfBuf) -> Self {
-        buf.to_vdf()
+    pub fn range<R>(&self, bounds: R) -> Range<'_, Key, Vec<Value>>
+    where
+        R: RangeBounds<Key<'a>>,
+    {
+        self.0.range(bounds)
+    }
+
+    pub fn range_mut<R>(&mut self, bounds: R) -> RangeMut<'_, Key<'a>, Vec<Value<'a>>>
+    where
+        R: RangeBounds<Key<'a>>,
+    {
+        self.0.range_mut(bounds)
+    }
+
+    pub fn remove(&mut self, key: &str) -> Option<Vec<Value>> {
+        self.0.remove(key)
+    }
+
+    pub fn remove_entry(&mut self, key: &str) -> Option<(Key<'a>, Vec<Value<'a>>)> {
+        self.0.remove_entry(key)
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
-    Str(&'a str),
+    Str(Cow<'a, str>),
     Obj(Vdf<'a>),
 }
 
 impl<'a> Value<'a> {
-    pub fn to_value_buf(&self) -> ValueBuf {
-        todo!()
-    }
-
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
@@ -88,7 +101,7 @@ impl<'a> Value<'a> {
         self.get_obj().is_some()
     }
 
-    pub fn get_str(&self) -> Option<&str> {
+    pub fn get_str(&self) -> Option<&Cow<'a, str>> {
         if let Value::Str(s) = self {
             Some(s)
         } else {
@@ -105,7 +118,7 @@ impl<'a> Value<'a> {
     }
 
     // TODO: work out error situation
-    pub fn try_get_str(&self) -> Result<&str, ()> {
+    pub fn try_get_str(&self) -> Result<&Cow<'a, str>, ()> {
         self.get_str().ok_or(())
     }
 
@@ -118,7 +131,7 @@ impl<'a> Value<'a> {
 impl<'a> Index<&str> for Vdf<'a> {
     type Output = Vec<Value<'a>>;
 
-    fn index(&self, needle: &str) -> &Self::Output {
-        &self.0[needle]
+    fn index(&self, index: &str) -> &Self::Output {
+        &self.0[index]
     }
 }

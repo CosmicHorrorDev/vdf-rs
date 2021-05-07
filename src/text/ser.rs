@@ -13,6 +13,7 @@ impl<'a> fmt::Display for Vdf<'a> {
 }
 
 // TODO: this needs to handle escaping special characters like \", \\, \n, etc.
+// TODO: make a note that keys with no corresponding values get skipped
 impl<'a> Vdf<'a> {
     fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
         for (key, values) in self.iter() {
