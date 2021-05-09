@@ -1,5 +1,6 @@
 [workspace]
 
 members = [
-    "vdf-parser"
+    "keyvalues-serde",
+    "keyvalues-parser",
 ]

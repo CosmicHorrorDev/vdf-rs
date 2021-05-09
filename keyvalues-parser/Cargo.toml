@@ -1,5 +1,5 @@
 [package]
-name = "vdf-parser"
+name = "keyvalues-parser"
 version = "0.1.0"
 authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
 edition = "2018"

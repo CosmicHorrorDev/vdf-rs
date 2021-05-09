@@ -1,6 +1,6 @@
 #![no_main]
+use keyvalues_parser::core::Vdf;
 use libfuzzer_sys::fuzz_target;
-use vdf_pest::core::Vdf;
 
 fuzz_target!(|data: &[u8]| {
     if let Ok(s) = std::str::from_utf8(data) {
