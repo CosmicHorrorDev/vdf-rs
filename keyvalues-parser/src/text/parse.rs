@@ -6,7 +6,7 @@ use std::{borrow::Cow, convert::TryFrom};
 use crate::core::{KeyValues, Value, Vdf};
 
 #[derive(Parser)]
-#[grammar = "grammars/text.pest"]
+#[grammar = "text/grammar.pest"]
 struct VdfParser;
 
 impl<'a> Vdf<'a> {
