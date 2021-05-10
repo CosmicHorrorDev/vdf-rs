@@ -1,23 +1,103 @@
+// FIXME: replace the unwraps here with actual error handling
+
 use keyvalues_parser::core::{Key, Value, Vdf};
 use serde::{
     de::{self, DeserializeSeed, MapAccess, Visitor},
     Deserialize,
 };
 
+use std::borrow::Cow;
+
 use crate::error::{Error, Result};
 
-// TODO: can I just hold the entries as a vec to make things easier?
-// The deserializer will either currently be working on a full `Vdf` or just a `Value`, but never
-// both simultaneously
+// I've been struggling to get serde to play nice with using a more complex internal structure in a
+// `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into
+// a stream of tokens that serde can consume. In this way the Deserializer can just work on
+// munching through all the tokens instead of trying to mutate a more complex nested structure
+// containing different types
+/// A stream of tokens representing vdf. I think an example is the easiest way to understand the
+/// structure so something like
+/// ```
+/// "Outer Key" "Outer Value"
+/// "Outer Key"
+/// {
+///     "Inner Key" "Inner Value"
+/// }
+/// ```
+/// will be transformed into
+/// ```
+/// Vdf({
+///     "Outer Key": [
+///         Str("Outer Value"),
+///         Obj(
+///             Vdf({
+///                 "Inner Key": [
+///                     Str("Inner Value")
+///                 ]
+///             })
+///         )
+///     ]
+/// })
+/// ```
+/// which has the following token stream
+/// ```
+/// TokenStream([
+///     Key("Outer Key"),
+///     Str("Outer Value"),
+///     Key("Outer Key"),
+///     ObjBegin,
+///     Key("Inner Key"),
+///     Str("Inner Value"),
+///     ObjEnd,
+/// )]
+/// ```
+/// So in this way it's a linear sequence of keys and values where the value is either a str or
+/// an object.
+#[derive(Clone, Debug, PartialEq)]
+struct TokenStream<'a>(Vec<Token<'a>>);
+
+impl<'a> From<Vdf<'a>> for TokenStream<'a> {
+    fn from(vdf: Vdf<'a>) -> Self {
+        let mut inner = Vec::new();
+
+        for (key, values) in vdf.0.into_iter() {
+            for value in values {
+                inner.push(Token::Key(key.clone()));
+                match value {
+                    Value::Str(s) => {
+                        inner.push(Token::Str(s));
+                    }
+                    Value::Obj(obj) => {
+                        inner.push(Token::ObjBegin);
+                        inner.extend(TokenStream::from(obj).0);
+                        inner.push(Token::ObjEnd);
+                    }
+                }
+            }
+        }
+
+        Self(inner)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum Token<'a> {
+    Key(Cow<'a, str>),
+    Str(Cow<'a, str>),
+    ObjBegin,
+    ObjEnd,
+}
+
 pub struct Deserializer<'de> {
-    inner: Vec<(Key<'de>, Vec<Value<'de>>)>,
+    tokens: TokenStream<'de>,
 }
 
 impl<'de> Deserializer<'de> {
+    // TODO: this can really return an error from parsing here
     pub fn from_str(input: &'de str) -> Self {
         let vdf = Vdf::parse(input).unwrap();
-        let inner = vdf.0.into_iter().collect();
-        Self { inner }
+        let tokens = TokenStream::from(vdf);
+        Self { tokens }
     }
 }
 
@@ -66,9 +146,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        assert_eq!(self.inner[0].1.len(), 1);
-        assert!(self.inner[0].1[0].is_str());
-        visitor.visit_i32(self.inner[0].1[0].get_str().unwrap().parse().unwrap())
+        todo!()
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
@@ -131,19 +209,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // Remove the first entry we see
-        // NOTE: this can be simplified if something like `.pop_first()` gets stabilized
-        // let entry = self.parsed.keys().next().unwrap();
-        // println!("{}", entry);
-        visitor.visit_str(&self.inner[0].0)
+        todo!()
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        // TODO: this is all a hacky mess
-        visitor.visit_string(self.inner[0].1[0].get_str().unwrap().clone().into_owned())
+        todo!()
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
@@ -218,8 +291,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        println!("{:#?}", self.inner);
-        visitor.visit_map(ObjEater::new(&mut self))
+        todo!()
     }
 
     fn deserialize_struct<V>(
@@ -231,17 +303,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // TODO: this is likely horribly broken in some scenarios
-        assert_eq!(self.inner.len(), 1);
-        assert_eq!(self.inner[0].1.len(), 1);
-        let obj = self.inner.pop().unwrap().1.pop().unwrap();
-        if let Value::Obj(vdf) = obj {
-            let new_inner = vdf.0.into_iter().collect();
-            self.inner = new_inner;
-            self.deserialize_map(visitor)
-        } else {
-            unreachable!()
-        }
+        todo!()
     }
 
     fn deserialize_enum<V>(
@@ -260,7 +322,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        self.deserialize_str(visitor)
+        todo!()
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
@@ -273,15 +335,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
 struct ObjEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
-    stored_val: Option<Vec<Value<'de>>>,
 }
 
 impl<'a, 'de> ObjEater<'a, 'de> {
     fn new(de: &'a mut Deserializer<'de>) -> Self {
-        Self {
-            de,
-            stored_val: None,
-        }
+        Self { de }
     }
 }
 
@@ -292,27 +350,20 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
     where
         K: DeserializeSeed<'de>,
     {
-        if !self.de.inner.is_empty() {
-            seed.deserialize(&mut *self.de).map(Some)
-        } else {
-            Ok(None)
-        }
+        todo!()
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
     where
         V: DeserializeSeed<'de>,
     {
-        let result = seed.deserialize(&mut *self.de);
-        self.de.inner.remove(0);
-        result
+        todo!()
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    // use serde::Deserialize;
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct TestStruct {
@@ -333,5 +384,30 @@ mod tests {
         let sample: Result<TestStruct> = from_str(s);
         println!("{:#?}", sample);
         todo!();
+    }
+
+    #[test]
+    fn token_stream() {
+        let s = r#"
+"Outer Key" "Outer Value"
+"Outer Key"
+{
+    "Inner Key" "Inner Value"
+}
+        "#;
+        let vdf = Vdf::parse(s).unwrap();
+        let token_stream = TokenStream::from(vdf);
+        assert_eq!(
+            token_stream,
+            TokenStream(vec![
+                Token::Key(Cow::from("Outer Key")),
+                Token::Str(Cow::from("Outer Value")),
+                Token::Key(Cow::from("Outer Key")),
+                Token::ObjBegin,
+                Token::Key(Cow::from("Inner Key")),
+                Token::Str(Cow::from("Inner Value")),
+                Token::ObjEnd,
+            ])
+        );
     }
 }

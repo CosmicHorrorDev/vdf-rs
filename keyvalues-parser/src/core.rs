@@ -1,7 +1,7 @@
 use std::{
     borrow::Cow,
     collections::{
-        btree_map::{Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut},
+        btree_map::{Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut, IntoIter},
         BTreeMap,
     },
     ops::Index,
@@ -90,6 +90,25 @@ impl<'a> Vdf<'a> {
     }
 }
 
+// TODO: implement `IndexMut` as well
+impl<'a> Index<&str> for Vdf<'a> {
+    type Output = Vec<Value<'a>>;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+// TODO: implement these for different variants
+impl<'a> IntoIterator for Vdf<'a> {
+    type Item = (Key<'a>, Vec<Value<'a>>);
+    type IntoIter = IntoIter<Key<'a>, Vec<Value<'a>>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
     Str(Cow<'a, str>),
@@ -129,13 +148,5 @@ impl<'a> Value<'a> {
     // TODO: work out error situation
     pub fn try_get_obj(&self) -> Result<&Vdf, ()> {
         self.get_obj().ok_or(())
-    }
-}
-
-impl<'a> Index<&str> for Vdf<'a> {
-    type Output = Vec<Value<'a>>;
-
-    fn index(&self, index: &str) -> &Self::Output {
-        &self.0[index]
     }
 }

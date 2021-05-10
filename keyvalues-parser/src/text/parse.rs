@@ -92,15 +92,10 @@ mod tests {
     #[test]
     fn checking() {
         let sample_vdf = r#"
-"Key" "Value"
-"Key" "Value2"
-"Key"
+"Outer Key" "Outer Value"
+"Outer Key"
 {
     "Inner Key" "Inner Value"
-    "Inner Key"
-    {
-        "Rar" "Bar"
-    }
 }
         "#;
         let mut vdf = Vdf::parse(sample_vdf).unwrap();
@@ -109,7 +104,7 @@ mod tests {
                 *s = Cow::from(s.to_mut().to_uppercase());
             }
         });
-        println!("{}", vdf);
+        println!("{:#?}", vdf);
         panic!();
     }
 }
