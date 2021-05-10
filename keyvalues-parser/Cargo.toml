@@ -12,8 +12,3 @@ pest_derive = "2.1"
 
 [dev-dependencies]
 once_cell = "1.7"
-
-[features]
-# Unlocks functionality that hasn't quite been worked out enough to be
-# considered stable quite yet
-unstable = []

@@ -19,6 +19,10 @@ pub struct Vdf<'a>(pub KeyValues<'a>);
 // methods
 // TODO: implement some of the traits that `BTreeMap` has too
 impl<'a> Vdf<'a> {
+    pub fn consume_value(self) -> Vec<Value<'a>> {
+        self.0.into_iter().next().unwrap().1
+    }
+
     pub fn contains_key(&self, key: &str) -> bool {
         self.0.contains_key(key)
     }
