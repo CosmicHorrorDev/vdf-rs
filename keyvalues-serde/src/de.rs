@@ -1,12 +1,15 @@
 // FIXME: replace the unwraps here with actual error handling
 
-use keyvalues_parser::core::{Key, Value, Vdf};
+use keyvalues_parser::core::{Value, Vdf};
 use serde::{
     de::{self, DeserializeSeed, MapAccess, Visitor},
     Deserialize,
 };
 
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    ops::{Deref, DerefMut},
+};
 
 use crate::error::{Error, Result};
 
@@ -56,6 +59,36 @@ use crate::error::{Error, Result};
 #[derive(Clone, Debug, PartialEq)]
 struct TokenStream<'a>(Vec<Token<'a>>);
 
+impl<'a> TokenStream<'a> {
+    fn peek(&self) -> Option<&Token<'a>> {
+        self.get(0)
+    }
+
+    // This is pretty bad for performance. If it's an issue we can flip the direction of the tokens
+    // when we store it so that we can pop off the back instead
+    fn next(&mut self) -> Option<Token<'a>> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self.remove(0))
+        }
+    }
+}
+
+impl<'a> Deref for TokenStream<'a> {
+    type Target = Vec<Token<'a>>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> DerefMut for TokenStream<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 impl<'a> From<Vdf<'a>> for TokenStream<'a> {
     fn from(vdf: Vdf<'a>) -> Self {
         let mut inner = Vec::new();
@@ -88,6 +121,35 @@ enum Token<'a> {
     ObjEnd,
 }
 
+impl<'a> Token<'a> {
+    fn is_key(&self) -> bool {
+        matches!(self, Token::Key(_))
+    }
+
+    fn is_str(&self) -> bool {
+        matches!(self, Token::Str(_))
+    }
+
+    fn is_obj_begin(&self) -> bool {
+        matches!(self, Token::ObjBegin)
+    }
+
+    fn is_obj_end(&self) -> bool {
+        matches!(self, Token::ObjEnd)
+    }
+}
+
+pub fn from_str<'a, T>(s: &'a str) -> Result<T>
+where
+    T: Deserialize<'a>,
+{
+    let mut deserializer = Deserializer::from_str(s);
+    let t = T::deserialize(&mut deserializer)?;
+    // TODO: potentially do some validation here
+    Ok(t)
+}
+
+#[derive(Debug)]
 pub struct Deserializer<'de> {
     tokens: TokenStream<'de>,
 }
@@ -101,14 +163,14 @@ impl<'de> Deserializer<'de> {
     }
 }
 
-pub fn from_str<'a, T>(s: &'a str) -> Result<T>
-where
-    T: Deserialize<'a>,
-{
-    let mut deserializer = Deserializer::from_str(s);
-    let t = T::deserialize(&mut deserializer)?;
-    // TODO: potentially do some validation here
-    Ok(t)
+impl<'de> Deserializer<'de> {
+    fn peek(&self) -> Option<&Token<'de>> {
+        self.tokens.peek()
+    }
+
+    fn next(&mut self) -> Option<Token<'de>> {
+        self.tokens.next()
+    }
 }
 
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
@@ -142,11 +204,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
+    // TODO: can this be for anything other than `Str`?
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        if let Some(Token::Str(s)) = self.next() {
+            visitor.visit_i32(s.parse().unwrap())
+        } else {
+            todo!()
+        }
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
@@ -209,14 +276,26 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        if let Some(token) = self.next() {
+            match token {
+                Token::Key(s) | Token::Str(s) => visitor.visit_str(&s),
+                _ => todo!(),
+            }
+        } else {
+            todo!()
+        }
     }
 
+    // TODO: can this be for anything other than `Str`
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        if let Some(Token::Str(s)) = self.next() {
+            visitor.visit_string(s.into_owned())
+        } else {
+            todo!()
+        }
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
@@ -287,13 +366,15 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
+    /// A map is considered to just be an object containing a list of KeyValues
     fn deserialize_map<V>(mut self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_map(ObjEater::try_new(&mut self).unwrap())
     }
 
+    /// A struct is just considered to be a key followed by a map
     fn deserialize_struct<V>(
         self,
         _name: &'static str,
@@ -303,7 +384,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        // FIXME: Can we just have deserialize any deserialize a str, or do we
+        // need to pay mind to fields here?
+        // TODO: potentially verify the name of the struct here?
+        // Pop the key and process the map
+        if let Some(token) = self.next() {
+            assert!(token.is_key());
+        } else {
+            todo!()
+        }
+        self.deserialize_map(visitor)
     }
 
     fn deserialize_enum<V>(
@@ -322,9 +412,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        self.deserialize_str(visitor)
     }
 
+    // An identifer should just be a str
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -333,13 +424,21 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 }
 
+// FIXME: this also has to store a depth to handle internal objects as well
+#[derive(Debug)]
 struct ObjEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
 }
 
 impl<'a, 'de> ObjEater<'a, 'de> {
-    fn new(de: &'a mut Deserializer<'de>) -> Self {
-        Self { de }
+    fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
+        if let Some(token) = de.next() {
+            assert!(token.is_obj_begin());
+        } else {
+            todo!()
+        }
+
+        Ok(Self { de })
     }
 }
 
@@ -350,14 +449,24 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
     where
         K: DeserializeSeed<'de>,
     {
-        todo!()
+        match self.de.peek() {
+            Some(Token::Key(_)) => seed.deserialize(&mut *self.de).map(Some),
+            Some(Token::ObjEnd) => {
+                self.de.next();
+                Ok(None)
+            }
+            _ => todo!(),
+        }
     }
 
     fn next_value_seed<V>(&mut self, seed: V) -> Result<V::Value>
     where
         V: DeserializeSeed<'de>,
     {
-        todo!()
+        match self.de.peek() {
+            Some(Token::Str(_)) | Some(Token::ObjBegin) => seed.deserialize(&mut *self.de),
+            _ => todo!(),
+        }
     }
 }
 
