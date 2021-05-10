@@ -366,15 +366,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
-    /// A map is considered to just be an object containing a list of KeyValues
     fn deserialize_map<V>(mut self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
+        // A map is just an object containing a list of keyvalues
         visitor.visit_map(ObjEater::try_new(&mut self).unwrap())
     }
 
-    /// A struct is just considered to be a key followed by a map
     fn deserialize_struct<V>(
         self,
         _name: &'static str,
@@ -384,15 +383,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // FIXME: Can we just have deserialize any deserialize a str, or do we
-        // need to pay mind to fields here?
-        // TODO: potentially verify the name of the struct here?
-        // Pop the key and process the map
-        if let Some(token) = self.next() {
-            assert!(token.is_key());
-        } else {
-            todo!()
+        // A struct is either a key followed by an obj, or just an obj in the
+        // case of a nested struct where the key is already popped off
+        match self.peek() {
+            Some(Token::Key(_)) => {
+                self.next();
+            }
+            Some(Token::ObjBegin) => {}
+            _ => todo!(),
         }
+
         self.deserialize_map(visitor)
     }
 
@@ -412,10 +412,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // An identifier is just a str
         self.deserialize_str(visitor)
     }
 
-    // An identifer should just be a str
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -424,7 +424,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 }
 
-// FIXME: this also has to store a depth to handle internal objects as well
 #[derive(Debug)]
 struct ObjEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
@@ -474,14 +473,14 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
 mod tests {
     use super::*;
 
-    #[derive(Deserialize, Debug, PartialEq)]
-    struct TestStruct {
-        field1: i32,
-        field2: String,
-    }
-
     #[test]
-    fn dev_helper() {
+    fn basic_struct() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct TestStruct {
+            field1: i32,
+            field2: String,
+        }
+
         let s = r#"
 "TestStruct"
 {
@@ -490,9 +489,80 @@ mod tests {
 }
         "#;
 
-        let sample: Result<TestStruct> = from_str(s);
+        let sample: TestStruct = from_str(s).unwrap();
+        assert_eq!(
+            sample,
+            TestStruct {
+                field1: -123,
+                field2: String::from("Sample String")
+            }
+        )
+    }
+
+    #[test]
+    fn nested_structs() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct OuterStruct {
+            field: String,
+            inner1: InnerStruct,
+            inner2: InnerStruct,
+        }
+
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct InnerStruct {
+            field: String,
+        }
+
+        let s = r#"
+"OuterStruct"
+{
+    "field" "Outer Value"
+    "inner1"
+    {
+        "field" "Inner1 Value"
+    }
+    "inner2"
+    {
+        "field" "Inner2 Value"
+    }
+}
+        "#;
+
+        let sample: OuterStruct = from_str(s).unwrap();
+        assert_eq!(
+            sample,
+            OuterStruct {
+                field: String::from("Outer Value"),
+                inner1: InnerStruct {
+                    field: String::from("Inner1 Value"),
+                },
+                inner2: InnerStruct {
+                    field: String::from("Inner2 Value"),
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn tuple_structs() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct Container {
+            inner: I32Wrapper,
+        }
+
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct I32Wrapper(i32);
+
+        let s = r#"
+"Container"
+{
+    "inner": "123"
+}
+        "#;
+
+        let sample: Container = from_str(s).unwrap();
         println!("{:#?}", sample);
-        todo!();
+        todo!()
     }
 
     #[test]
