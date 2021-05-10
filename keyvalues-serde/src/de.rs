@@ -2,7 +2,7 @@
 
 use keyvalues_parser::core::{Value, Vdf};
 use serde::{
-    de::{self, DeserializeSeed, MapAccess, Visitor},
+    de::{self, DeserializeSeed, IntoDeserializer, MapAccess, Visitor},
     Deserialize,
 };
 
@@ -20,7 +20,7 @@ use crate::error::{Error, Result};
 // containing different types
 /// A stream of tokens representing vdf. I think an example is the easiest way to understand the
 /// structure so something like
-/// ```
+/// ```no_test
 /// "Outer Key" "Outer Value"
 /// "Outer Key"
 /// {
@@ -28,7 +28,7 @@ use crate::error::{Error, Result};
 /// }
 /// ```
 /// will be transformed into
-/// ```
+/// ```no_test
 /// Vdf({
 ///     "Outer Key": [
 ///         Str("Outer Value"),
@@ -43,7 +43,7 @@ use crate::error::{Error, Result};
 /// })
 /// ```
 /// which has the following token stream
-/// ```
+/// ```no_test
 /// TokenStream([
 ///     Key("Outer Key"),
 ///     Str("Outer Value"),
@@ -406,7 +406,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        match self.next() {
+            Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
+            Some(Token::ObjBegin) => {
+                todo!()
+            }
+            _ => todo!(),
+        }
     }
 
     fn deserialize_identifier<V>(self, visitor: V) -> Result<V::Value>
@@ -567,6 +573,34 @@ mod tests {
             sample,
             Container {
                 inner: I32Wrapper(123)
+            }
+        );
+    }
+
+    #[test]
+    fn unit_variant_enum() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct Container {
+            inner: SampleEnum,
+        }
+
+        #[derive(Deserialize, Debug, PartialEq)]
+        enum SampleEnum {
+            Foo,
+            Bar,
+        }
+
+        let s = r#"
+"Key"
+{
+    "inner" "Foo"
+}
+        "#;
+        let sample: Container = from_str(s).unwrap();
+        assert_eq!(
+            sample,
+            Container {
+                inner: SampleEnum::Foo
             }
         );
     }
