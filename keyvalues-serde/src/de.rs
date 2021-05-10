@@ -337,7 +337,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        // Considered just a wrapper over the contained value
+        visitor.visit_newtype_struct(self)
     }
 
     fn deserialize_seq<V>(mut self, visitor: V) -> Result<V::Value>
@@ -431,6 +432,7 @@ struct ObjEater<'a, 'de: 'a> {
 
 impl<'a, 'de> ObjEater<'a, 'de> {
     fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
+        // An object starts with an `ObjBegin` and ends with `ObjEnd`
         if let Some(token) = de.next() {
             assert!(token.is_obj_begin());
         } else {
@@ -544,7 +546,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_structs() {
+    fn tuple_struct() {
         #[derive(Deserialize, Debug, PartialEq)]
         struct Container {
             inner: I32Wrapper,
@@ -556,13 +558,17 @@ mod tests {
         let s = r#"
 "Container"
 {
-    "inner": "123"
+    "inner" "123"
 }
         "#;
 
         let sample: Container = from_str(s).unwrap();
-        println!("{:#?}", sample);
-        todo!()
+        assert_eq!(
+            sample,
+            Container {
+                inner: I32Wrapper(123)
+            }
+        );
     }
 
     #[test]
