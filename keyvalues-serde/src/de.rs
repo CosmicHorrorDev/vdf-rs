@@ -216,7 +216,17 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_bool(self.next_str().unwrap().parse().unwrap())
+        if let Ok(s) = self.next_str() {
+            if s == "0" {
+                visitor.visit_bool(false)
+            } else if s == "1" {
+                visitor.visit_bool(true)
+            } else {
+                todo!()
+            }
+        } else {
+            todo!()
+        }
     }
 
     // TODO: can this be for anything other than `Str`?
@@ -648,7 +658,7 @@ mod tests {
         let s = r#"
 "Key"
 {
-    "boolean" "true"
+    "boolean" "0"
     "character" "a"
     "signed8" "1"
     "signed16" "2"
@@ -667,7 +677,7 @@ mod tests {
         assert_eq!(
             sample,
             BasicTypes {
-                boolean: true,
+                boolean: false,
                 character: 'a',
                 signed8: 1,
                 signed16: 2,
@@ -819,8 +829,8 @@ mod tests {
         let s = r#"
 "Key"
 {
-    "inner" "true"
     "inner" "1"
+    "inner" "2"
     "inner" "Sample Text"
 }
         "#;
@@ -828,7 +838,7 @@ mod tests {
         let sample: Container<(bool, i32, String)> = from_str(s).unwrap();
         assert_eq!(
             sample,
-            Container::new((true, 1, String::from("Sample Text")))
+            Container::new((true, 2, String::from("Sample Text")))
         );
     }
 
@@ -840,8 +850,8 @@ mod tests {
         let s = r#"
 "Key"
 {
-    "inner" "true"
     "inner" "1"
+    "inner" "2"
     "inner" "Sample Text"
 }
         "#;
@@ -849,7 +859,7 @@ mod tests {
         let sample: Container<TupleStruct> = from_str(s).unwrap();
         assert_eq!(
             sample,
-            Container::new(TupleStruct(true, 1, String::from("Sample Text")))
+            Container::new(TupleStruct(true, 2, String::from("Sample Text")))
         )
     }
 
