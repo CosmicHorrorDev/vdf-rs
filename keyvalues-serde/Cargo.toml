@@ -8,5 +8,6 @@ edition = "2018"
 
 [dependencies]
 keyvalues-parser = { path = "../keyvalues-parser" }
+regex = "1.5.4"
 serde = { version = "1.0.125", features = ["derive"] }
 thiserror = "1.0.24"

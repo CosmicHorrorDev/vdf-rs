@@ -1,8 +1,12 @@
 // FIXME: replace the unwraps here with actual error handling
 
 use keyvalues_parser::core::{Value, Vdf};
+use regex::Regex;
 use serde::{
-    de::{self, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor},
+    de::{
+        self, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess,
+        Visitor,
+    },
     Deserialize,
 };
 
@@ -208,7 +212,31 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        match self.peek() {
+            Some(Token::ObjBegin) => self.deserialize_map(visitor),
+            Some(Token::SeqBegin) => self.deserialize_seq(visitor),
+            Some(Token::Str(s)) => {
+                // Falls back to using a regex to match several patterns. This will be far from
+                // efficient, but I'm feeling lazy for now
+                let neg_num_regex = Regex::new(r"^-\d+$").unwrap();
+                let num_regex = Regex::new(r"^\d+$").unwrap();
+                let real_regex = Regex::new(r"^-?\d+\.\d+$").unwrap();
+
+                // Check from more specific to more general types
+                if s == "0" || s == "1" {
+                    self.deserialize_bool(visitor)
+                } else if neg_num_regex.is_match(s) {
+                    self.deserialize_i64(visitor)
+                } else if num_regex.is_match(s) {
+                    self.deserialize_u64(visitor)
+                } else if real_regex.is_match(s) {
+                    self.deserialize_f64(visitor)
+                } else {
+                    self.deserialize_str(visitor)
+                }
+            }
+            _ => todo!(),
+        }
     }
 
     // TODO: find examples of bools being used in vdf to know their format
@@ -355,6 +383,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // TODO: it looks like this is the empty string or at least in some cases?
         // It's unclear how a null type would be represented in vdf (Empty string or obj?)
         todo!()
     }
@@ -450,9 +479,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // TODO: should this be a next or just a peek?
         match self.next() {
             Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
             Some(Token::ObjBegin) => {
+                todo!()
+            }
+            Some(Token::SeqBegin) => {
                 todo!()
             }
             _ => todo!(),
@@ -769,6 +802,25 @@ mod tests {
         "#;
         let sample: Container<SampleEnum> = from_str(s).unwrap();
         assert_eq!(sample, Container::new(SampleEnum::Foo));
+    }
+
+    #[test]
+    fn newtype_variant_enum() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        #[serde(untagged)]
+        enum NewTypeEnum {
+            Variant(i32),
+        }
+
+        let s = r#"
+"Key"
+{
+    "inner" "123"
+}
+        "#;
+
+        let sample: Container<NewTypeEnum> = from_str(s).unwrap();
+        assert_eq!(sample, Container::new(NewTypeEnum::Variant(123)));
     }
 
     #[test]
