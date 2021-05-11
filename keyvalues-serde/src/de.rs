@@ -8,7 +8,9 @@ use serde::{
 
 use std::{
     borrow::Cow,
-    ops::{Deref, DerefMut},
+    fmt,
+    ops::{AddAssign, Deref, DerefMut, MulAssign},
+    str::FromStr,
 };
 
 use crate::error::{Error, Result};
@@ -57,7 +59,7 @@ use crate::error::{Error, Result};
 /// So in this way it's a linear sequence of keys and values where the value is either a str or
 /// an object.
 #[derive(Clone, Debug, PartialEq)]
-struct TokenStream<'a>(Vec<Token<'a>>);
+pub struct TokenStream<'a>(Vec<Token<'a>>);
 
 impl<'a> TokenStream<'a> {
     fn peek(&self) -> Option<&Token<'a>> {
@@ -71,6 +73,14 @@ impl<'a> TokenStream<'a> {
             None
         } else {
             Some(self.remove(0))
+        }
+    }
+
+    fn next_str(&mut self) -> Result<Cow<'a, str>> {
+        if let Some(Token::Str(s)) = self.next() {
+            Ok(s)
+        } else {
+            todo!()
         }
     }
 }
@@ -114,29 +124,11 @@ impl<'a> From<Vdf<'a>> for TokenStream<'a> {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum Token<'a> {
+pub enum Token<'a> {
     Key(Cow<'a, str>),
     Str(Cow<'a, str>),
     ObjBegin,
     ObjEnd,
-}
-
-impl<'a> Token<'a> {
-    fn is_key(&self) -> bool {
-        matches!(self, Token::Key(_))
-    }
-
-    fn is_str(&self) -> bool {
-        matches!(self, Token::Str(_))
-    }
-
-    fn is_obj_begin(&self) -> bool {
-        matches!(self, Token::ObjBegin)
-    }
-
-    fn is_obj_end(&self) -> bool {
-        matches!(self, Token::ObjEnd)
-    }
 }
 
 pub fn from_str<'a, T>(s: &'a str) -> Result<T>
@@ -163,13 +155,17 @@ impl<'de> Deserializer<'de> {
     }
 }
 
-impl<'de> Deserializer<'de> {
-    fn peek(&self) -> Option<&Token<'de>> {
-        self.tokens.peek()
-    }
+impl<'de> Deref for Deserializer<'de> {
+    type Target = TokenStream<'de>;
 
-    fn next(&mut self) -> Option<Token<'de>> {
-        self.tokens.next()
+    fn deref(&self) -> &Self::Target {
+        &self.tokens
+    }
+}
+
+impl<'de> DerefMut for Deserializer<'de> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.tokens
     }
 }
 
@@ -183,106 +179,108 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
+    // TODO: find examples of bools being used in vdf to know their format
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_bool(self.next_str().unwrap().parse().unwrap())
     }
 
+    // TODO: can this be for anything other than `Str`?
     fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_i8(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_i16(self.next_str().unwrap().parse().unwrap())
     }
 
-    // TODO: can this be for anything other than `Str`?
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        if let Some(Token::Str(s)) = self.next() {
-            visitor.visit_i32(s.parse().unwrap())
-        } else {
-            todo!()
-        }
+        visitor.visit_i32(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_i64(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_u8(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_u16(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_u32(self.next_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_u64(self.next_str().unwrap().parse().unwrap())
     }
 
-    fn deserialize_f32<V>(self, _visitor: V) -> Result<V::Value>
+    // TODO: try to find usages of real numbers in vdf
+    fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_f32(self.next_str().unwrap().parse().unwrap())
     }
 
-    fn deserialize_f64<V>(self, _visitor: V) -> Result<V::Value>
+    // TODO: try to find usages of real numbers in vdf
+    fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_f64(self.next_str().unwrap().parse().unwrap())
     }
 
-    fn deserialize_char<V>(self, _visitor: V) -> Result<V::Value>
+    fn deserialize_char<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        let s = self.next_str()?;
+        let mut chars_iter = s.chars();
+        if let Some(c) = chars_iter.next() {
+            assert!(chars_iter.next().is_none());
+            visitor.visit_char(c)
+        } else {
+            todo!()
+        }
     }
 
     fn deserialize_str<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        if let Some(token) = self.next() {
-            match token {
-                Token::Key(s) | Token::Str(s) => visitor.visit_str(&s),
-                _ => todo!(),
-            }
-        } else {
-            todo!()
+        match self.next() {
+            Some(Token::Key(s)) | Some(Token::Str(s)) => visitor.visit_str(&s),
+            _ => todo!(),
         }
     }
 
@@ -291,11 +289,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if let Some(Token::Str(s)) = self.next() {
-            visitor.visit_string(s.into_owned())
-        } else {
-            todo!()
-        }
+        let s = self.next_str()?;
+        visitor.visit_string(s.into_owned())
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
@@ -439,10 +434,9 @@ struct ObjEater<'a, 'de: 'a> {
 impl<'a, 'de> ObjEater<'a, 'de> {
     fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
         // An object starts with an `ObjBegin` and ends with `ObjEnd`
-        if let Some(token) = de.next() {
-            assert!(token.is_obj_begin());
-        } else {
-            todo!()
+        match de.next() {
+            Some(Token::ObjBegin) => {}
+            _ => todo!(),
         }
 
         Ok(Self { de })
@@ -505,6 +499,62 @@ mod tests {
                 field2: String::from("Sample String")
             }
         )
+    }
+
+    #[test]
+    fn basic_types() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct BasicTypes {
+            boolean: bool,
+            character: char,
+            signed8: i8,
+            signed16: i16,
+            signed32: i32,
+            signed64: i64,
+            unsigned8: u8,
+            unsigned16: u16,
+            unsigned32: u32,
+            unsigned64: u64,
+            float32: f32,
+            float64: f64,
+        }
+
+        let s = r#"
+"Key"
+{
+    "boolean" "true"
+    "character" "a"
+    "signed8" "1"
+    "signed16" "2"
+    "signed32" "3"
+    "signed64" "4"
+    "unsigned8" "5"
+    "unsigned16" "6"
+    "unsigned32" "7"
+    "unsigned64" "8"
+    "float32" "1.0"
+    "float64" "2.0"
+}
+        "#;
+
+        let sample: BasicTypes = from_str(s).unwrap();
+        assert_eq!(
+            sample,
+            BasicTypes {
+                boolean: true,
+                character: 'a',
+                signed8: 1,
+                signed16: 2,
+                signed32: 3,
+                signed64: 4,
+                unsigned8: 5,
+                unsigned16: 6,
+                unsigned32: 7,
+                unsigned64: 8,
+                float32: 1.0,
+                float64: 2.0
+            }
+        );
     }
 
     #[test]
