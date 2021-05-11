@@ -2,7 +2,7 @@
 
 use keyvalues_parser::core::{Value, Vdf};
 use serde::{
-    de::{self, DeserializeSeed, IntoDeserializer, MapAccess, Visitor},
+    de::{self, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor},
     Deserialize,
 };
 
@@ -48,12 +48,13 @@ use crate::error::{Error, Result};
 /// ```no_test
 /// TokenStream([
 ///     Key("Outer Key"),
+///     SeqBegin,
 ///     Str("Outer Value"),
-///     Key("Outer Key"),
 ///     ObjBegin,
 ///     Key("Inner Key"),
 ///     Str("Inner Value"),
 ///     ObjEnd,
+///     SeqEnd,
 /// )]
 /// ```
 /// So in this way it's a linear sequence of keys and values where the value is either a str or
@@ -64,6 +65,13 @@ pub struct TokenStream<'a>(Vec<Token<'a>>);
 impl<'a> TokenStream<'a> {
     fn peek(&self) -> Option<&Token<'a>> {
         self.get(0)
+    }
+
+    fn peek_is_value(&self) -> bool {
+        matches!(
+            self.peek(),
+            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
+        )
     }
 
     // This is pretty bad for performance. If it's an issue we can flip the direction of the tokens
@@ -104,18 +112,40 @@ impl<'a> From<Vdf<'a>> for TokenStream<'a> {
         let mut inner = Vec::new();
 
         for (key, values) in vdf.0.into_iter() {
+            inner.push(Token::Key(key));
+
+            // For ease of use a sequence is only marked for keys that have
+            // more than one values (zero shouldn't be allowed)
+            let num_values = values.len();
+            if num_values != 1 {
+                inner.push(Token::SeqBegin);
+            }
+
             for value in values {
-                inner.push(Token::Key(key.clone()));
-                match value {
-                    Value::Str(s) => {
-                        inner.push(Token::Str(s));
-                    }
-                    Value::Obj(obj) => {
-                        inner.push(Token::ObjBegin);
-                        inner.extend(TokenStream::from(obj).0);
-                        inner.push(Token::ObjEnd);
-                    }
-                }
+                inner.extend(TokenStream::from(value).0);
+            }
+
+            if num_values != 1 {
+                inner.push(Token::SeqEnd);
+            }
+        }
+
+        Self(inner)
+    }
+}
+
+impl<'a> From<Value<'a>> for TokenStream<'a> {
+    fn from(value: Value<'a>) -> Self {
+        let mut inner = Vec::new();
+
+        match value {
+            Value::Str(s) => {
+                inner.push(Token::Str(s));
+            }
+            Value::Obj(obj) => {
+                inner.push(Token::ObjBegin);
+                inner.extend(Self::from(obj).0);
+                inner.push(Token::ObjEnd);
             }
         }
 
@@ -129,6 +159,8 @@ pub enum Token<'a> {
     Str(Cow<'a, str>),
     ObjBegin,
     ObjEnd,
+    SeqBegin,
+    SeqEnd,
 }
 
 pub fn from_str<'a, T>(s: &'a str) -> Result<T>
@@ -340,18 +372,20 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_seq(SeqEater::try_new(&mut self)?)
     }
 
-    fn deserialize_tuple<V>(self, _len: usize, visitor: V) -> Result<V::Value>
+    // TODO: the length here can help make `SeqEater` logic simpler
+    fn deserialize_tuple<V>(mut self, _len: usize, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_seq(SeqEater::try_new(&mut self)?)
     }
 
+    // TODO: the length here can help make `SeqEater` logic simpler
     fn deserialize_tuple_struct<V>(
-        self,
+        mut self,
         _name: &'static str,
         _len: usize,
         visitor: V,
@@ -359,7 +393,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        todo!()
+        visitor.visit_seq(SeqEater::try_new(&mut self)?)
     }
 
     fn deserialize_map<V>(mut self, visitor: V) -> Result<V::Value>
@@ -464,9 +498,83 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
     where
         V: DeserializeSeed<'de>,
     {
-        match self.de.peek() {
-            Some(Token::Str(_)) | Some(Token::ObjBegin) => seed.deserialize(&mut *self.de),
+        if self.de.peek_is_value() {
+            seed.deserialize(&mut *self.de)
+        } else {
+            todo!()
+        }
+    }
+}
+
+// TODO: test how this works with nested sequences
+#[derive(Debug)]
+struct SeqEater<'a, 'de: 'a> {
+    de: &'a mut Deserializer<'de>,
+    single_value: bool,
+    finished: bool,
+}
+
+impl<'a, 'de> SeqEater<'a, 'de> {
+    fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
+        match de.peek() {
+            Some(Token::SeqBegin) => {
+                // Pop off the marker
+                de.next();
+
+                Ok(Self {
+                    de,
+                    single_value: false,
+                    finished: false,
+                })
+            }
+            // A sequence with just a single value isn't surrounded by `Seq*`
+            // tags where it can either be an `Obj` or a `Str`
+            Some(Token::ObjBegin) | Some(Token::Str(_)) => Ok(Self {
+                de,
+                single_value: true,
+                finished: false,
+            }),
             _ => todo!(),
+        }
+    }
+}
+
+impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
+    type Error = Error;
+
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    where
+        T: DeserializeSeed<'de>,
+    {
+        if self.finished {
+            return Ok(None);
+        }
+
+        if self.single_value {
+            match self.de.peek() {
+                Some(Token::Str(_)) | Some(Token::ObjBegin) => {
+                    self.finished = true;
+                    seed.deserialize(&mut *self.de).map(Some)
+                }
+                _ => todo!(),
+            }
+        } else {
+            if self.de.peek_is_value() {
+                let res = seed.deserialize(&mut *self.de).map(Some);
+
+                // Eagerly check for the `SeqEnd`. This is done because some datatypes like `Vec`
+                // will continue iterating till `SeqEnd` is hit while types with a known size like
+                // tuples will end iterating when they've consumed all desired elements which
+                // leaves a lingering `SeqEnd` on without doing this
+                if let Some(Token::SeqEnd) = self.de.peek() {
+                    self.de.next();
+                    self.finished = true;
+                }
+
+                res
+            } else {
+                todo!()
+            }
         }
     }
 }
@@ -474,6 +582,17 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Container<T> {
+        inner: T,
+    }
+
+    impl<T> Container<T> {
+        fn new(inner: T) -> Self {
+            Self { inner }
+        }
+    }
 
     #[test]
     fn basic_struct() {
@@ -602,12 +721,7 @@ mod tests {
     }
 
     #[test]
-    fn tuple_struct() {
-        #[derive(Deserialize, Debug, PartialEq)]
-        struct Container {
-            inner: I32Wrapper,
-        }
-
+    fn newtype_struct() {
         #[derive(Deserialize, Debug, PartialEq)]
         struct I32Wrapper(i32);
 
@@ -618,22 +732,12 @@ mod tests {
 }
         "#;
 
-        let sample: Container = from_str(s).unwrap();
-        assert_eq!(
-            sample,
-            Container {
-                inner: I32Wrapper(123)
-            }
-        );
+        let sample: Container<I32Wrapper> = from_str(s).unwrap();
+        assert_eq!(sample, Container::new(I32Wrapper(123)));
     }
 
     #[test]
     fn unit_variant_enum() {
-        #[derive(Deserialize, Debug, PartialEq)]
-        struct Container {
-            inner: SampleEnum,
-        }
-
         #[derive(Deserialize, Debug, PartialEq)]
         enum SampleEnum {
             Foo,
@@ -646,13 +750,100 @@ mod tests {
     "inner" "Foo"
 }
         "#;
-        let sample: Container = from_str(s).unwrap();
+        let sample: Container<SampleEnum> = from_str(s).unwrap();
+        assert_eq!(sample, Container::new(SampleEnum::Foo));
+    }
+
+    #[test]
+    fn sequence() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct Inner {
+            field: String,
+        }
+
+        let single_str = r#"
+"Key"
+{
+    "inner"
+    {
+        "field" "Some String"
+    }
+}
+        "#;
+
+        let double_str = r#"
+"Key"
+{
+    "inner"
+    {
+        "field" "Some String"
+    }
+    "inner"
+    {
+        "field" "Another String"
+    }
+}
+        "#;
+
+        let single: Container<Vec<Inner>> = from_str(single_str).unwrap();
+        assert_eq!(
+            single,
+            Container::new(vec![Inner {
+                field: String::from("Some String")
+            }])
+        );
+
+        let double: Container<Vec<Inner>> = from_str(double_str).unwrap();
+        assert_eq!(
+            double,
+            Container::new(vec![
+                Inner {
+                    field: String::from("Some String")
+                },
+                Inner {
+                    field: String::from("Another String")
+                }
+            ])
+        );
+    }
+
+    #[test]
+    fn tuple() {
+        let s = r#"
+"Key"
+{
+    "inner" "true"
+    "inner" "1"
+    "inner" "Sample Text"
+}
+        "#;
+
+        let sample: Container<(bool, i32, String)> = from_str(s).unwrap();
         assert_eq!(
             sample,
-            Container {
-                inner: SampleEnum::Foo
-            }
+            Container::new((true, 1, String::from("Sample Text")))
         );
+    }
+
+    #[test]
+    fn tuple_struct() {
+        #[derive(Deserialize, Debug, PartialEq)]
+        struct TupleStruct(bool, i32, String);
+
+        let s = r#"
+"Key"
+{
+    "inner" "true"
+    "inner" "1"
+    "inner" "Sample Text"
+}
+        "#;
+
+        let sample: Container<TupleStruct> = from_str(s).unwrap();
+        assert_eq!(
+            sample,
+            Container::new(TupleStruct(true, 1, String::from("Sample Text")))
+        )
     }
 
     #[test]
@@ -670,12 +861,13 @@ mod tests {
             token_stream,
             TokenStream(vec![
                 Token::Key(Cow::from("Outer Key")),
+                Token::SeqBegin,
                 Token::Str(Cow::from("Outer Value")),
-                Token::Key(Cow::from("Outer Key")),
                 Token::ObjBegin,
                 Token::Key(Cow::from("Inner Key")),
                 Token::Str(Cow::from("Inner Value")),
                 Token::ObjEnd,
+                Token::SeqEnd,
             ])
         );
     }
