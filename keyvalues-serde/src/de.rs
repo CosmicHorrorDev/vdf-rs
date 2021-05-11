@@ -329,6 +329,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // It's unclear how `bytes` would be represented in vdf
         todo!()
     }
 
@@ -336,6 +337,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // It's unclear how `byte buf` would be represented in vdf
         todo!()
     }
 
@@ -343,6 +345,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // It's unclear how a null type would be represented in vdf (Empty string or obj?)
         todo!()
     }
 
@@ -350,6 +353,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // It's unclear how a unit type would be represented in vdf (Empty string or obj?)
         todo!()
     }
 
@@ -357,6 +361,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
+        // It's unclear how a unit type would be represented in vdf (Empty string or obj?)
         todo!()
     }
 
@@ -452,6 +457,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_str(visitor)
     }
 
+    // TODO: I think this will get hit if the vdf has extra keys that aren't used. Falling back
+    // to deserializing to an `Obj`, `Seq`, or `Str` based on the token should be a good heuristic
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
