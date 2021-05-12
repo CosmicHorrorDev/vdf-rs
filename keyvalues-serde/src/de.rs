@@ -1,5 +1,6 @@
 // FIXME: replace the unwraps here with actual error handling
-// TODO: should the `next_*` methods only pop the value if it matches?
+// TODO: will tuples that end in a seq early break things? I.e. a tuple of two values when there
+// are more
 
 use keyvalues_parser::core::{Value, Vdf};
 use regex::Regex;
@@ -67,6 +68,14 @@ impl<'a> TokenStream<'a> {
         self.get(0)
     }
 
+    fn peek_is_key(&self) -> bool {
+        matches!(self.peek(), Some(Token::Key(_)))
+    }
+
+    fn peek_is_str(&self) -> bool {
+        matches!(self.peek(), Some(Token::Str(_)))
+    }
+
     fn peek_is_value(&self) -> bool {
         matches!(
             self.peek(),
@@ -85,25 +94,38 @@ impl<'a> TokenStream<'a> {
     }
 
     fn next_key(&mut self) -> Result<Cow<'a, str>> {
-        if let Some(Token::Key(s)) = self.next() {
-            Ok(s)
+        if self.peek_is_key() {
+            if let Some(Token::Key(s)) = self.next() {
+                Ok(s)
+            } else {
+                unreachable!("Key was peeked");
+            }
         } else {
             todo!()
         }
     }
 
     fn next_str(&mut self) -> Result<Cow<'a, str>> {
-        if let Some(Token::Str(s)) = self.next() {
-            Ok(s)
+        if self.peek_is_str() {
+            if let Some(Token::Str(s)) = self.next() {
+                Ok(s)
+            } else {
+                unreachable!("Str was peeked");
+            }
         } else {
             todo!()
         }
     }
 
+    // TODO: this can just chain `next_key` and `next_str` once it returns an error
     fn next_key_or_str(&mut self) -> Result<Cow<'a, str>> {
-        match self.next() {
-            Some(Token::Key(s)) | Some(Token::Str(s)) => Ok(s),
-            _ => todo!(),
+        if self.peek_is_key() || self.peek_is_str() {
+            match self.next() {
+                Some(Token::Key(s)) | Some(Token::Str(s)) => Ok(s),
+                _ => unreachable!("Key/Str was peeked"),
+            }
+        } else {
+            todo!()
         }
     }
 }
@@ -226,6 +248,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match self.peek() {
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
+            // TODO: does this need to apply to `Token::Key` too?
             Some(Token::Str(s)) => {
                 // Falls back to using a regex to match several patterns. This will be far from
                 // efficient, but I'm feeling lazy for now
@@ -250,7 +273,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    // TODO: find examples of bools being used in vdf to know their format
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -268,7 +290,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    // TODO: can this be for anything other than `Str`?
     fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -325,7 +346,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_u64(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
-    // TODO: try to find usages of real numbers in vdf
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -333,7 +353,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_f32(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
-    // TODO: try to find usages of real numbers in vdf
     fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -348,8 +367,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         let s = self.next_key_or_str()?;
         let mut chars_iter = s.chars();
         if let Some(c) = chars_iter.next() {
-            assert!(chars_iter.next().is_none());
-            visitor.visit_char(c)
+            if chars_iter.next().is_none() {
+                visitor.visit_char(c)
+            } else {
+                todo!()
+            }
         } else {
             todo!()
         }
@@ -362,7 +384,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_str(&self.next_key_or_str()?)
     }
 
-    // TODO: can this be for anything other than `Str`
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
@@ -390,8 +411,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // It looks like vdf will just entirely omit values that aren't used,
-        // so if the field appeared then it should be `Some`
+        // It looks like vdf will just entirely omit values that aren't used, so if the field
+        // appeared then it should be `Some`
         visitor.visit_some(self)
     }
 
@@ -486,7 +507,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // TODO: should this be a next or just a peek?
+        // TODO: variants can be partially expressed by having the `VariantAccess` hinting at the
+        // appropriate type to be deserialized
         match self.next() {
             Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
             Some(Token::ObjBegin) => {
