@@ -507,16 +507,28 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // TODO: variants can be partially expressed by having the `VariantAccess` hinting at the
-        // appropriate type to be deserialized
+        // Enums are only supported to the extent of the `Str` value matching the variant. No
+        // newtype, tuple, or struct variants supported due to ambiguity in vdf types
+        // This is because there is no pretence (that I know of) for how enums are notated in the
+        // externally, internally, and adjacently tagged enums, and the content of the data is far
+        // too vague for untagged to make sense. Consider how deserializing
+        // "Key"
+        // {
+        //      "inner"    "1"
+        // }
+        // with
+        // ```
+        // struct Outer { inner: SampleEnum, }
+        // enum SampleEnum {
+        //     Bool(bool),
+        //     Int(i32),
+        //     Optional(Option<u32>)
+        //     Seq(Vec<u64>),
+        //  }
+        //  ```
+        //  where each of these variants are equally valid for trying to determine "1".
         match self.next() {
             Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
-            Some(Token::ObjBegin) => {
-                todo!()
-            }
-            Some(Token::SeqBegin) => {
-                todo!()
-            }
             _ => todo!(),
         }
     }
@@ -839,25 +851,6 @@ mod tests {
         "#;
         let sample: Container<SampleEnum> = from_str(s).unwrap();
         assert_eq!(sample, Container::new(SampleEnum::Foo));
-    }
-
-    #[test]
-    fn newtype_variant_enum() {
-        #[derive(Deserialize, Debug, PartialEq)]
-        #[serde(untagged)]
-        enum NewTypeEnum {
-            Variant(i32),
-        }
-
-        let s = r#"
-"Key"
-{
-    "inner" "123"
-}
-        "#;
-
-        let sample: Container<NewTypeEnum> = from_str(s).unwrap();
-        assert_eq!(sample, Container::new(NewTypeEnum::Variant(123)));
     }
 
     #[test]
