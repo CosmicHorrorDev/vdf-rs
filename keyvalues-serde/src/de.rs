@@ -1,4 +1,5 @@
 // FIXME: replace the unwraps here with actual error handling
+// TODO: should the `next_*` methods only pop the value if it matches?
 
 use keyvalues_parser::core::{Value, Vdf};
 use regex::Regex;
@@ -83,11 +84,26 @@ impl<'a> TokenStream<'a> {
         }
     }
 
+    fn next_key(&mut self) -> Result<Cow<'a, str>> {
+        if let Some(Token::Key(s)) = self.next() {
+            Ok(s)
+        } else {
+            todo!()
+        }
+    }
+
     fn next_str(&mut self) -> Result<Cow<'a, str>> {
         if let Some(Token::Str(s)) = self.next() {
             Ok(s)
         } else {
             todo!()
+        }
+    }
+
+    fn next_key_or_str(&mut self) -> Result<Cow<'a, str>> {
+        match self.next() {
+            Some(Token::Key(s)) | Some(Token::Str(s)) => Ok(s),
+            _ => todo!(),
         }
     }
 }
@@ -239,7 +255,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if let Ok(s) = self.next_str() {
+        if let Ok(s) = self.next_key_or_str() {
             if s == "0" {
                 visitor.visit_bool(false)
             } else if s == "1" {
@@ -257,56 +273,56 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i8(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_i8(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i16(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_i16(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i32(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_i32(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i64(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_i64(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u8(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_u8(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u16(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_u16(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u32(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_u32(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u64(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_u64(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     // TODO: try to find usages of real numbers in vdf
@@ -314,7 +330,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f32(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_f32(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     // TODO: try to find usages of real numbers in vdf
@@ -322,14 +338,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f64(self.next_str().unwrap().parse().unwrap())
+        visitor.visit_f64(self.next_key_or_str().unwrap().parse().unwrap())
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        let s = self.next_str()?;
+        let s = self.next_key_or_str()?;
         let mut chars_iter = s.chars();
         if let Some(c) = chars_iter.next() {
             assert!(chars_iter.next().is_none());
@@ -343,10 +359,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        match self.next() {
-            Some(Token::Key(s)) | Some(Token::Str(s)) => visitor.visit_str(&s),
-            _ => todo!(),
-        }
+        visitor.visit_str(&self.next_key_or_str()?)
     }
 
     // TODO: can this be for anything other than `Str`
@@ -354,8 +367,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        let s = self.next_str()?;
-        visitor.visit_string(s.into_owned())
+        visitor.visit_string(self.next_key_or_str()?.into_owned())
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
@@ -497,11 +509,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     // TODO: I think this will get hit if the vdf has extra keys that aren't used. Falling back
     // to deserializing to an `Obj`, `Seq`, or `Str` based on the token should be a good heuristic
-    fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<V::Value>
+    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        todo!()
+        self.deserialize_any(visitor)
     }
 }
 
@@ -512,6 +524,12 @@ struct ObjEater<'a, 'de: 'a> {
 
 impl<'a, 'de> ObjEater<'a, 'de> {
     fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
+        // In the case of wanting to deserialize the top level to a `HashMap`
+        // pop off the top level key
+        while let Some(Token::Key(_)) = de.peek() {
+            de.next();
+        }
+
         // An object starts with an `ObjBegin` and ends with `ObjEnd`
         match de.next() {
             Some(Token::ObjBegin) => {}
@@ -627,6 +645,8 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    use std::collections::HashMap;
 
     #[derive(Deserialize, Debug, PartialEq)]
     struct Container<T> {
@@ -908,6 +928,41 @@ mod tests {
             sample,
             Container::new(TupleStruct(true, 2, String::from("Sample Text")))
         )
+    }
+
+    #[test]
+    fn hashmap() {
+        let nested = r#"
+"Key"
+{
+    "inner"
+    {
+        "0" "Foo"
+        "1" "Bar"
+        "2" "Baz"
+    }
+}
+        "#;
+
+        let mut ideal = HashMap::new();
+        ideal.insert(0, "Foo".to_owned());
+        ideal.insert(1, "Bar".to_owned());
+        ideal.insert(2, "Baz".to_owned());
+
+        let sample: Container<HashMap<u64, String>> = from_str(nested).unwrap();
+        assert_eq!(sample, Container::new(ideal.clone()));
+
+        let top_level = r#"
+"Key"
+{
+    "0" "Foo"
+    "1" "Bar"
+    "2" "Baz"
+}
+        "#;
+
+        let sample: HashMap<u64, String> = from_str(top_level).unwrap();
+        assert_eq!(sample, ideal);
     }
 
     #[test]
