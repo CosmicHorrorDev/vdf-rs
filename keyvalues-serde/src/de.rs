@@ -386,13 +386,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
-    fn deserialize_option<V>(self, _visitor: V) -> Result<V::Value>
+    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        // TODO: it looks like this is the empty string or at least in some cases?
-        // It's unclear how a null type would be represented in vdf (Empty string or obj?)
-        todo!()
+        // It looks like vdf will just entirely omit values that aren't used,
+        // so if the field appeared then it should be `Some`
+        visitor.visit_some(self)
     }
 
     fn deserialize_unit<V>(self, _visitor: V) -> Result<V::Value>
@@ -930,6 +930,9 @@ mod tests {
         )
     }
 
+    // TODO: it's not clear if the ordering of values is expected to stay the
+    // same in vdf. If that is the case then it would be important to track
+    // down a map type that preserves insertion order
     #[test]
     fn hashmap() {
         let nested = r#"
@@ -963,6 +966,28 @@ mod tests {
 
         let sample: HashMap<u64, String> = from_str(top_level).unwrap();
         assert_eq!(sample, ideal);
+    }
+
+    #[test]
+    fn option() {
+        let none_str = r#"
+"Key"
+{
+}
+        "#;
+
+        let none: Container<Option<String>> = from_str(none_str).unwrap();
+        assert_eq!(none, Container::new(None));
+
+        let some_str = r#"
+"Key"
+{
+    "inner" "Some value"
+}
+        "#;
+
+        let some: Container<Option<String>> = from_str(some_str).unwrap();
+        assert_eq!(some, Container::new(Some(String::from("Some value"))));
     }
 
     #[test]
