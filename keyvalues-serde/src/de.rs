@@ -3,18 +3,13 @@
 use keyvalues_parser::core::{Value, Vdf};
 use regex::Regex;
 use serde::{
-    de::{
-        self, DeserializeSeed, EnumAccess, IntoDeserializer, MapAccess, SeqAccess, VariantAccess,
-        Visitor,
-    },
+    de::{self, DeserializeSeed, IntoDeserializer, MapAccess, SeqAccess, Visitor},
     Deserialize,
 };
 
 use std::{
     borrow::Cow,
-    fmt,
-    ops::{AddAssign, Deref, DerefMut, MulAssign},
-    str::FromStr,
+    ops::{Deref, DerefMut},
 };
 
 use crate::error::{Error, Result};
@@ -379,7 +374,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
-    fn deserialize_option<V>(self, visitor: V) -> Result<V::Value>
+    fn deserialize_option<V>(self, _visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
@@ -388,7 +383,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
-    fn deserialize_unit<V>(self, visitor: V) -> Result<V::Value>
+    fn deserialize_unit<V>(self, _visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
@@ -396,7 +391,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         todo!()
     }
 
-    fn deserialize_unit_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
+    fn deserialize_unit_struct<V>(self, _name: &'static str, _visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
@@ -502,7 +497,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     // TODO: I think this will get hit if the vdf has extra keys that aren't used. Falling back
     // to deserializing to an `Obj`, `Seq`, or `Str` based on the token should be a good heuristic
-    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value>
+    fn deserialize_ignored_any<V>(self, _visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
