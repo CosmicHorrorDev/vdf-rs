@@ -1,4 +1,3 @@
-// FIXME: replace the unwraps here with actual error handling
 // TODO: will tuples that end in a seq early break things? I.e. a tuple of two values when there
 // are more
 
@@ -93,39 +92,39 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    fn next_key(&mut self) -> Result<Cow<'a, str>> {
+    fn next_key(&mut self) -> Option<Cow<'a, str>> {
         if self.peek_is_key() {
             if let Some(Token::Key(s)) = self.next() {
-                Ok(s)
+                Some(s)
             } else {
                 unreachable!("Key was peeked");
             }
         } else {
-            todo!()
+            None
         }
     }
 
-    fn next_str(&mut self) -> Result<Cow<'a, str>> {
+    fn next_str(&mut self) -> Option<Cow<'a, str>> {
         if self.peek_is_str() {
             if let Some(Token::Str(s)) = self.next() {
-                Ok(s)
+                Some(s)
             } else {
                 unreachable!("Str was peeked");
             }
         } else {
-            todo!()
+            None
         }
     }
 
     // TODO: this can just chain `next_key` and `next_str` once it returns an error
-    fn next_key_or_str(&mut self) -> Result<Cow<'a, str>> {
+    fn next_key_or_str(&mut self) -> Option<Cow<'a, str>> {
         if self.peek_is_key() || self.peek_is_str() {
             match self.next() {
-                Some(Token::Key(s)) | Some(Token::Str(s)) => Ok(s),
+                Some(Token::Key(s)) | Some(Token::Str(s)) => Some(s),
                 _ => unreachable!("Key/Str was peeked"),
             }
         } else {
-            todo!()
+            None
         }
     }
 }
@@ -204,10 +203,14 @@ pub fn from_str<'a, T>(s: &'a str) -> Result<T>
 where
     T: Deserialize<'a>,
 {
-    let mut deserializer = Deserializer::from_str(s);
+    let mut deserializer = Deserializer::from_str(s)?;
     let t = T::deserialize(&mut deserializer)?;
-    // TODO: potentially do some validation here
-    Ok(t)
+
+    if deserializer.is_empty() {
+        Ok(t)
+    } else {
+        Err(Error::TrailingTokens)
+    }
 }
 
 #[derive(Debug)]
@@ -217,10 +220,10 @@ pub struct Deserializer<'de> {
 
 impl<'de> Deserializer<'de> {
     // TODO: this can really return an error from parsing here
-    pub fn from_str(input: &'de str) -> Self {
-        let vdf = Vdf::parse(input).unwrap();
+    pub fn from_str(input: &'de str) -> Result<Self> {
+        let vdf = Vdf::parse(input)?;
         let tokens = TokenStream::from(vdf);
-        Self { tokens }
+        Ok(Self { tokens })
     }
 }
 
@@ -248,8 +251,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match self.peek() {
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
-            // TODO: does this need to apply to `Token::Key` too?
-            Some(Token::Str(s)) => {
+            Some(Token::Key(s)) | Some(Token::Str(s)) => {
                 // Falls back to using a regex to match several patterns. This will be far from
                 // efficient, but I'm feeling lazy for now
                 let neg_num_regex = Regex::new(r"^-\d+$").unwrap();
@@ -269,7 +271,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
                     self.deserialize_str(visitor)
                 }
             }
-            _ => todo!(),
+            Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
+            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
+            None => Err(Error::EofWhileParsingAny),
         }
     }
 
@@ -277,16 +281,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        if let Ok(s) = self.next_key_or_str() {
+        if let Some(s) = self.next_key_or_str() {
             if s == "0" {
                 visitor.visit_bool(false)
             } else if s == "1" {
                 visitor.visit_bool(true)
             } else {
-                todo!()
+                Err(Error::InvalidBoolean)
             }
         } else {
-            todo!()
+            Err(Error::EofWhileParsingValue)
         }
     }
 
@@ -294,86 +298,126 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i8(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_i8(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i16(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_i16(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i32(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_i32(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i64(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_i64(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u8(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_u8(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u16(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_u16(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u32(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_u32(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u64(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_u64(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f32(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_f32(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f64(self.next_key_or_str().unwrap().parse().unwrap())
+        visitor.visit_f64(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .parse()?,
+        )
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        let s = self.next_key_or_str()?;
+        let s = self.next_key_or_str().ok_or(Error::EofWhileParsingValue)?;
         let mut chars_iter = s.chars();
         if let Some(c) = chars_iter.next() {
             if chars_iter.next().is_none() {
                 visitor.visit_char(c)
             } else {
-                todo!()
+                Err(Error::InvalidChar)
             }
         } else {
-            todo!()
+            Err(Error::EofWhileParsingValue)
         }
     }
 
@@ -381,14 +425,18 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_str(&self.next_key_or_str()?)
+        visitor.visit_str(&self.next_key_or_str().ok_or(Error::EofWhileParsingValue)?)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_string(self.next_key_or_str()?.into_owned())
+        visitor.visit_string(
+            self.next_key_or_str()
+                .ok_or(Error::EofWhileParsingValue)?
+                .into_owned(),
+        )
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
@@ -396,7 +444,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // It's unclear how `bytes` would be represented in vdf
-        todo!()
+        Err(Error::Unsupported("Bytes"))
     }
 
     fn deserialize_byte_buf<V>(self, _visitor: V) -> Result<V::Value>
@@ -404,7 +452,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // It's unclear how `byte buf` would be represented in vdf
-        todo!()
+        Err(Error::Unsupported("Byte Buf"))
     }
 
     fn deserialize_option<V>(self, visitor: V) -> Result<V::Value>
@@ -421,7 +469,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // It's unclear how a unit type would be represented in vdf (Empty string or obj?)
-        todo!()
+        Err(Error::Unsupported("Unit"))
     }
 
     fn deserialize_unit_struct<V>(self, _name: &'static str, _visitor: V) -> Result<V::Value>
@@ -429,7 +477,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // It's unclear how a unit type would be represented in vdf (Empty string or obj?)
-        todo!()
+        Err(Error::Unsupported("Unit Struct"))
     }
 
     fn deserialize_newtype_struct<V>(self, _name: &'static str, visitor: V) -> Result<V::Value>
@@ -473,7 +521,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: Visitor<'de>,
     {
         // A map is just an object containing a list of keyvalues
-        visitor.visit_map(ObjEater::try_new(&mut self).unwrap())
+        visitor.visit_map(ObjEater::try_new(&mut self)?)
     }
 
     fn deserialize_struct<V>(
@@ -485,16 +533,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        // A struct is either a key followed by an obj, or just an obj in the
-        // case of a nested struct where the key is already popped off
-        match self.peek() {
-            Some(Token::Key(_)) => {
-                self.next();
-            }
-            Some(Token::ObjBegin) => {}
-            _ => todo!(),
-        }
-
         self.deserialize_map(visitor)
     }
 
@@ -529,7 +567,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         //  where each of these variants are equally valid for trying to determine "1".
         match self.next() {
             Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
-            _ => todo!(),
+            Some(_) => Err(Error::ExpectedSomeValue),
+            None => Err(Error::EofWhileParsingValue),
         }
     }
 
@@ -566,11 +605,10 @@ impl<'a, 'de> ObjEater<'a, 'de> {
 
         // An object starts with an `ObjBegin` and ends with `ObjEnd`
         match de.next() {
-            Some(Token::ObjBegin) => {}
-            _ => todo!(),
+            Some(Token::ObjBegin) => Ok(Self { de }),
+            Some(_) => Err(Error::ExpectedObjectStart),
+            None => Err(Error::EofWhileParsingObject),
         }
-
-        Ok(Self { de })
     }
 }
 
@@ -587,7 +625,8 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
                 self.de.next();
                 Ok(None)
             }
-            _ => todo!(),
+            Some(_) => Err(Error::ExpectedSomeIdent),
+            None => Err(Error::EofWhileParsingObject),
         }
     }
 
@@ -598,7 +637,7 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
         if self.de.peek_is_value() {
             seed.deserialize(&mut *self.de)
         } else {
-            todo!()
+            Err(Error::ExpectedSomeValue)
         }
     }
 }
@@ -631,7 +670,8 @@ impl<'a, 'de> SeqEater<'a, 'de> {
                 single_value: true,
                 finished: false,
             }),
-            _ => todo!(),
+            Some(_) => Err(Error::ExpectedSomeValue),
+            None => Err(Error::EofWhileParsingSequence),
         }
     }
 }
@@ -653,7 +693,8 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
                     self.finished = true;
                     seed.deserialize(&mut *self.de).map(Some)
                 }
-                _ => todo!(),
+                Some(_) => Err(Error::ExpectedSomeValue),
+                None => Err(Error::EofWhileParsingSequence),
             }
         } else {
             if self.de.peek_is_value() {
@@ -670,7 +711,7 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
 
                 res
             } else {
-                todo!()
+                Err(Error::ExpectedSomeValue)
             }
         }
     }

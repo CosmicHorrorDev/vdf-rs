@@ -9,6 +9,8 @@ use crate::core::{KeyValues, Value, Vdf};
 #[grammar = "text/grammar.pest"]
 struct VdfParser;
 
+pub type Error = PestError<Rule>;
+
 impl<'a> Vdf<'a> {
     // TODO: implement this as fromstr instead?
     pub fn parse(s: &'a str) -> Result<Self, PestError<Rule>> {

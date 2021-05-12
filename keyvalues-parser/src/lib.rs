@@ -1,2 +1,2 @@
 pub mod core;
-mod text;
+pub mod text;
