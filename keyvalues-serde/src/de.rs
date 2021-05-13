@@ -217,6 +217,10 @@ impl<'de> Deserializer<'de> {
         let tokens = TokenStream::from(vdf);
         Ok(Self { tokens })
     }
+
+    fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
+        self.next_key_or_str().ok_or(Error::EofWhileParsingValue)
+    }
 }
 
 impl<'de> Deref for Deserializer<'de> {
@@ -290,117 +294,77 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i8(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_i8(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i16(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_i16(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i32(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_i32(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_i64(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_i64(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_u8<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u8(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_u8(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_u16<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u16(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_u16(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_u32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u32(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_u32(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_u64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_u64(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_u64(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f32(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_f32(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_f64(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .parse()?,
-        )
+        visitor.visit_f64(self.next_key_or_str_else_eof()?.parse()?)
     }
 
     fn deserialize_char<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        let s = self.next_key_or_str().ok_or(Error::EofWhileParsingValue)?;
+        let s = self.next_key_or_str_else_eof()?;
         let mut chars_iter = s.chars();
         if let Some(c) = chars_iter.next() {
             if chars_iter.next().is_none() {
@@ -417,18 +381,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_str(&self.next_key_or_str().ok_or(Error::EofWhileParsingValue)?)
+        visitor.visit_str(&self.next_key_or_str_else_eof()?)
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_string(
-            self.next_key_or_str()
-                .ok_or(Error::EofWhileParsingValue)?
-                .into_owned(),
-        )
+        visitor.visit_string(self.next_key_or_str_else_eof()?.into_owned())
     }
 
     fn deserialize_bytes<V>(self, _visitor: V) -> Result<V::Value>
