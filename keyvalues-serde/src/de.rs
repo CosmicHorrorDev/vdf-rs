@@ -496,24 +496,24 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     // TODO: the length here can help make `SeqEater` logic simpler
-    fn deserialize_tuple<V>(mut self, _len: usize, visitor: V) -> Result<V::Value>
+    fn deserialize_tuple<V>(mut self, len: usize, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqEater::try_new(&mut self)?)
+        visitor.visit_seq(SeqEater::try_new_with_len(&mut self, len)?)
     }
 
     // TODO: the length here can help make `SeqEater` logic simpler
     fn deserialize_tuple_struct<V>(
         mut self,
         _name: &'static str,
-        _len: usize,
+        len: usize,
         visitor: V,
     ) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqEater::try_new(&mut self)?)
+        visitor.visit_seq(SeqEater::try_new_with_len(&mut self, len)?)
     }
 
     fn deserialize_map<V>(mut self, visitor: V) -> Result<V::Value>
@@ -646,12 +646,20 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
 #[derive(Debug)]
 struct SeqEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
+    expected_remaining: Option<usize>,
     single_value: bool,
-    finished: bool,
 }
 
 impl<'a, 'de> SeqEater<'a, 'de> {
     fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
+        Self::_try_new(de, None)
+    }
+
+    fn try_new_with_len(de: &'a mut Deserializer<'de>, len: usize) -> Result<Self> {
+        Self::_try_new(de, Some(len))
+    }
+
+    fn _try_new(de: &'a mut Deserializer<'de>, expected_remaining: Option<usize>) -> Result<Self> {
         match de.peek() {
             Some(Token::SeqBegin) => {
                 // Pop off the marker
@@ -659,23 +667,27 @@ impl<'a, 'de> SeqEater<'a, 'de> {
 
                 Ok(Self {
                     de,
+                    expected_remaining,
                     single_value: false,
-                    finished: false,
                 })
             }
             // A sequence with just a single value isn't surrounded by `Seq*`
             // tags where it can either be an `Obj` or a `Str`
-            Some(Token::ObjBegin) | Some(Token::Str(_)) => Ok(Self {
-                de,
-                single_value: true,
-                finished: false,
-            }),
+            Some(Token::ObjBegin) | Some(Token::Str(_)) => match expected_remaining {
+                Some(invalid) if invalid != 1 => Err(Error::TrailingTokens),
+                _ => Ok(Self {
+                    de,
+                    expected_remaining: Some(1),
+                    single_value: true,
+                }),
+            },
             Some(_) => Err(Error::ExpectedSomeValue),
             None => Err(Error::EofWhileParsingSequence),
         }
     }
 }
 
+// TODO: the logic in here is all jumbled. It may be worth splitting out a separate TupleEater
 impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
     type Error = Error;
 
@@ -683,36 +695,48 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        if self.finished {
-            return Ok(None);
+        // Check for possible ending scenarios
+        if let Some(r) = self.expected_remaining {
+            if r == 0 && self.single_value {
+                return Ok(None);
+            }
         }
 
-        if self.single_value {
-            match self.de.peek() {
-                Some(Token::Str(_)) | Some(Token::ObjBegin) => {
-                    self.finished = true;
-                    seed.deserialize(&mut *self.de).map(Some)
-                }
-                Some(_) => Err(Error::ExpectedSomeValue),
-                None => Err(Error::EofWhileParsingSequence),
-            }
-        } else {
-            if self.de.peek_is_value() {
-                let res = seed.deserialize(&mut *self.de).map(Some);
+        // if self.single_value {
+        match self.de.peek() {
+            Some(Token::Str(_)) | Some(Token::ObjBegin) => {
+                let ret = seed.deserialize(&mut *self.de).map(Some);
 
-                // Eagerly check for the `SeqEnd`. This is done because some datatypes like `Vec`
-                // will continue iterating till `SeqEnd` is hit while types with a known size like
-                // tuples will end iterating when they've consumed all desired elements which
-                // leaves a lingering `SeqEnd` on without doing this
-                if let Some(Token::SeqEnd) = self.de.peek() {
+                self.expected_remaining = self.expected_remaining.map(|r| r - 1);
+                if let Some(r) = self.expected_remaining {
+                    // Eagerly try to pop off the end. This has to be done eagerly because
+                    // sequences with a known length like tuples will only be called for their
+                    // number of elements which would leave a dangling `SeqEnd` otherwise. This
+                    // would be broken with nested sequences, but that's not possible in vdf
+                    if r == 0 && !self.single_value {
+                        if let Some(Token::SeqEnd) = self.de.peek() {
+                            self.de.next();
+                        } else {
+                            return Err(Error::TrailingTokens);
+                        }
+                    }
+                }
+
+                ret
+            }
+            Some(Token::SeqEnd) => match self.expected_remaining {
+                Some(r) => {
+                    debug_assert!(r > 0, "Remaining is guaranteed to not be 0 here");
+                    Err(Error::UnexpectedEndOfSequence)
+                }
+                None => {
+                    // Undefined length sequence. Need to remove the end marker
                     self.de.next();
-                    self.finished = true;
+                    Ok(None)
                 }
-
-                res
-            } else {
-                Err(Error::ExpectedSomeValue)
-            }
+            },
+            Some(_) => Err(Error::ExpectedSomeValue),
+            None => Err(Error::EofWhileParsingSequence),
         }
     }
 }
@@ -911,6 +935,14 @@ mod tests {
 }
         "#;
 
+        let single: Container<Vec<Inner>> = from_str(single_str).unwrap();
+        assert_eq!(
+            single,
+            Container::new(vec![Inner {
+                field: String::from("Some String")
+            }])
+        );
+
         let double_str = r#"
 "Key"
 {
@@ -924,14 +956,6 @@ mod tests {
     }
 }
         "#;
-
-        let single: Container<Vec<Inner>> = from_str(single_str).unwrap();
-        assert_eq!(
-            single,
-            Container::new(vec![Inner {
-                field: String::from("Some String")
-            }])
-        );
 
         let double: Container<Vec<Inner>> = from_str(double_str).unwrap();
         assert_eq!(
@@ -982,7 +1006,7 @@ mod tests {
         let sample: Container<TupleStruct> = from_str(s).unwrap();
         assert_eq!(
             sample,
-            Container::new(TupleStruct(true, 2, String::from("Sample Text")))
+            Container::new(TupleStruct(true, 2, String::from("Sample Text"),))
         )
     }
 
