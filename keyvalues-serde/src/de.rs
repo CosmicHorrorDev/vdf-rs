@@ -116,16 +116,8 @@ impl<'a> TokenStream<'a> {
         }
     }
 
-    // TODO: this can just chain `next_key` and `next_str` once it returns an error
     fn next_key_or_str(&mut self) -> Option<Cow<'a, str>> {
-        if self.peek_is_key() || self.peek_is_str() {
-            match self.next() {
-                Some(Token::Key(s)) | Some(Token::Str(s)) => Some(s),
-                _ => unreachable!("Key/Str was peeked"),
-            }
-        } else {
-            None
-        }
+        self.next_key().or_else(|| self.next_str())
     }
 }
 
@@ -492,18 +484,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqEater::try_new(&mut self)?)
+        visitor.visit_seq(SeqBuilder::new(&mut self).try_build()?)
     }
 
-    // TODO: the length here can help make `SeqEater` logic simpler
     fn deserialize_tuple<V>(mut self, len: usize, visitor: V) -> Result<V::Value>
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqEater::try_new_with_len(&mut self, len)?)
+        visitor.visit_seq(SeqBuilder::new(&mut self).length(len).try_build()?)
     }
 
-    // TODO: the length here can help make `SeqEater` logic simpler
     fn deserialize_tuple_struct<V>(
         mut self,
         _name: &'static str,
@@ -513,7 +503,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     where
         V: Visitor<'de>,
     {
-        visitor.visit_seq(SeqEater::try_new_with_len(&mut self, len)?)
+        visitor.visit_seq(SeqBuilder::new(&mut self).length(len).try_build()?)
     }
 
     fn deserialize_map<V>(mut self, visitor: V) -> Result<V::Value>
@@ -642,52 +632,75 @@ impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
     }
 }
 
-// TODO: test how this works with nested sequences
 #[derive(Debug)]
-struct SeqEater<'a, 'de: 'a> {
+struct SeqBuilder<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
-    expected_remaining: Option<usize>,
-    single_value: bool,
+    maybe_len: Option<usize>,
 }
 
-impl<'a, 'de> SeqEater<'a, 'de> {
-    fn try_new(de: &'a mut Deserializer<'de>) -> Result<Self> {
-        Self::_try_new(de, None)
+impl<'a, 'de> SeqBuilder<'a, 'de> {
+    fn new(de: &'a mut Deserializer<'de>) -> Self {
+        Self {
+            de,
+            maybe_len: None,
+        }
     }
 
-    fn try_new_with_len(de: &'a mut Deserializer<'de>, len: usize) -> Result<Self> {
-        Self::_try_new(de, Some(len))
+    fn length(mut self, len: usize) -> Self {
+        self.maybe_len = Some(len);
+        self
     }
 
-    fn _try_new(de: &'a mut Deserializer<'de>, expected_remaining: Option<usize>) -> Result<Self> {
-        match de.peek() {
-            Some(Token::SeqBegin) => {
-                // Pop off the marker
-                de.next();
-
-                Ok(Self {
-                    de,
-                    expected_remaining,
-                    single_value: false,
-                })
+    fn try_build(self) -> Result<SeqEater<'a, 'de>> {
+        match (self.maybe_len, self.de.peek()) {
+            (Some(len), Some(Token::SeqBegin)) if len != 1 => {
+                Ok(SeqEater::new_set_length(self.de, len))
             }
-            // A sequence with just a single value isn't surrounded by `Seq*`
-            // tags where it can either be an `Obj` or a `Str`
-            Some(Token::ObjBegin) | Some(Token::Str(_)) => match expected_remaining {
-                Some(invalid) if invalid != 1 => Err(Error::TrailingTokens),
-                _ => Ok(Self {
-                    de,
-                    expected_remaining: Some(1),
-                    single_value: true,
-                }),
-            },
-            Some(_) => Err(Error::ExpectedSomeValue),
-            None => Err(Error::EofWhileParsingSequence),
+            // `len` says single element, but `SeqBegin` indicates otherwise
+            (Some(_), Some(Token::SeqBegin)) => Err(Error::TrailingTokens),
+            (None, Some(Token::SeqBegin)) => Ok(SeqEater::new_variable_length(self.de)),
+            // TODO: these can be condensed once 1.53 lands
+            (_, Some(Token::ObjBegin)) => Ok(SeqEater::new_single_value(self.de)),
+            (_, Some(Token::Str(_))) => Ok(SeqEater::new_single_value(self.de)),
+            _ => Err(Error::ExpectedSomeValue),
         }
     }
 }
 
-// TODO: the logic in here is all jumbled. It may be worth splitting out a separate TupleEater
+#[derive(Debug)]
+enum SeqEater<'a, 'de: 'a> {
+    SingleValue(SingleValueEater<'a, 'de>),
+    SetLength(SetLengthEater<'a, 'de>),
+    VariableLength(VariableLengthEater<'a, 'de>),
+}
+
+impl<'a, 'de> SeqEater<'a, 'de> {
+    fn new_single_value(de: &'a mut Deserializer<'de>) -> Self {
+        Self::SingleValue(SingleValueEater {
+            de,
+            finished: false,
+        })
+    }
+
+    fn new_set_length(de: &'a mut Deserializer<'de>, remaining: usize) -> Self {
+        // Pop off the marker
+        if let Some(Token::SeqBegin) = de.next() {
+            Self::SetLength(SetLengthEater { de, remaining })
+        } else {
+            unreachable!("SeqBegin was peeked");
+        }
+    }
+
+    fn new_variable_length(de: &'a mut Deserializer<'de>) -> Self {
+        // Pop off the marker
+        if let Some(Token::SeqBegin) = de.next() {
+            Self::VariableLength(VariableLengthEater { de })
+        } else {
+            unreachable!("SeqBegin was peeked");
+        }
+    }
+}
+
 impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
     type Error = Error;
 
@@ -695,46 +708,96 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        // Check for possible ending scenarios
-        if let Some(r) = self.expected_remaining {
-            if r == 0 && self.single_value {
-                return Ok(None);
+        match self {
+            Self::SingleValue(eater) => eater.next_element_seed(seed),
+            Self::SetLength(eater) => eater.next_element_seed(seed),
+            Self::VariableLength(eater) => eater.next_element_seed(seed),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct SingleValueEater<'a, 'de: 'a> {
+    de: &'a mut Deserializer<'de>,
+    finished: bool,
+}
+
+impl<'de, 'a> SingleValueEater<'a, 'de> {
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    where
+        T: DeserializeSeed<'de>,
+    {
+        if self.finished {
+            Ok(None)
+        } else {
+            self.finished = true;
+            match self.de.peek() {
+                Some(Token::ObjBegin) | Some(Token::Str(_)) => {
+                    seed.deserialize(&mut *self.de).map(Some)
+                }
+                Some(_) => Err(Error::ExpectedSomeValue),
+                None => Err(Error::EofWhileParsingSequence),
             }
         }
+    }
+}
 
-        // if self.single_value {
+#[derive(Debug)]
+struct SetLengthEater<'a, 'de: 'a> {
+    de: &'a mut Deserializer<'de>,
+    remaining: usize,
+}
+
+impl<'de, 'a> SetLengthEater<'a, 'de> {
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    where
+        T: DeserializeSeed<'de>,
+    {
         match self.de.peek() {
-            Some(Token::Str(_)) | Some(Token::ObjBegin) => {
-                let ret = seed.deserialize(&mut *self.de).map(Some);
+            Some(Token::ObjBegin) | Some(Token::Str(_)) => {
+                self.remaining -= 1;
+                let val = seed.deserialize(&mut *self.de).map(Some)?;
 
-                self.expected_remaining = self.expected_remaining.map(|r| r - 1);
-                if let Some(r) = self.expected_remaining {
-                    // Eagerly try to pop off the end. This has to be done eagerly because
-                    // sequences with a known length like tuples will only be called for their
-                    // number of elements which would leave a dangling `SeqEnd` otherwise. This
-                    // would be broken with nested sequences, but that's not possible in vdf
-                    if r == 0 && !self.single_value {
-                        if let Some(Token::SeqEnd) = self.de.peek() {
-                            self.de.next();
-                        } else {
-                            return Err(Error::TrailingTokens);
-                        }
-                    }
+                // Eagerly pop off the end marker since this won't get called again
+                if self.remaining == 0 {
+                    match self.de.next() {
+                        Some(Token::SeqEnd) => Ok(()),
+                        Some(_) => Err(Error::TrailingTokens),
+                        None => Err(Error::EofWhileParsingSequence),
+                    }?;
                 }
 
-                ret
+                Ok(val)
             }
-            Some(Token::SeqEnd) => match self.expected_remaining {
-                Some(r) => {
-                    debug_assert!(r > 0, "Remaining is guaranteed to not be 0 here");
-                    Err(Error::UnexpectedEndOfSequence)
-                }
-                None => {
-                    // Undefined length sequence. Need to remove the end marker
-                    self.de.next();
+            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
+            Some(_) => Err(Error::ExpectedSomeValue),
+            None => Err(Error::EofWhileParsingSequence),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct VariableLengthEater<'a, 'de: 'a> {
+    de: &'a mut Deserializer<'de>,
+}
+
+impl<'de, 'a> VariableLengthEater<'a, 'de> {
+    fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
+    where
+        T: DeserializeSeed<'de>,
+    {
+        match self.de.peek() {
+            Some(Token::ObjBegin) | Some(Token::Str(_)) => {
+                seed.deserialize(&mut *self.de).map(Some)
+            }
+            Some(Token::SeqEnd) => {
+                // Pop off the marker
+                if let Some(Token::SeqEnd) = self.de.next() {
                     Ok(None)
+                } else {
+                    unreachable!("SeqEnd was peeked");
                 }
-            },
+            }
             Some(_) => Err(Error::ExpectedSomeValue),
             None => Err(Error::EofWhileParsingSequence),
         }
