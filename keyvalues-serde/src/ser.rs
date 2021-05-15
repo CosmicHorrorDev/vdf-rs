@@ -1,7 +1,3 @@
-// mod naive_tokens;
-// #[cfg(test)]
-// mod tests;
-
 use keyvalues_parser::core::Vdf;
 use keyvalues_parser::tokens::naive::{NaiveToken, NaiveTokenStream};
 use serde::{ser, Serialize};
@@ -17,12 +13,10 @@ pub struct Serializer {
 // Serialization process goes as follows:
 // value: &T
 // -> NaiveTokenStream
-// -> TokenStream (fails on invalid VDF structure like nested sequences)
-// -> VDF
+// -> Vdf (fails on invalid VDF structure like nested sequences)
 // -> String
-// Which is a bit of a longwinded process just to serialize some text, but it comes with validation
-// (NaiveTokenStream -> TokenStream) and reuses portions from the parser (TokenStream -> Vdf ->
-// String)
+// Which is a bit of a long-winded process just to serialize some text, but it comes with
+// validation (NaiveTokenStream -> Vdf) and reuses portions from the parser (Vdf -> String)
 /// Attempts to serialize some input to VDF text.
 ///
 /// # Errors
@@ -40,6 +34,8 @@ where
     Ok(token_stream.to_string())
 }
 
+// Basically all value types are just represnted as strings with the only exceptions being
+// sequences and maps
 impl<'a> ser::Serializer for &'a mut Serializer {
     type Ok = ();
 
@@ -54,8 +50,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeStructVariant = Self;
 
     fn serialize_bool(self, v: bool) -> Result<()> {
-        self.tokens.push(NaiveToken::str(if v { "1" } else { "0" }));
-        Ok(())
+        self.serialize_str(if v { "1" } else { "0" })
     }
 
     fn serialize_i8(self, v: i8) -> Result<()> {

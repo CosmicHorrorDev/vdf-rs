@@ -10,6 +10,8 @@ use std::{
 
 use crate::error::{Error, Result, TokenContext};
 
+// Used to easily deal with serializing VDF. The serializer spits out a `NaiveTokenStream` that can
+// then be converted to a `Vdf` object which can handle all the rendering functions.
 /// `NaiveTokenStream` is the token-stream that is emitted by the serialization process. This is
 /// done so that
 ///
@@ -38,108 +40,110 @@ impl DerefMut for NaiveTokenStream {
     }
 }
 
-fn process_key_values<'a, I>(
-    mut tokens: Peekable<I>,
-) -> Result<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
-where
-    I: Iterator<Item = &'a NaiveToken>,
-{
-    match tokens.next() {
-        Some(NaiveToken::Str(s)) => {
-            let key = Cow::from(s);
-
-            let res = process_values(tokens)?;
-            tokens = res.0;
-            let values = res.1;
-
-            Ok((tokens, (key, values)))
-        }
-        Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
-        None => Err(Error::from(TokenContext::EofWhileParsingKey)),
-    }
-}
-
-fn process_values<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Vec<Value<'a>>)>
-where
-    I: Iterator<Item = &'a NaiveToken>,
-{
-    match tokens.next() {
-        // A `Str` is a single value
-        Some(NaiveToken::Str(s)) => {
-            let values = vec![Value::Str(Cow::from(s.clone()))];
-            Ok((tokens, values))
-        }
-        Some(NaiveToken::ObjBegin) => {
-            let res = process_obj(tokens)?;
-            Ok((res.0, vec![res.1]))
-        }
-        // Sequences are a series of values that can't contain a sequence (vdf limitation)
-        Some(NaiveToken::SeqBegin) => {
-            let mut values = Vec::new();
-            loop {
-                // TODO: match for EOF here
-                if let Some(NaiveToken::SeqEnd) = tokens.peek() {
-                    // Pop off the marker
-                    tokens.next();
-                    break;
-                } else {
-                    let res = process_non_seq_value(tokens)?;
-                    tokens = res.0;
-                    values.push(res.1);
-                }
-            }
-
-            Ok((tokens, values))
-        }
-        Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
-        None => Err(Error::from(TokenContext::EofWhileParsingVal)),
-    }
-}
-
-fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
-where
-    I: Iterator<Item = &'a NaiveToken>,
-{
-    match tokens.next() {
-        Some(NaiveToken::Str(s)) => Ok((tokens, Value::Str(Cow::from(s)))),
-        Some(NaiveToken::ObjBegin) => process_obj(tokens),
-        Some(_) => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
-        None => Err(Error::from(TokenContext::EofWhileParsingSeq)),
-    }
-}
-
-fn process_obj<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
-where
-    I: Iterator<Item = &'a NaiveToken>,
-{
-    let mut inner = BTreeMap::new();
-    loop {
-        match tokens.peek() {
-            Some(NaiveToken::ObjEnd) => {
-                tokens.next();
-                break;
-            }
-            // An object is a series of key-value pairs
-            Some(_) => {
-                let res = process_key_values(tokens)?;
-                tokens = res.0;
-                let key = res.1 .0;
-                let values = res.1 .1;
-                inner.insert(key, values);
-            }
-            None => {
-                return Err(Error::from(TokenContext::EofWhileParsingObj));
-            }
-        }
-    }
-
-    Ok((tokens, Value::Obj(Vdf(inner))))
-}
-
+// The conversion from `NaiveTokenStream` to `Vdf` leverages all the `proccess_*` functions which
+// pass off an owned iterator through all of them to deal with the borrow checker
 impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     type Error = Error;
 
     fn try_from(naive_token_stream: &'a NaiveTokenStream) -> Result<Self> {
+        fn process_key_values<'a, I>(
+            mut tokens: Peekable<I>,
+        ) -> Result<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
+        where
+            I: Iterator<Item = &'a NaiveToken>,
+        {
+            match tokens.next() {
+                Some(NaiveToken::Str(s)) => {
+                    let key = Cow::from(s);
+
+                    let res = process_values(tokens)?;
+                    tokens = res.0;
+                    let values = res.1;
+
+                    Ok((tokens, (key, values)))
+                }
+                Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
+                None => Err(Error::from(TokenContext::EofWhileParsingKey)),
+            }
+        }
+
+        fn process_values<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Vec<Value<'a>>)>
+        where
+            I: Iterator<Item = &'a NaiveToken>,
+        {
+            match tokens.next() {
+                // A `Str` is a single value
+                Some(NaiveToken::Str(s)) => {
+                    let values = vec![Value::Str(Cow::from(s.clone()))];
+                    Ok((tokens, values))
+                }
+                Some(NaiveToken::ObjBegin) => {
+                    let res = process_obj(tokens)?;
+                    Ok((res.0, vec![res.1]))
+                }
+                // Sequences are a series of values that can't contain a sequence (vdf limitation)
+                Some(NaiveToken::SeqBegin) => {
+                    let mut values = Vec::new();
+                    loop {
+                        // TODO: match for EOF here
+                        if let Some(NaiveToken::SeqEnd) = tokens.peek() {
+                            // Pop off the marker
+                            tokens.next();
+                            break;
+                        } else {
+                            let res = process_non_seq_value(tokens)?;
+                            tokens = res.0;
+                            values.push(res.1);
+                        }
+                    }
+
+                    Ok((tokens, values))
+                }
+                Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
+                None => Err(Error::from(TokenContext::EofWhileParsingVal)),
+            }
+        }
+
+        fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
+        where
+            I: Iterator<Item = &'a NaiveToken>,
+        {
+            match tokens.next() {
+                Some(NaiveToken::Str(s)) => Ok((tokens, Value::Str(Cow::from(s)))),
+                Some(NaiveToken::ObjBegin) => process_obj(tokens),
+                Some(_) => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
+                None => Err(Error::from(TokenContext::EofWhileParsingSeq)),
+            }
+        }
+
+        fn process_obj<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
+        where
+            I: Iterator<Item = &'a NaiveToken>,
+        {
+            let mut inner = BTreeMap::new();
+            loop {
+                match tokens.peek() {
+                    Some(NaiveToken::ObjEnd) => {
+                        tokens.next();
+                        break;
+                    }
+                    // An object is a series of key-value pairs
+                    Some(_) => {
+                        let res = process_key_values(tokens)?;
+                        tokens = res.0;
+                        let key = res.1 .0;
+                        let values = res.1 .1;
+                        inner.insert(key, values);
+                    }
+                    None => {
+                        return Err(Error::from(TokenContext::EofWhileParsingObj));
+                    }
+                }
+            }
+
+            Ok((tokens, Value::Obj(Vdf(inner))))
+        }
+
         let mut inner = BTreeMap::new();
         let tokens = naive_token_stream.iter().peekable();
         let (mut tokens, (key, values)) = process_key_values(tokens)?;

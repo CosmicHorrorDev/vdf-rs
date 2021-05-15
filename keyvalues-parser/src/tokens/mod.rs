@@ -1,4 +1,6 @@
 pub mod naive;
+#[cfg(test)]
+mod tests;
 
 use std::{
     borrow::Cow,
@@ -8,7 +10,10 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::core::{Key, Value, Vdf};
+use crate::{
+    core::{Key, Value, Vdf},
+    tokens::naive::{NaiveToken, NaiveTokenStream},
+};
 
 // I've been struggling to get serde to play nice with using a more complex internal structure in a
 // `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into
@@ -176,119 +181,6 @@ impl<'a> From<Value<'a>> for TokenStream<'a> {
     }
 }
 
-// TODO: have this return an error
-fn process_key_value<'a, I>(
-    mut tokens: Peekable<I>,
-) -> Option<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
-where
-    I: Iterator<Item = &'a Token<'a>>,
-{
-    if let Some(Token::Key(s)) = tokens.peek() {
-        tokens.next();
-        let key = s.clone();
-        // TODO: don't unwrap here
-        let res = process_value(tokens).unwrap();
-        tokens = res.0;
-        let value = res.1;
-        Some((tokens, (key, value)))
-    } else {
-        todo!()
-    }
-}
-
-fn process_value<'a, I>(mut tokens: Peekable<I>) -> Option<(Peekable<I>, Vec<Value<'a>>)>
-where
-    I: Iterator<Item = &'a Token<'a>>,
-{
-    match tokens.next() {
-        Some(Token::Str(s)) => {
-            let values = vec![Value::Str(s.clone())];
-            Some((tokens, values))
-        }
-        Some(Token::ObjBegin) => {
-            let res = process_obj(tokens).unwrap();
-            Some((res.0, vec![res.1]))
-        }
-        Some(Token::SeqBegin) => {
-            let mut values = Vec::new();
-            loop {
-                if let Some(Token::SeqEnd) = tokens.peek() {
-                    tokens.next();
-                    break;
-                } else {
-                    let res = process_non_seq_value(tokens).unwrap();
-                    tokens = res.0;
-                    values.push(res.1);
-                }
-            }
-
-            Some((tokens, values))
-        }
-        _ => todo!(),
-    }
-}
-
-fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> Option<(Peekable<I>, Value<'a>)>
-where
-    I: Iterator<Item = &'a Token<'a>>,
-{
-    match tokens.next() {
-        Some(Token::Str(s)) => Some((tokens, Value::Str(s.clone()))),
-        Some(Token::ObjBegin) => process_obj(tokens),
-        _ => todo!(),
-    }
-}
-
-fn process_obj<'a, I>(mut tokens: Peekable<I>) -> Option<(Peekable<I>, Value<'a>)>
-where
-    I: Iterator<Item = &'a Token<'a>>,
-{
-    let mut inner = BTreeMap::new();
-    loop {
-        match tokens.peek() {
-            Some(Token::ObjEnd) => {
-                tokens.next();
-                break;
-            }
-            // An object is a series of key-value pairs
-            Some(_) => {
-                // ) -> Option<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
-                let res = process_key_value(tokens).unwrap();
-                tokens = res.0;
-                let key = res.1 .0;
-                let values = res.1 .1;
-                inner.insert(key, values);
-            }
-            _ => todo!(),
-        }
-    }
-
-    Some((tokens, Value::Obj(Vdf(inner))))
-}
-
-// TODO: this should be fallible
-// TODO: basically all of this is the same as `NaiveTokenStream` -> `TokenStream`. Can we switch
-// the conversions to `NaiveTokenStream` -> `Vdf` and then `TokenStream` -> `NaiveTokenStream`
-// instead which should cover all the possible options still and be much simpler instead
-impl<'a> From<&'a TokenStream<'a>> for Vdf<'a> {
-    fn from(token_stream: &'a TokenStream) -> Self {
-        let mut inner = BTreeMap::new();
-        let tokens = token_stream.iter().peekable();
-        let (tokens, (key, value)) = process_key_value(tokens).unwrap();
-        inner.insert(key, value);
-
-        Self(inner)
-    }
-}
-
-// TODO: Don't implement this directly since it's fallible
-impl<'a> fmt::Display for TokenStream<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let vdf = Vdf::from(self);
-        write!(f, "{}", vdf)
-    }
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub enum Token<'a> {
     Key(Cow<'a, str>),
@@ -297,58 +189,4 @@ pub enum Token<'a> {
     ObjEnd,
     SeqBegin,
     SeqEnd,
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn dev_checking() {
-        let token_stream = TokenStream(vec![
-            Token::Key(Cow::from("Outer Key")),
-            Token::ObjBegin,
-            Token::Key(Cow::from("Inner Key")),
-            Token::Str(Cow::from("Inner Value")),
-            Token::Key(Cow::from("Inner Seq")),
-            Token::SeqBegin,
-            Token::Str(Cow::from("Seq val")),
-            Token::ObjBegin,
-            Token::Key(Cow::from("Seq Val Key")),
-            Token::Str(Cow::from("Seq Val Value")),
-            Token::ObjEnd,
-            Token::SeqEnd,
-            Token::ObjEnd,
-        ]);
-
-        let vdf = Vdf::from(&token_stream);
-        println!("{}", vdf);
-        todo!();
-    }
-
-    #[test]
-    fn token_stream() {
-        let s = r#"
-"Outer Key" "Outer Value"
-"Outer Key"
-{
-    "Inner Key" "Inner Value"
-}
-        "#;
-        let vdf = Vdf::parse(s).unwrap();
-        let token_stream = TokenStream::from(vdf);
-        assert_eq!(
-            token_stream,
-            TokenStream(vec![
-                Token::Key(Cow::from("Outer Key")),
-                Token::SeqBegin,
-                Token::Str(Cow::from("Outer Value")),
-                Token::ObjBegin,
-                Token::Key(Cow::from("Inner Key")),
-                Token::Str(Cow::from("Inner Value")),
-                Token::ObjEnd,
-                Token::SeqEnd,
-            ])
-        );
-    }
 }
