@@ -1,16 +1,14 @@
-mod naive_tokens;
-#[cfg(test)]
-mod tests;
+// mod naive_tokens;
+// #[cfg(test)]
+// mod tests;
 
-use keyvalues_parser::tokens::TokenStream;
+use keyvalues_parser::core::Vdf;
+use keyvalues_parser::tokens::naive::{NaiveToken, NaiveTokenStream};
 use serde::{ser, Serialize};
 
 use std::convert::TryFrom;
 
-use crate::{
-    error::{Error, Result},
-    ser::naive_tokens::{NaiveToken, NaiveTokenStream},
-};
+use crate::error::{Error, Result};
 
 pub struct Serializer {
     tokens: NaiveTokenStream,
@@ -38,7 +36,7 @@ where
         tokens: NaiveTokenStream::default(),
     };
     value.serialize(&mut serializer)?;
-    let token_stream = TokenStream::try_from(&serializer.tokens)?;
+    let token_stream = Vdf::try_from(&serializer.tokens)?;
     Ok(token_stream.to_string())
 }
 

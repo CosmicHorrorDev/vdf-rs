@@ -1,4 +1,5 @@
-use keyvalues_parser::text::parse::Error as ParserError;
+// use keyvalues_parser::text::parse::Error as ParserError;
+use keyvalues_parser::error::Error as ParserError;
 use serde::{de, ser};
 
 use std::{

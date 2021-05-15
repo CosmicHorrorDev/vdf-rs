@@ -1,3 +1,4 @@
 pub mod core;
-pub mod text;
+pub mod error;
+mod text;
 pub mod tokens;

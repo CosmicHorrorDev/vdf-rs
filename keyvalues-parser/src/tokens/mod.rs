@@ -1,3 +1,5 @@
+pub mod naive;
+
 use std::{
     borrow::Cow,
     collections::BTreeMap,
