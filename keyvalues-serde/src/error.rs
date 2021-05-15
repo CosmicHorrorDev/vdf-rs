@@ -18,6 +18,8 @@ pub enum Error {
 
     #[error("EOF while parsing unknown type")]
     EofWhileParsingAny,
+    #[error("EOF while parsing key")]
+    EofWhileParsingKey,
     #[error("EOF while parsing a value")]
     EofWhileParsingValue,
     #[error("EOF while parsing an object")]
@@ -29,6 +31,8 @@ pub enum Error {
     ExpectedObjectStart,
     #[error("Expected some valid value")]
     ExpectedSomeValue,
+    #[error("Expected a non-sequence value")]
+    ExpectedSomeNonSeqValue,
     #[error("Expected some valid ident")]
     ExpectedSomeIdent,
 
@@ -38,8 +42,6 @@ pub enum Error {
     InvalidChar,
     #[error("Tried parsing an invalid number")]
     InvalidNumber,
-    #[error("Token stream conversion failed")]
-    InvalidTokenStream,
 
     #[error("Tokens remain after deserializing")]
     TrailingTokens,

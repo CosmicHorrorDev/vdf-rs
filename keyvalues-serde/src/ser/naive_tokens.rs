@@ -9,6 +9,17 @@ use std::{
 
 use crate::error::{Error, Result};
 
+/// `NaiveTokenStream` is the token-stream that is emitted by the serialization process. This is
+/// done so that
+///
+/// 1. The tokens can be owned values since there is no lifetime to tie the borrowed values to.
+/// 2. There isn't context about what are keys vs. values
+/// 3. Validation can be done in a separate step
+///
+/// From there a `NaiveTokenStream` can be converted to a `TokenStream` where the position of the
+/// keys is inferred from the general structure. This also performs validation that all keys have
+/// an associated value, all markers for mutli-token structures make sense, and that there can't
+/// be a sequence as a value in another sequence.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct NaiveTokenStream(pub Vec<NaiveToken>);
 
@@ -33,11 +44,13 @@ fn process_key_value<'a, I>(
 where
     I: Iterator<Item = &'a NaiveToken>,
 {
-    if let Some(NaiveToken::Str(s)) = tokens.next() {
-        processed.push(Token::Key(Cow::from(s)));
-        process_value(tokens, processed)
-    } else {
-        Err(Error::InvalidTokenStream)
+    match tokens.next() {
+        Some(NaiveToken::Str(s)) => {
+            processed.push(Token::Key(Cow::from(s)));
+            process_value(tokens, processed)
+        }
+        Some(_) => Err(Error::ExpectedSomeValue),
+        None => Err(Error::EofWhileParsingKey),
     }
 }
 
@@ -63,7 +76,6 @@ where
                     processed.push(Token::SeqEnd);
                     break;
                 } else {
-                    // Nested sequences aren't allowed
                     let res = process_non_seq_value(tokens, processed)?;
                     tokens = res.0;
                     processed = res.1;
@@ -72,9 +84,9 @@ where
 
             Ok((tokens, processed))
         }
-        // An object is a series of key-value pairs
         Some(NaiveToken::ObjBegin) => process_obj(tokens, processed),
-        _ => Err(Error::InvalidTokenStream),
+        Some(_) => Err(Error::ExpectedSomeValue),
+        None => Err(Error::EofWhileParsingValue),
     }
 }
 
@@ -91,7 +103,8 @@ where
             Ok((tokens, processed))
         }
         Some(NaiveToken::ObjBegin) => process_obj(tokens, processed),
-        _ => Err(Error::InvalidTokenStream),
+        Some(_) => Err(Error::ExpectedSomeNonSeqValue),
+        None => Err(Error::EofWhileParsingValue),
     }
 }
 
@@ -104,14 +117,21 @@ where
 {
     processed.push(Token::ObjBegin);
     loop {
-        if let Some(NaiveToken::ObjEnd) = tokens.peek() {
-            tokens.next();
-            processed.push(Token::ObjEnd);
-            break;
-        } else {
-            let res = process_key_value(tokens, processed)?;
-            tokens = res.0;
-            processed = res.1;
+        match tokens.peek() {
+            Some(NaiveToken::ObjEnd) => {
+                tokens.next();
+                processed.push(Token::ObjEnd);
+                break;
+            }
+            // An object is a series of key-value pairs
+            Some(_) => {
+                let res = process_key_value(tokens, processed)?;
+                tokens = res.0;
+                processed = res.1;
+            }
+            None => {
+                return Err(Error::EofWhileParsingObject);
+            }
         }
     }
 
@@ -121,8 +141,6 @@ where
 impl<'a> TryFrom<&'a NaiveTokenStream> for TokenStream<'a> {
     type Error = Error;
 
-    // This conversion isn't done recursively so multi-token structures like objects and sequences
-    // are tracked using a `context_stack`
     fn try_from(naive_token_stream: &'a NaiveTokenStream) -> Result<Self> {
         let (mut unprocessed_tokens, tokens) = process_key_value(
             naive_token_stream.iter().peekable(),
@@ -132,7 +150,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for TokenStream<'a> {
         if let None = unprocessed_tokens.next() {
             Ok(TokenStream(tokens))
         } else {
-            Err(Error::InvalidTokenStream)
+            Err(Error::TrailingTokens)
         }
     }
 }
@@ -149,87 +167,5 @@ pub enum NaiveToken {
 impl NaiveToken {
     pub fn str<S: ToString>(s: S) -> Self {
         Self::Str(s.to_string())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn basics() {
-        let naive_token_stream = NaiveTokenStream(vec![
-            NaiveToken::str("outer"),
-            NaiveToken::ObjBegin,
-            NaiveToken::str("sequence start"),
-            NaiveToken::SeqBegin,
-            NaiveToken::ObjBegin,
-            NaiveToken::str("inner key"),
-            NaiveToken::str("inner val"),
-            NaiveToken::ObjEnd,
-            NaiveToken::str("some other inner val"),
-            NaiveToken::SeqEnd,
-            NaiveToken::ObjEnd,
-        ]);
-
-        assert_eq!(
-            TokenStream::try_from(&naive_token_stream),
-            Ok(TokenStream(vec![
-                Token::Key(Cow::from("outer")),
-                Token::ObjBegin,
-                Token::Key(Cow::from("sequence start")),
-                Token::SeqBegin,
-                Token::ObjBegin,
-                Token::Key(Cow::from("inner key")),
-                Token::Str(Cow::from("inner val")),
-                Token::ObjEnd,
-                Token::Str(Cow::from("some other inner val")),
-                Token::SeqEnd,
-                Token::ObjEnd,
-            ]))
-        );
-    }
-
-    #[test]
-    fn invalid_nested_seq() {
-        let naive_token_stream = NaiveTokenStream(vec![
-            NaiveToken::str("outer"),
-            NaiveToken::ObjBegin,
-            NaiveToken::str("nested sequence"),
-            NaiveToken::SeqBegin,
-            NaiveToken::str("the calm before the storm"),
-            NaiveToken::SeqBegin,
-            NaiveToken::SeqEnd,
-            NaiveToken::SeqEnd,
-            NaiveToken::ObjEnd,
-        ]);
-
-        assert!(TokenStream::try_from(&naive_token_stream).is_err());
-    }
-
-    #[test]
-    fn invalid_obj_key() {
-        let naive_token_stream = NaiveTokenStream(vec![
-            NaiveToken::str("outer"),
-            NaiveToken::ObjBegin,
-            NaiveToken::ObjBegin,
-            NaiveToken::ObjEnd,
-            NaiveToken::ObjEnd,
-        ]);
-
-        assert!(TokenStream::try_from(&naive_token_stream).is_err());
-    }
-
-    #[test]
-    fn invalid_seq_key() {
-        let naive_token_stream = NaiveTokenStream(vec![
-            NaiveToken::str("outer"),
-            NaiveToken::ObjBegin,
-            NaiveToken::SeqBegin,
-            NaiveToken::SeqEnd,
-            NaiveToken::ObjEnd,
-        ]);
-
-        assert!(TokenStream::try_from(&naive_token_stream).is_err());
     }
 }

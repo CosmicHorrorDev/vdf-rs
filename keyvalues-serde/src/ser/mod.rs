@@ -1,4 +1,6 @@
 mod naive_tokens;
+#[cfg(test)]
+mod tests;
 
 use keyvalues_parser::tokens::TokenStream;
 use serde::{ser, Serialize};
@@ -14,6 +16,20 @@ pub struct Serializer {
     tokens: NaiveTokenStream,
 }
 
+// Serialization process goes as follows:
+// value: &T
+// -> NaiveTokenStream
+// -> TokenStream (fails on invalid VDF structure like nested sequences)
+// -> VDF
+// -> String
+// Which is a bit of a longwinded process just to serialize some text, but it comes with validation
+// (NaiveTokenStream -> TokenStream) and reuses portions from the parser (TokenStream -> Vdf ->
+// String)
+/// Attempts to serialize some input to VDF text.
+///
+/// # Errors
+///
+/// This will return an error if the input can't be represented with valid VDF.
 pub fn to_string<T>(value: &T) -> Result<String>
 where
     T: Serialize,
@@ -22,8 +38,8 @@ where
         tokens: NaiveTokenStream::default(),
     };
     value.serialize(&mut serializer)?;
-    println!("{:#?}", serializer.tokens);
     let token_stream = TokenStream::try_from(&serializer.tokens)?;
+    println!("{:#?}", token_stream);
     todo!();
     Ok(String::new())
 }
