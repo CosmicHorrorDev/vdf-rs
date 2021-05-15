@@ -14,7 +14,7 @@ pub enum Error {
     #[error("{0}")]
     Message(String),
 
-    #[error("Need to actually flesh out the parser errors")]
+    #[error("Failed parsing VDF text")]
     ParseError(#[from] ParserError),
 
     #[error("EOF while parsing unknown type")]

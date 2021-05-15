@@ -1,12 +1,14 @@
-use crate::text::parse::Error as ParseError;
+use std::fmt;
+
+use crate::text::parse::PestError;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
 #[derive(thiserror::Error, Clone, Debug, PartialEq)]
 pub enum Error {
-    #[error("Failed parsing input")]
-    ParseError(#[from] ParseError),
-    #[error("Invalid token stream: {0:?}")]
+    #[error("Failed parsing input Error: {0}")]
+    ParseError(#[from] PestError),
+    #[error("Invalid token stream Context: {0}")]
     InvalidTokenStream(TokenContext),
 }
 
@@ -25,4 +27,20 @@ pub enum TokenContext {
     ExpectedSomeVal,
     ExpectedNonSeqVal,
     TrailingTokens,
+}
+
+impl fmt::Display for TokenContext {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let message = match self {
+            Self::EofWhileParsingKey => "Token stream ended when needed key",
+            Self::EofWhileParsingVal => "Token stream ended when needed value",
+            Self::EofWhileParsingSeq => "Token stream ended when parsing sequence",
+            Self::EofWhileParsingObj => "Token stream ended when parsing object",
+            Self::ExpectedSomeVal => "Found invalid token when expecting value",
+            Self::ExpectedNonSeqVal => "Found invalid token when expecing non sequence value",
+            Self::TrailingTokens => "Trailing tokens after finishing conversion",
+        };
+
+        f.write_str(message)
+    }
 }

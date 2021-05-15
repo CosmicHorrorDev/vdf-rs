@@ -41,8 +41,7 @@ pub struct Deserializer<'de> {
 
 impl<'de> Deserializer<'de> {
     pub fn from_str(input: &'de str) -> Result<Self> {
-        // TODO: handle this error
-        let vdf = Vdf::parse(input).unwrap();
+        let vdf = Vdf::parse(input)?;
         let tokens = TokenStream::from(vdf);
         Ok(Self { tokens })
     }

@@ -1,27 +1,30 @@
-use pest::{error::Error as PestError, iterators::Pair as PestPair, Parser};
+use pest::{iterators::Pair as PestPair, Parser};
 use pest_derive::Parser;
 
 use std::{borrow::Cow, convert::TryFrom};
 
-use crate::core::{KeyValues, Value, Vdf};
+use crate::{
+    core::{KeyValues, Value, Vdf},
+    error::{Error, Result},
+};
 
 #[derive(Parser)]
 #[grammar = "text/grammar.pest"]
 struct VdfParser;
 
-pub(crate) type Error = PestError<Rule>;
+pub(crate) type PestError = pest::error::Error<Rule>;
 
 impl<'a> Vdf<'a> {
     // TODO: implement this as fromstr instead?
-    pub fn parse(s: &'a str) -> Result<Self, PestError<Rule>> {
+    pub fn parse(s: &'a str) -> Result<Self> {
         Self::try_from(s)
     }
 }
 
 impl<'a> TryFrom<&'a str> for Vdf<'a> {
-    type Error = PestError<Rule>;
+    type Error = Error;
 
-    fn try_from(s: &'a str) -> Result<Self, Self::Error> {
+    fn try_from(s: &'a str) -> Result<Self> {
         // Structure: vdf
         //            \ SOI
         //            \ pairs <- Desired
