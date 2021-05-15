@@ -39,9 +39,7 @@ where
     };
     value.serialize(&mut serializer)?;
     let token_stream = TokenStream::try_from(&serializer.tokens)?;
-    println!("{:#?}", token_stream);
-    todo!();
-    Ok(String::new())
+    Ok(token_stream.to_string())
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -360,5 +358,6 @@ fn checking() {
             key: String::from("Value"),
         },
     };
-    to_string(&test).unwrap();
+    println!("{}", to_string(&test).unwrap());
+    todo!();
 }

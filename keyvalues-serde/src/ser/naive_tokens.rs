@@ -71,6 +71,7 @@ where
         Some(NaiveToken::SeqBegin) => {
             processed.push(Token::SeqBegin);
             loop {
+                // TODO: match for EOF here
                 if let Some(NaiveToken::SeqEnd) = tokens.peek() {
                     tokens.next();
                     processed.push(Token::SeqEnd);
