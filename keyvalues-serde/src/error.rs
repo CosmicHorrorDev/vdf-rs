@@ -38,6 +38,8 @@ pub enum Error {
     InvalidChar,
     #[error("Tried parsing an invalid number")]
     InvalidNumber,
+    #[error("Token stream conversion failed")]
+    InvalidTokenStream,
 
     #[error("Tokens remain after deserializing")]
     TrailingTokens,

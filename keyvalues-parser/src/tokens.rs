@@ -1,5 +1,6 @@
 use std::{
     borrow::Cow,
+    fmt,
     ops::{Deref, DerefMut},
 };
 
@@ -168,6 +169,19 @@ impl<'a> From<Value<'a>> for TokenStream<'a> {
         }
 
         Self(inner)
+    }
+}
+
+impl<'a> From<&'a TokenStream<'a>> for Vdf<'a> {
+    fn from(token_stream: &TokenStream) -> Self {
+        todo!()
+    }
+}
+
+impl<'a> fmt::Display for TokenStream<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let vdf = Vdf::from(self);
+        write!(f, "{}", vdf)
     }
 }
 
