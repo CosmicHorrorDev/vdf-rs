@@ -1,7 +1,5 @@
 mod map;
 mod seq;
-#[cfg(test)]
-mod tests;
 
 use keyvalues_parser::{
     core::Vdf,

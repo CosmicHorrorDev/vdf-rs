@@ -11,3 +11,6 @@ keyvalues-parser = { path = "../keyvalues-parser" }
 regex = "1.5.4"
 serde = { version = "1.0.125", features = ["derive"] }
 thiserror = "1.0.24"
+
+[dev-dependencies]
+pretty_assertions = "0.7.2"

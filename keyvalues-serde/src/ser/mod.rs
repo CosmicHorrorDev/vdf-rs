@@ -33,6 +33,7 @@ where
         tokens: NaiveTokenStream::default(),
     };
     value.serialize(&mut serializer)?;
+    println!("{:#?}", serializer.tokens);
     let token_stream = Vdf::try_from(&serializer.tokens)?;
     Ok(token_stream.to_string())
 }
@@ -135,9 +136,10 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self,
         _name: &'static str,
         _variant_index: u32,
-        _variant: &'static str,
+        variant: &'static str,
     ) -> Result<()> {
-        Err(Error::Unsupported("Enum Variant"))
+        // Just pass the variant name for unit variant enums
+        self.serialize_str(variant)
     }
 
     fn serialize_newtype_struct<T>(self, _name: &'static str, value: &T) -> Result<()>
