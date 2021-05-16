@@ -1,4 +1,4 @@
-use keyvalues_serde::{from_str, to_string};
+use keyvalues_serde::{from_str, to_string, to_string_with_key};
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
 
@@ -218,7 +218,6 @@ fn hashmap_nested() -> BoxedResult<()> {
 }
 
 #[test]
-#[ignore = "Serialization is stalled on being able to provide the top-level key"]
 fn hashmap_top_level() -> BoxedResult<()> {
     let mut val = HashMap::new();
     val.insert(0, "Foo".to_owned());
@@ -226,7 +225,12 @@ fn hashmap_top_level() -> BoxedResult<()> {
     val.insert(2, "Baz".to_owned());
     let vdf_text = read_asset_file("hashmap_top_level.vdf")?;
     test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+
+    // Using a hashmap on the top level has no way of indicating what the key should be so it must
+    // be passed in separately
+    let val_text = to_string_with_key(&val, "Key")?;
+    assert_eq!(vdf_text, val_text, "Failed serializing");
+    Ok(())
 }
 
 #[test]

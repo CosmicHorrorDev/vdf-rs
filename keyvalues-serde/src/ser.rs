@@ -1,6 +1,3 @@
-#[cfg(test)]
-mod tests;
-
 use keyvalues_parser::core::Vdf;
 use keyvalues_parser::tokens::naive::{NaiveToken, NaiveTokenStream};
 use serde::{ser, Serialize};
@@ -29,10 +26,39 @@ pub fn to_string<T>(value: &T) -> Result<String>
 where
     T: Serialize,
 {
+    _to_string(value, None)
+}
+
+pub fn to_string_with_key<T>(value: &T, key: &str) -> Result<String>
+where
+    T: Serialize,
+{
+    _to_string(value, Some(key))
+}
+
+fn _to_string<T>(value: &T, maybe_key: Option<&str>) -> Result<String>
+where
+    T: Serialize,
+{
     let mut serializer = Serializer {
         tokens: NaiveTokenStream::default(),
     };
     value.serialize(&mut serializer)?;
+
+    if let Some(key) = maybe_key {
+        match serializer.tokens.get(0) {
+            // Replace the old key
+            Some(NaiveToken::Str(_old_key)) => {
+                serializer.tokens[0] = NaiveToken::Str(key.to_owned());
+            }
+            // Push on the key
+            Some(_) => {
+                serializer.tokens.insert(0, NaiveToken::Str(key.to_owned()));
+            }
+            None => {}
+        }
+    }
+
     println!("{:#?}", serializer.tokens);
     let token_stream = Vdf::try_from(&serializer.tokens)?;
     Ok(token_stream.to_string())
