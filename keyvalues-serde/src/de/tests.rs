@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error, fmt, fs, path::Path};
 
 use crate::de::from_str;
 
@@ -15,34 +15,39 @@ impl<T> Container<T> {
     }
 }
 
+type BoxedResult<T> = Result<T, Box<dyn Error>>;
+
+fn read_asset_file(file_name: &str) -> BoxedResult<String> {
+    let val = fs::read_to_string(Path::new("tests").join("assets").join(file_name))?;
+    Ok(val)
+}
+
+fn test_vdf_deserialization<'a, T>(vdf_text: &'a str, ideal_val: T) -> BoxedResult<()>
+where
+    T: fmt::Debug + PartialEq + Deserialize<'a>,
+{
+    let deserialized_val: T = from_str(&vdf_text)?;
+    assert_eq!(deserialized_val, ideal_val);
+    Ok(())
+}
+
 #[test]
-fn basic_struct() {
+fn basic_struct() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct TestStruct {
         field1: i32,
         field2: String,
     }
 
-    let s = r#"
-"TestStruct"
-{
-    "field1" "-123"
-    "field2" "Sample String"
-}
-        "#;
-
-    let sample: TestStruct = from_str(s).unwrap();
-    assert_eq!(
-        sample,
-        TestStruct {
-            field1: -123,
-            field2: String::from("Sample String")
-        }
-    )
+    let ideal = TestStruct {
+        field1: -123,
+        field2: String::from("Sample String"),
+    };
+    test_vdf_deserialization(&read_asset_file("basic_struct.vdf")?, ideal)
 }
 
 #[test]
-fn basic_types() {
+fn basic_types() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct BasicTypes {
         boolean: bool,
@@ -59,46 +64,25 @@ fn basic_types() {
         float64: f64,
     }
 
-    let s = r#"
-"Key"
-{
-    "boolean" "0"
-    "character" "a"
-    "signed8" "1"
-    "signed16" "2"
-    "signed32" "3"
-    "signed64" "4"
-    "unsigned8" "5"
-    "unsigned16" "6"
-    "unsigned32" "7"
-    "unsigned64" "8"
-    "float32" "1.0"
-    "float64" "2.0"
-}
-        "#;
-
-    let sample: BasicTypes = from_str(s).unwrap();
-    assert_eq!(
-        sample,
-        BasicTypes {
-            boolean: false,
-            character: 'a',
-            signed8: 1,
-            signed16: 2,
-            signed32: 3,
-            signed64: 4,
-            unsigned8: 5,
-            unsigned16: 6,
-            unsigned32: 7,
-            unsigned64: 8,
-            float32: 1.0,
-            float64: 2.0
-        }
-    );
+    let ideal = BasicTypes {
+        boolean: false,
+        character: 'a',
+        signed8: 1,
+        signed16: 2,
+        signed32: 3,
+        signed64: 4,
+        unsigned8: 5,
+        unsigned16: 6,
+        unsigned32: 7,
+        unsigned64: 8,
+        float32: 1.0,
+        float64: 2.0,
+    };
+    test_vdf_deserialization(&read_asset_file("basic_types.vdf")?, ideal)
 }
 
 #[test]
-fn nested_structs() {
+fn nested_structs() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct OuterStruct {
         field: String,
@@ -111,218 +95,115 @@ fn nested_structs() {
         field: String,
     }
 
-    let s = r#"
-"OuterStruct"
-{
-    "field" "Outer Value"
-    "inner1"
-    {
-        "field" "Inner1 Value"
-    }
-    "inner2"
-    {
-        "field" "Inner2 Value"
-    }
-}
-        "#;
-
-    let sample: OuterStruct = from_str(s).unwrap();
-    assert_eq!(
-        sample,
-        OuterStruct {
-            field: String::from("Outer Value"),
-            inner1: InnerStruct {
-                field: String::from("Inner1 Value"),
-            },
-            inner2: InnerStruct {
-                field: String::from("Inner2 Value"),
-            }
+    let ideal = OuterStruct {
+        field: String::from("Outer Value"),
+        inner1: InnerStruct {
+            field: String::from("Inner1 Value"),
         },
-    );
+        inner2: InnerStruct {
+            field: String::from("Inner2 Value"),
+        },
+    };
+    test_vdf_deserialization(&read_asset_file("nested_structs.vdf")?, ideal)
 }
 
 #[test]
-fn newtype_struct() {
+fn newtype_struct() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct I32Wrapper(i32);
 
-    let s = r#"
-"Container"
-{
-    "inner" "123"
-}
-        "#;
-
-    let sample: Container<I32Wrapper> = from_str(s).unwrap();
-    assert_eq!(sample, Container::new(I32Wrapper(123)));
+    let ideal = Container::new(I32Wrapper(123));
+    test_vdf_deserialization(&read_asset_file("newtype_struct.vdf")?, ideal)
 }
 
 #[test]
-fn unit_variant_enum() {
+fn unit_variant_enum() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     enum SampleEnum {
         Foo,
         Bar,
     }
 
-    let s = r#"
-"Key"
-{
-    "inner" "Foo"
-}
-        "#;
-    let sample: Container<SampleEnum> = from_str(s).unwrap();
-    assert_eq!(sample, Container::new(SampleEnum::Foo));
+    let ideal = Container::new(SampleEnum::Foo);
+    test_vdf_deserialization(&read_asset_file("unit_variant_enum.vdf")?, ideal)
 }
 
 #[test]
-fn sequence() {
+fn sequence_single() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct Inner {
         field: String,
     }
 
-    let single_str = r#"
-"Key"
-{
-    "inner"
-    {
-        "field" "Some String"
-    }
-}
-        "#;
-
-    let single: Container<Vec<Inner>> = from_str(single_str).unwrap();
-    assert_eq!(
-        single,
-        Container::new(vec![Inner {
-            field: String::from("Some String")
-        }])
-    );
-
-    let double_str = r#"
-"Key"
-{
-    "inner"
-    {
-        "field" "Some String"
-    }
-    "inner"
-    {
-        "field" "Another String"
-    }
-}
-        "#;
-
-    let double: Container<Vec<Inner>> = from_str(double_str).unwrap();
-    assert_eq!(
-        double,
-        Container::new(vec![
-            Inner {
-                field: String::from("Some String")
-            },
-            Inner {
-                field: String::from("Another String")
-            }
-        ])
-    );
+    let ideal = Container::new(vec![Inner {
+        field: String::from("Some String"),
+    }]);
+    test_vdf_deserialization(&read_asset_file("sequence_single.vdf")?, ideal)
 }
 
 #[test]
-fn tuple() {
-    let s = r#"
-"Key"
-{
-    "inner" "1"
-    "inner" "2"
-    "inner" "Sample Text"
-}
-        "#;
+fn sequence_double() -> BoxedResult<()> {
+    #[derive(Deserialize, Debug, PartialEq)]
+    struct Inner {
+        field: String,
+    }
 
-    let sample: Container<(bool, i32, String)> = from_str(s).unwrap();
-    assert_eq!(
-        sample,
-        Container::new((true, 2, String::from("Sample Text")))
-    );
+    let ideal = Container::new(vec![
+        Inner {
+            field: String::from("Some String"),
+        },
+        Inner {
+            field: String::from("Another String"),
+        },
+    ]);
+    test_vdf_deserialization(&read_asset_file("sequence_double.vdf")?, ideal)
 }
 
 #[test]
-fn tuple_struct() {
+fn tuple() -> BoxedResult<()> {
+    let ideal = Container::new((true, 2, String::from("Sample Text")));
+    test_vdf_deserialization(&read_asset_file("tuple.vdf")?, ideal)
+}
+
+#[test]
+fn tuple_struct() -> BoxedResult<()> {
     #[derive(Deserialize, Debug, PartialEq)]
     struct TupleStruct(bool, i32, String);
 
-    let s = r#"
-"Key"
-{
-    "inner" "1"
-    "inner" "2"
-    "inner" "Sample Text"
-}
-        "#;
-
-    let sample: Container<TupleStruct> = from_str(s).unwrap();
-    assert_eq!(
-        sample,
-        Container::new(TupleStruct(true, 2, String::from("Sample Text"),))
-    )
+    let ideal = Container::new(TupleStruct(true, 2, String::from("Sample Text")));
+    test_vdf_deserialization(&read_asset_file("tuple.vdf")?, ideal)
 }
 
-// TODO: it's not clear if the ordering of values is expected to stay the
-// same in vdf. If that is the case then it would be important to track
-// down a map type that preserves insertion order
+// TODO: it's not clear if the ordering of values is expected to stay the same in vdf. If that is
+// the case then it would be important to track down a map type that preserves insertion order. It
+// looks like something like hashlink should work out
 #[test]
-fn hashmap() {
-    let nested = r#"
-"Key"
-{
-    "inner"
-    {
-        "0" "Foo"
-        "1" "Bar"
-        "2" "Baz"
-    }
+fn hashmap_nested() -> BoxedResult<()> {
+    let mut inner = HashMap::new();
+    inner.insert(0, "Foo".to_owned());
+    inner.insert(1, "Bar".to_owned());
+    inner.insert(2, "Baz".to_owned());
+    let ideal = Container::new(inner);
+    test_vdf_deserialization(&read_asset_file("hashmap_nested.vdf")?, ideal)
 }
-        "#;
 
+#[test]
+fn hashmap_top_level() -> BoxedResult<()> {
     let mut ideal = HashMap::new();
     ideal.insert(0, "Foo".to_owned());
     ideal.insert(1, "Bar".to_owned());
     ideal.insert(2, "Baz".to_owned());
-
-    let sample: Container<HashMap<u64, String>> = from_str(nested).unwrap();
-    assert_eq!(sample, Container::new(ideal.clone()));
-
-    let top_level = r#"
-"Key"
-{
-    "0" "Foo"
-    "1" "Bar"
-    "2" "Baz"
-}
-        "#;
-
-    let sample: HashMap<u64, String> = from_str(top_level).unwrap();
-    assert_eq!(sample, ideal);
+    test_vdf_deserialization(&read_asset_file("hashmap_top_level.vdf")?, ideal)
 }
 
 #[test]
-fn option() {
-    let none_str = r#"
-"Key"
-{
+fn option_none() -> BoxedResult<()> {
+    let ideal: Container<Option<String>> = Container::new(None);
+    test_vdf_deserialization(&read_asset_file("option_none.vdf")?, ideal)
 }
-        "#;
 
-    let none: Container<Option<String>> = from_str(none_str).unwrap();
-    assert_eq!(none, Container::new(None));
-
-    let some_str = r#"
-"Key"
-{
-    "inner" "Some value"
-}
-        "#;
-
-    let some: Container<Option<String>> = from_str(some_str).unwrap();
-    assert_eq!(some, Container::new(Some(String::from("Some value"))));
+#[test]
+fn option_some() -> BoxedResult<()> {
+    let ideal = Container::new(Some(String::from("Some value")));
+    test_vdf_deserialization(&read_asset_file("option_some.vdf")?, ideal)
 }

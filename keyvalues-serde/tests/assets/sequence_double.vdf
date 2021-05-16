@@ -1,0 +1,11 @@
+"Key"
+{
+	"inner"
+	{
+		"field"	"Some String"
+	}
+	"inner"
+	{
+		"field"	"Another String"
+	}
+}

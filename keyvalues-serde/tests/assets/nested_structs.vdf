@@ -1,0 +1,12 @@
+"OuterStruct"
+{
+	"field"	"Outer Value"
+	"inner1"
+	{
+		"field"	"Inner1 Value"
+	}
+	"inner2"
+	{
+		"field"	"Inner2 Value"
+	}
+}

@@ -1,0 +1,15 @@
+"Key"
+{
+	"boolean"	"0"
+	"character"	"a"
+	"signed8"	"1"
+	"signed16"	"2"
+	"signed32"	"3"
+	"signed64"	"4"
+	"unsigned8"	"5"
+	"unsigned16"	"6"
+	"unsigned32"	"7"
+	"unsigned64"	"8"
+	"float32"	"1.0"
+	"float64"	"2.0"
+}

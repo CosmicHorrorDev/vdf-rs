@@ -1,3 +1,6 @@
+#[cfg(test)]
+mod tests;
+
 use keyvalues_parser::core::Vdf;
 use keyvalues_parser::tokens::naive::{NaiveToken, NaiveTokenStream};
 use serde::{ser, Serialize};
@@ -34,6 +37,7 @@ where
     Ok(token_stream.to_string())
 }
 
+// TODO: Serializer can probably internally tie the lifetime to 'a so that NaiveToken can use a cow
 // Basically all value types are just represnted as strings with the only exceptions being
 // sequences and maps
 impl<'a> ser::Serializer for &'a mut Serializer {
@@ -332,25 +336,4 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     fn end(self) -> Result<()> {
         Err(Error::Unsupported("Enum Variant"))
     }
-}
-
-#[derive(Serialize, Debug)]
-struct Test {
-    inner: Inner,
-}
-
-#[derive(Serialize, Debug)]
-struct Inner {
-    key: String,
-}
-
-#[test]
-fn checking() {
-    let test = Test {
-        inner: Inner {
-            key: String::from("Value"),
-        },
-    };
-    println!("{}", to_string(&test).unwrap());
-    todo!();
 }
