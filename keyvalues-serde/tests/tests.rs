@@ -234,7 +234,7 @@ fn hashmap_top_level() -> BoxedResult<()> {
 }
 
 #[test]
-#[ignore = "Serialization fails since ignoring the value still has a key. Maybe use a marker?"]
+// #[ignore = "Serialization fails since ignoring the value still has a key. Maybe use a marker?"]
 fn option_none() -> BoxedResult<()> {
     let val: Container<Option<String>> = Container::new(None);
     let vdf_text = read_asset_file("option_none.vdf")?;

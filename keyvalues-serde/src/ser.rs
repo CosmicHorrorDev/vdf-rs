@@ -138,7 +138,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_none(self) -> Result<()> {
-        // None is represented by ommiting the values
+        self.tokens.push(NaiveToken::Null);
         Ok(())
     }
 

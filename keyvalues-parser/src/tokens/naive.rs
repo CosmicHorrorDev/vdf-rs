@@ -46,6 +46,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     type Error = Error;
 
     fn try_from(naive_token_stream: &'a NaiveTokenStream) -> Result<Self> {
+        // Just some helper functions for munching through tokens
         fn process_key_values<'a, I>(
             mut tokens: Peekable<I>,
         ) -> Result<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
@@ -93,24 +94,35 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                         } else {
                             let res = process_non_seq_value(tokens)?;
                             tokens = res.0;
-                            values.push(res.1);
+                            if let Some(val) = res.1 {
+                                values.push(val);
+                            }
                         }
                     }
 
                     Ok((tokens, values))
                 }
+                // VDF represents `Null` as omitting the value
+                Some(NaiveToken::Null) => Ok((tokens, Vec::new())),
                 Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
                 None => Err(Error::from(TokenContext::EofWhileParsingVal)),
             }
         }
 
-        fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
+        fn process_non_seq_value<'a, I>(
+            mut tokens: Peekable<I>,
+        ) -> Result<(Peekable<I>, Option<Value<'a>>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
             match tokens.next() {
-                Some(NaiveToken::Str(s)) => Ok((tokens, Value::Str(Cow::from(s)))),
-                Some(NaiveToken::ObjBegin) => process_obj(tokens),
+                Some(NaiveToken::Str(s)) => Ok((tokens, Some(Value::Str(Cow::from(s))))),
+                Some(NaiveToken::ObjBegin) => {
+                    let res = process_obj(tokens)?;
+                    Ok((res.0, Some(res.1)))
+                }
+                // VDF represents `Null` as omitting the value
+                Some(NaiveToken::Null) => Ok((tokens, None)),
                 Some(_) => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
                 None => Err(Error::from(TokenContext::EofWhileParsingSeq)),
             }
@@ -164,6 +176,7 @@ pub enum NaiveToken {
     ObjEnd,
     SeqBegin,
     SeqEnd,
+    Null,
 }
 
 impl NaiveToken {
