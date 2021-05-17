@@ -115,6 +115,13 @@ mod tests {
     "Inner Key" "Inner Value"
     "Seq" "1"
     "Seq" "2"
+    "Inner Obj"
+    {
+        "Inner Inner Key" "Inner Inner Val"
+    }
+    "Empty Obj"
+    {
+    }
 }
         "#;
         let mut vdf = Vdf::parse(sample_vdf).unwrap();
@@ -123,7 +130,7 @@ mod tests {
         //         *s = Cow::from(s.to_mut().to_uppercase());
         //     }
         // });
-        println!("{:#?}", vdf);
+        println!("{}", vdf);
         panic!();
     }
 }
