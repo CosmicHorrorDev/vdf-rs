@@ -62,7 +62,7 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
 impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
     fn from(grammar_pair: PestPair<'a, Rule>) -> Self {
         let (key, value) = parse_pair(grammar_pair);
-        Self { key, value }
+        Self::new(key, value)
     }
 }
 

@@ -17,38 +17,38 @@ use crate::core::{Obj, Value, Vdf};
 /// A stream of tokens representing vdf. I think an example is the easiest way to understand the
 /// structure so something like
 /// ```no_test
-/// "Outer Key" "Outer Value"
 /// "Outer Key"
 /// {
 ///     "Inner Key" "Inner Value"
+///     "Inner Key"
+///     {
+///     }
 /// }
 /// ```
 /// will be transformed into
 /// ```no_test
-/// Vdf({
-///     "Outer Key": [
-///         Str("Outer Value"),
-///         Obj(
-///             Vdf({
-///                 "Inner Key": [
-///                     Str("Inner Value")
-///                 ]
-///             })
-///         )
-///     ]
-/// })
+/// Vdf(
+///     key: "Outer Key",
+///     value: Obj({
+///         "Inner Key": [
+///             Str("Inner Value"),
+///             Obj({})
+///         ]
+///     })
+/// )
 /// ```
 /// which has the following token stream
 /// ```no_test
 /// TokenStream([
 ///     Key("Outer Key"),
-///     SeqBegin,
-///     Str("Outer Value"),
 ///     ObjBegin,
 ///     Key("Inner Key"),
+///     SeqBegin,
 ///     Str("Inner Value"),
+///     ObjBegin,
 ///     ObjEnd,
 ///     SeqEnd,
+///     ObjEnd,
 /// )]
 /// ```
 /// So in this way it's a linear sequence of keys and values where the value is either a str or

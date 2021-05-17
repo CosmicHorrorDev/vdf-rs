@@ -9,6 +9,12 @@ pub struct Vdf<'a> {
     pub value: Value<'a>,
 }
 
+impl<'a> Vdf<'a> {
+    pub fn new(key: Key<'a>, value: Value<'a>) -> Self {
+        Self { key, value }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
     Str(Cow<'a, str>),

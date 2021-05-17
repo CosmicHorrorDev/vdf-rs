@@ -162,10 +162,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
         if let None = tokens.next() {
             match values.len() {
                 0 => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
-                1 => Ok(Self {
-                    key,
-                    value: values.pop().expect("Length was checked"),
-                }),
+                1 => Ok(Self::new(key, values.pop().expect("Length was checked"))),
                 _two_or_more => Err(Error::from(TokenContext::TrailingTokens)),
             }
         } else {
