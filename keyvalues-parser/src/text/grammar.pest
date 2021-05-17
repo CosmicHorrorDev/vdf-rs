@@ -1,6 +1,6 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 
-vdf = _{ SOI ~ pairs ~ EOI }
+vdf = _{ SOI ~ pair ~ EOI }
 
 pairs = { pair* }
 
