@@ -95,6 +95,7 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "just for helping develop things"]
     fn checking() {
         let sample_vdf = r#"
 "Outer Key" "Outer Value"

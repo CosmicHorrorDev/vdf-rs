@@ -4,16 +4,10 @@ mod tests;
 
 use std::{
     borrow::Cow,
-    collections::BTreeMap,
-    fmt,
-    iter::Peekable,
     ops::{Deref, DerefMut},
 };
 
-use crate::{
-    core::{Key, Value, Vdf},
-    tokens::naive::{NaiveToken, NaiveTokenStream},
-};
+use crate::core::{Value, Vdf};
 
 // I've been struggling to get serde to play nice with using a more complex internal structure in a
 // `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into

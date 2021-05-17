@@ -59,14 +59,10 @@ where
         }
     }
 
-    println!("{:#?}", serializer.tokens);
     let token_stream = Vdf::try_from(&serializer.tokens)?;
     Ok(token_stream.to_string())
 }
 
-// TODO: Serializer can probably internally tie the lifetime to 'a so that NaiveToken can use a cow
-// Basically all value types are just represnted as strings with the only exceptions being
-// sequences and maps
 impl<'a> ser::Serializer for &'a mut Serializer {
     type Ok = ();
 
@@ -121,7 +117,13 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_f64(self, v: f64) -> Result<()> {
-        self.serialize_str(&v.to_string())
+        // Force a decimal point
+        if v.trunc() == v {
+            self.tokens.push(NaiveToken::Str(format!("{:.1}", v)));
+            Ok(())
+        } else {
+            self.serialize_str(&v.to_string())
+        }
     }
 
     fn serialize_char(self, v: char) -> Result<()> {

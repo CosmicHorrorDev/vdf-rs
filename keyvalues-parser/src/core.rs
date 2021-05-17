@@ -1,7 +1,7 @@
 use std::{
     borrow::Cow,
     collections::{
-        btree_map::{Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut, IntoIter},
+        btree_map::{IntoIter, Iter, IterMut, Keys, Range, RangeMut, Values, ValuesMut},
         BTreeMap,
     },
     ops::Index,
@@ -90,7 +90,6 @@ impl<'a> Vdf<'a> {
     }
 }
 
-// TODO: implement `IndexMut` as well
 impl<'a> Index<&str> for Vdf<'a> {
     type Output = Vec<Value<'a>>;
 
@@ -138,15 +137,5 @@ impl<'a> Value<'a> {
         } else {
             None
         }
-    }
-
-    // TODO: work out error situation
-    pub fn try_get_str(&self) -> Result<&Cow<'a, str>, ()> {
-        self.get_str().ok_or(())
-    }
-
-    // TODO: work out error situation
-    pub fn try_get_obj(&self) -> Result<&Vdf, ()> {
-        self.get_obj().ok_or(())
     }
 }
