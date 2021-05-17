@@ -1,14 +1,14 @@
-use crate::core::{Key, Value, Vdf};
-
 use std::{
     borrow::Cow,
-    collections::BTreeMap,
     convert::TryFrom,
     iter::Peekable,
     ops::{Deref, DerefMut},
 };
 
-use crate::error::{Error, Result, TokenContext};
+use crate::{
+    core::{Key, Obj, Value, Vdf},
+    error::{Error, Result, TokenContext},
+};
 
 // Used to easily deal with serializing VDF. The serializer spits out a `NaiveTokenStream` that can
 // then be converted to a `Vdf` object which can handle all the rendering functions.
@@ -132,7 +132,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            let mut inner = BTreeMap::new();
+            let mut obj = Obj::new();
             loop {
                 match tokens.peek() {
                     Some(NaiveToken::ObjEnd) => {
@@ -145,7 +145,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                         tokens = res.0;
                         let key = res.1 .0;
                         let values = res.1 .1;
-                        inner.insert(key, values);
+                        obj.insert(key, values);
                     }
                     None => {
                         return Err(Error::from(TokenContext::EofWhileParsingObj));
@@ -153,16 +153,21 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                 }
             }
 
-            Ok((tokens, Value::Obj(Vdf(inner))))
+            Ok((tokens, Value::Obj(obj)))
         }
 
-        let mut inner = BTreeMap::new();
         let tokens = naive_token_stream.iter().peekable();
-        let (mut tokens, (key, values)) = process_key_values(tokens)?;
-        inner.insert(key, values);
+        let (mut tokens, (key, mut values)) = process_key_values(tokens)?;
 
         if let None = tokens.next() {
-            Ok(Self(inner))
+            match values.len() {
+                0 => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
+                1 => Ok(Self {
+                    key,
+                    value: values.pop().expect("Length was checked"),
+                }),
+                _two_or_more => Err(Error::from(TokenContext::TrailingTokens)),
+            }
         } else {
             Err(Error::from(TokenContext::TrailingTokens))
         }

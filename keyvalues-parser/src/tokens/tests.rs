@@ -1,13 +1,21 @@
-use std::{borrow::Cow, collections::BTreeMap, convert::TryFrom};
+use std::{borrow::Cow, convert::TryFrom};
 
 use crate::{
-    core::{Value, Vdf},
+    core::{Obj, Value, Vdf},
     tokens::{
         naive::{NaiveToken, NaiveTokenStream},
         Token, TokenStream,
     },
 };
 
+// "outer"
+// {
+//     "sequence start"
+//     {
+//         "inner key"    "inner val"
+//     }
+//     "sequence start"    "some other inner val"
+// }
 #[test]
 fn vdf_from_token_stream_basics() {
     let naive_token_stream = NaiveTokenStream(vec![
@@ -25,25 +33,25 @@ fn vdf_from_token_stream_basics() {
     ]);
 
     let ideal = {
-        let mut sequence_obj = BTreeMap::new();
+        let mut sequence_obj = Obj::new();
         sequence_obj.insert(
             Cow::from("inner key"),
             vec![Value::Str(Cow::from("inner val"))],
         );
 
-        let mut outer_val = BTreeMap::new();
+        let mut outer_val = Obj::new();
         outer_val.insert(
             Cow::from("sequence start"),
             vec![
-                Value::Obj(Vdf(sequence_obj)),
+                Value::Obj(sequence_obj),
                 Value::Str(Cow::from("some other inner val")),
             ],
         );
 
-        let mut outer = BTreeMap::new();
-        outer.insert(Cow::from("outer"), vec![Value::Obj(Vdf(outer_val))]);
-
-        Vdf(outer)
+        Vdf {
+            key: Cow::from("outer"),
+            value: Value::Obj(outer_val),
+        }
     };
 
     assert_eq!(Vdf::try_from(&naive_token_stream), Ok(ideal));
@@ -95,10 +103,12 @@ fn invalid_vdf_seq_key() {
 #[test]
 fn token_stream_from_vdf() {
     let s = r#"
-"Outer Key" "Outer Value"
 "Outer Key"
 {
     "Inner Key" "Inner Value"
+    "Inner Key"
+    {
+    }
 }
         "#;
     let vdf = Vdf::parse(s).unwrap();
@@ -107,13 +117,14 @@ fn token_stream_from_vdf() {
         token_stream,
         TokenStream(vec![
             Token::Key(Cow::from("Outer Key")),
-            Token::SeqBegin,
-            Token::Str(Cow::from("Outer Value")),
             Token::ObjBegin,
             Token::Key(Cow::from("Inner Key")),
+            Token::SeqBegin,
             Token::Str(Cow::from("Inner Value")),
+            Token::ObjBegin,
             Token::ObjEnd,
             Token::SeqEnd,
+            Token::ObjEnd,
         ])
     );
 }

@@ -7,7 +7,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::core::{Value, Vdf};
+use crate::core::{Obj, Value, Vdf};
 
 // I've been struggling to get serde to play nice with using a more complex internal structure in a
 // `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into
@@ -131,26 +131,11 @@ impl<'a> DerefMut for TokenStream<'a> {
 
 impl<'a> From<Vdf<'a>> for TokenStream<'a> {
     fn from(vdf: Vdf<'a>) -> Self {
+        let Vdf { key, value } = vdf;
+
         let mut inner = Vec::new();
-
-        for (key, values) in vdf.0.into_iter() {
-            inner.push(Token::Key(key));
-
-            // For ease of use a sequence is only marked for keys that have
-            // more than one values (zero shouldn't be allowed)
-            let num_values = values.len();
-            if num_values != 1 {
-                inner.push(Token::SeqBegin);
-            }
-
-            for value in values {
-                inner.extend(TokenStream::from(value).0);
-            }
-
-            if num_values != 1 {
-                inner.push(Token::SeqEnd);
-            }
-        }
+        inner.push(Token::Key(key));
+        inner.extend(TokenStream::from(value).0);
 
         Self(inner)
     }
@@ -168,6 +153,33 @@ impl<'a> From<Value<'a>> for TokenStream<'a> {
                 inner.push(Token::ObjBegin);
                 inner.extend(Self::from(obj).0);
                 inner.push(Token::ObjEnd);
+            }
+        }
+
+        Self(inner)
+    }
+}
+
+impl<'a> From<Obj<'a>> for TokenStream<'a> {
+    fn from(obj: Obj<'a>) -> Self {
+        let mut inner = Vec::new();
+
+        for (key, values) in obj.into_iter() {
+            inner.push(Token::Key(key));
+
+            // For ease of use a sequence is only marked for keys that have
+            // more than one values (zero shouldn't be allowed)
+            let num_values = values.len();
+            if num_values != 1 {
+                inner.push(Token::SeqBegin);
+            }
+
+            for value in values {
+                inner.extend(TokenStream::from(value).0);
+            }
+
+            if num_values != 1 {
+                inner.push(Token::SeqEnd);
             }
         }
 
