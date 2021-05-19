@@ -19,7 +19,10 @@ quoted_char = {
     | "\\" ~ ("\"" | "\\" | "n" | "r" | "t")
 }
 
-unquoted_string = ${ WHITESPACE ~ unquoted_char* ~ WHITESPACE }
+unquoted_string = @{ unquoted_char+ }
+// The wiki page just states that an unquoted string ends with ", {, }, or any
+// whitespace which I feel is likely missing several cases, but for now I will
+// follow that information
 unquoted_char = {
-    !("\"" | "\\" | "{" | "}") ~ ANY
+    !("\"" | "{" | "}" | WHITESPACE)  ~ ANY
 }

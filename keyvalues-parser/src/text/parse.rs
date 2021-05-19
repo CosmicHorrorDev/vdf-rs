@@ -24,14 +24,8 @@ fn parse_pair(grammar_pair: PestPair<'_, Rule>) -> (Cow<'_, str>, Value<'_>) {
     if let Rule::pair = grammar_pair.as_rule() {
         // Parse out the key and value
         let mut grammar_pair_innards = grammar_pair.into_inner();
-        let key_str = grammar_pair_innards
-            .next()
-            .unwrap()
-            .into_inner()
-            .next()
-            .unwrap()
-            .as_str();
-        let key = Cow::from(key_str);
+        let grammar_string = grammar_pair_innards.next().unwrap();
+        let key = parse_string(grammar_string);
 
         let grammar_value = grammar_pair_innards.next().unwrap();
         let value = Value::from(grammar_value);
@@ -40,6 +34,22 @@ fn parse_pair(grammar_pair: PestPair<'_, Rule>) -> (Cow<'_, str>, Value<'_>) {
     } else {
         unreachable!("Prevented by grammar");
     }
+}
+
+fn parse_string(grammar_string: PestPair<'_, Rule>) -> Cow<'_, str> {
+    let s = match grammar_string.as_rule() {
+        // Structure: quoted_string
+        //            \ "
+        //            \ quoted_inner <- Desired
+        //            \ "
+        Rule::quoted_string => grammar_string.into_inner().next().unwrap(),
+        // Structure: unquoted_string <- Desired
+        Rule::unquoted_string => grammar_string,
+        _ => unreachable!("Prevented by grammar"),
+    }
+    .as_str();
+
+    Cow::from(s)
 }
 
 impl<'a> Vdf<'a> {
@@ -58,6 +68,7 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
         //            \ pair <- Desired
         //            \ EOI
         let unparsed = VdfParser::parse(Rule::vdf, s)?.next().unwrap();
+        println!("{:#?}", unparsed);
         Ok(Self::from(unparsed))
     }
 }
@@ -71,14 +82,10 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
 
 impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
     fn from(grammar_value: PestPair<'a, Rule>) -> Self {
-        // Structure: value is ( quoted_string | obj )
+        // Structure: value is ( obj | quoted_string | unquoted_string )
         match grammar_value.as_rule() {
-            // Structure: quoted_string
-            //            \ inner <- Desired
-            Rule::quoted_string => {
-                let value = grammar_value.into_inner().next().unwrap().as_str();
-                Self::Str(Cow::from(value))
-            }
+            // Structure: ( quoted_string | unquoted_string )
+            Rule::quoted_string | Rule::unquoted_string => Self::Str(parse_string(grammar_value)),
             // Structure: obj
             //            \ pairs <- Desired
             Rule::obj => {
@@ -102,38 +109,5 @@ impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
             }
             _ => unreachable!("Prevented by grammar"),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    #[ignore = "just for helping develop things"]
-    fn checking() {
-        let sample_vdf = r#"
-"Outer Key"
-{
-    "Inner Key" "Inner Value"
-    "Seq" "1"
-    "Seq" "2"
-    "Inner Obj"
-    {
-        "Inner Inner Key" "Inner Inner Val"
-    }
-    "Empty Obj"
-    {
-    }
-}
-        "#;
-        let mut vdf = Vdf::parse(sample_vdf).unwrap();
-        // vdf.get_mut("Key").map(|values| {
-        //     if let Value::Str(s) = &mut values[1] {
-        //         *s = Cow::from(s.to_mut().to_uppercase());
-        //     }
-        // });
-        println!("{}", vdf);
-        panic!();
     }
 }
