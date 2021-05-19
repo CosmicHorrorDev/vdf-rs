@@ -1,0 +1,42 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: rendered
+
+---
+"AppState"
+{
+	"AllowOtherDownloadsWhileRunning"	"0"
+	"AutoUpdateBehavior"	"0"
+	"BytesDownloaded"	"564763584"
+	"BytesStaged"	"1045271601"
+	"BytesToDownload"	"564763584"
+	"BytesToStage"	"1045271601"
+	"InstalledDepots"
+	{
+		"1006"
+		{
+			"manifest"	"6688153055340488873"
+			"size"	"59862244"
+		}
+		"896661"
+		{
+			"manifest"	"521795651741005384"
+			"size"	"985409357"
+		}
+	}
+	"LastOwner"	"76561201190449363"
+	"LastUpdated"	"1613644649"
+	"ScheduledAutoUpdate"	"0"
+	"SizeOnDisk"	"1045271601"
+	"StateFlags"	"4"
+	"Universe"	"1"
+	"UpdateResult"	"0"
+	"UserConfig"
+	{
+	}
+	"appid"	"896660"
+	"buildid"	"6246034"
+	"installdir"	"Valheim dedicated server"
+	"name"	"Valheim Dedicated Server"
+}
+

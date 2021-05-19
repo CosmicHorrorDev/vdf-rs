@@ -15,6 +15,9 @@ fn basic() -> BoxedResult<()> {
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
 
+    let rendered = vdf.to_string();
+    insta::assert_snapshot!(rendered);
+
     Ok(())
 }
 
@@ -23,6 +26,9 @@ fn app_manifest() -> BoxedResult<()> {
     let vdf_text = read_asset_file("app_manifest.vdf")?;
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
+
+    let rendered = vdf.to_string();
+    insta::assert_snapshot!(rendered);
 
     Ok(())
 }
@@ -33,6 +39,9 @@ fn comments() -> BoxedResult<()> {
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
 
+    let rendered = vdf.to_string();
+    insta::assert_snapshot!(rendered);
+
     Ok(())
 }
 
@@ -41,6 +50,9 @@ fn unquoted_strings() -> BoxedResult<()> {
     let vdf_text = read_asset_file("unquoted_strings.vdf")?;
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
+
+    let rendered = vdf.to_string();
+    insta::assert_snapshot!(rendered);
 
     Ok(())
 }

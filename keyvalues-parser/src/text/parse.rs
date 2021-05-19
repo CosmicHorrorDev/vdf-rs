@@ -68,7 +68,6 @@ impl<'a> TryFrom<&'a str> for Vdf<'a> {
         //            \ pair <- Desired
         //            \ EOI
         let unparsed = VdfParser::parse(Rule::vdf, s)?.next().unwrap();
-        println!("{:#?}", unparsed);
         Ok(Self::from(unparsed))
     }
 }
