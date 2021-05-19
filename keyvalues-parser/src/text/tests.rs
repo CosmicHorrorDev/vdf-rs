@@ -28,6 +28,15 @@ fn app_manifest() -> BoxedResult<()> {
 }
 
 #[test]
+fn comments() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("comments.vdf")?;
+    let vdf = Vdf::parse(&vdf_text)?;
+    insta::assert_ron_snapshot!(vdf);
+
+    Ok(())
+}
+
+#[test]
 fn unquoted_strings() -> BoxedResult<()> {
     let vdf_text = read_asset_file("unquoted_strings.vdf")?;
     let vdf = Vdf::parse(&vdf_text)?;

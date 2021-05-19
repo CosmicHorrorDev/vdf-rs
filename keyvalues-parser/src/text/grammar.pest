@@ -1,4 +1,5 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
+COMMENT = _{"//" ~ (!"\n" ~ ANY)* }
 
 vdf = _{ SOI ~ pair ~ EOI }
 

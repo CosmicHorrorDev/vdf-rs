@@ -1,0 +1,11 @@
+// Separate line comment before initial pair
+"Outer Key"  // Inline comment
+{
+	// Separate line comment in obj
+	"Seq Key"	"Str Val"
+	"Seq Key"
+	{
+		// Separate line comment in empty obj
+	}
+}
+// Separate line comment after initial pair
