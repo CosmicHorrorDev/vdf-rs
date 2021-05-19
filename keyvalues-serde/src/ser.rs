@@ -117,13 +117,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_f64(self, v: f64) -> Result<()> {
-        // Force a decimal point
-        if v.trunc() == v {
-            self.tokens.push(NaiveToken::Str(format!("{:.1}", v)));
-            Ok(())
-        } else {
-            self.serialize_str(&v.to_string())
-        }
+        self.serialize_str(&v.to_string())
     }
 
     fn serialize_char(self, v: char) -> Result<()> {

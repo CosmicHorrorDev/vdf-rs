@@ -1,5 +1,4 @@
 use std::{
-    borrow::Cow,
     fmt::{self, Write},
 };
 
@@ -12,7 +11,7 @@ fn multiple_char(c: char, amount: usize) -> String {
 fn write_pair<'a>(
     f: &mut fmt::Formatter<'_>,
     num_indents: usize,
-    key: &Cow<'a, str>,
+    key: &str,
     value: &Value<'a>,
 ) -> fmt::Result {
     // Write the indented key
@@ -65,7 +64,7 @@ impl<'a> Value<'a> {
         match self {
             Value::Str(s) => write!(f, "\"{}\"", s),
             Value::Obj(obj) => {
-                write!(f, "{}{{\n", multiple_char('\t', num_indents))?;
+                writeln!(f, "{}{{", multiple_char('\t', num_indents))?;
                 write_obj(f, num_indents + 1, obj)?;
                 // obj.write_indented(f, num_indents + 1)?;
                 write!(f, "{}}}", multiple_char('\t', num_indents))

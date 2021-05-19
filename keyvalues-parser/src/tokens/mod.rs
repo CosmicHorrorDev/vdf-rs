@@ -133,8 +133,7 @@ impl<'a> From<Vdf<'a>> for TokenStream<'a> {
     fn from(vdf: Vdf<'a>) -> Self {
         let Vdf { key, value } = vdf;
 
-        let mut inner = Vec::new();
-        inner.push(Token::Key(key));
+        let mut inner = vec![Token::Key(key)];
         inner.extend(TokenStream::from(value).0);
 
         Self(inner)

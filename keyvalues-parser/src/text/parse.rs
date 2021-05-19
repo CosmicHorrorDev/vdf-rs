@@ -1,3 +1,6 @@
+// Due to Pest generating variants that are all uppercase
+#![allow(clippy::upper_case_acronyms)]
+
 use pest::{iterators::Pair as PestPair, Parser};
 use pest_derive::Parser;
 
@@ -14,7 +17,7 @@ struct VdfParser;
 
 pub(crate) type PestError = pest::error::Error<Rule>;
 
-fn parse_pair<'a>(grammar_pair: PestPair<'a, Rule>) -> (Cow<'a, str>, Value<'a>) {
+fn parse_pair(grammar_pair: PestPair<'_, Rule>) -> (Cow<'_, str>, Value<'_>) {
     // Structure: pair
     //            \ key   <- Desired
     //            \ value <- Desired

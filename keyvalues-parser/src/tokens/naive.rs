@@ -49,7 +49,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
         // Just some helper functions for munching through tokens
         fn process_key_values<'a, I>(
             mut tokens: Peekable<I>,
-        ) -> Result<(Peekable<I>, (Key<'a>, Vec<Value<'a>>))>
+        ) -> Result<(Peekable<I>, Key<'a>, Vec<Value<'a>>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
@@ -61,7 +61,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                     tokens = res.0;
                     let values = res.1;
 
-                    Ok((tokens, (key, values)))
+                    Ok((tokens, key, values))
                 }
                 Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
                 None => Err(Error::from(TokenContext::EofWhileParsingKey)),
@@ -143,8 +143,8 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                     Some(_) => {
                         let res = process_key_values(tokens)?;
                         tokens = res.0;
-                        let key = res.1 .0;
-                        let values = res.1 .1;
+                        let key = res.1;
+                        let values = res.2;
                         obj.insert(key, values);
                     }
                     None => {
@@ -157,9 +157,9 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
         }
 
         let tokens = naive_token_stream.iter().peekable();
-        let (mut tokens, (key, mut values)) = process_key_values(tokens)?;
+        let (mut tokens, key, mut values) = process_key_values(tokens)?;
 
-        if let None = tokens.next() {
+        if tokens.next().is_none() {
             match values.len() {
                 0 => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
                 1 => Ok(Self::new(key, values.pop().expect("Length was checked"))),
