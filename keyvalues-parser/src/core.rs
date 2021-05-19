@@ -3,6 +3,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 pub type Key<'a> = Cow<'a, str>;
 pub type Obj<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Vdf<'a> {
     pub key: Key<'a>,
@@ -15,6 +16,7 @@ impl<'a> Vdf<'a> {
     }
 }
 
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
     Str(Cow<'a, str>),
