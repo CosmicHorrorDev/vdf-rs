@@ -13,6 +13,7 @@ use serde::{
 
 use std::{
     borrow::Cow,
+    convert::TryFrom,
     ops::{Deref, DerefMut},
 };
 
@@ -22,7 +23,7 @@ use crate::{
 };
 
 pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
-    let mut deserializer = Deserializer::from_str(s)?;
+    let mut deserializer = Deserializer::try_from(s)?;
     let t = T::deserialize(&mut deserializer)?;
 
     if deserializer.is_empty() {
@@ -38,14 +39,18 @@ pub struct Deserializer<'de> {
 }
 
 impl<'de> Deserializer<'de> {
-    pub fn from_str(input: &'de str) -> Result<Self> {
-        let vdf = Vdf::parse(input)?;
-        let tokens = TokenStream::from(vdf);
-        Ok(Self { tokens })
-    }
-
     fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
         self.next_key_or_str().ok_or(Error::EofWhileParsingValue)
+    }
+}
+
+impl<'de> TryFrom<&'de str> for Deserializer<'de> {
+    type Error = Error;
+
+    fn try_from(value: &'de str) -> Result<Self> {
+        let vdf = Vdf::parse(value)?;
+        let tokens = TokenStream::from(vdf);
+        Ok(Self { tokens })
     }
 }
 
