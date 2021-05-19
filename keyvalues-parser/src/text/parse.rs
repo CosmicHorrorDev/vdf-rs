@@ -71,11 +71,11 @@ impl<'a> From<PestPair<'a, Rule>> for Vdf<'a> {
 
 impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
     fn from(grammar_value: PestPair<'a, Rule>) -> Self {
-        // Structure: value is ( string | obj )
+        // Structure: value is ( quoted_string | obj )
         match grammar_value.as_rule() {
-            // Structure: string
+            // Structure: quoted_string
             //            \ inner <- Desired
-            Rule::string => {
+            Rule::quoted_string => {
                 let value = grammar_value.into_inner().next().unwrap().as_str();
                 Self::Str(Cow::from(value))
             }
@@ -95,7 +95,7 @@ impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
                         (*entry).push(value);
                     }
 
-                    Value::Obj(obj)
+                    Self::Obj(obj)
                 } else {
                     unreachable!("Prevented by grammar");
                 }

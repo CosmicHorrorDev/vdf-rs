@@ -6,15 +6,20 @@ pairs = { pair* }
 
 pair = { key ~ value }
 
-key = _{ string }
+key = _{ quoted_string | unquoted_string }
 
-value = _{ string | obj }
+value = _{ obj | quoted_string | unquoted_string }
 
 obj = { "{" ~ pairs ~ "}" }
 
-string = ${ "\"" ~ inner ~ "\"" }
-inner = @{ char* }
-char = {
+quoted_string = ${ "\"" ~ quoted_inner ~ "\"" }
+quoted_inner = @{ quoted_char* }
+quoted_char = {
     !("\"" | "\\")  ~ ANY
     | "\\" ~ ("\"" | "\\" | "n" | "r" | "t")
+}
+
+unquoted_string = ${ WHITESPACE ~ unquoted_char* ~ WHITESPACE }
+unquoted_char = {
+    !("\"" | "\\" | "{" | "}") ~ ANY
 }
