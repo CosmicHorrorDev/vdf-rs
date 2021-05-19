@@ -9,9 +9,8 @@ fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     Ok(val)
 }
 
-#[test]
-fn basic() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("basic.vdf")?;
+fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
+    let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
 
@@ -21,38 +20,16 @@ fn basic() -> BoxedResult<()> {
     Ok(())
 }
 
-#[test]
-fn app_manifest() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("app_manifest.vdf")?;
-    let vdf = Vdf::parse(&vdf_text)?;
-    insta::assert_ron_snapshot!(vdf);
-
-    let rendered = vdf.to_string();
-    insta::assert_snapshot!(rendered);
-
-    Ok(())
+macro_rules! parse_render_test {
+    ($func_name:ident, $file_name: literal) => {
+        #[test]
+        fn $func_name() -> BoxedResult<()> {
+            snapshot_test_parse_and_render($file_name)
+        }
+    };
 }
 
-#[test]
-fn comments() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("comments.vdf")?;
-    let vdf = Vdf::parse(&vdf_text)?;
-    insta::assert_ron_snapshot!(vdf);
-
-    let rendered = vdf.to_string();
-    insta::assert_snapshot!(rendered);
-
-    Ok(())
-}
-
-#[test]
-fn unquoted_strings() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("unquoted_strings.vdf")?;
-    let vdf = Vdf::parse(&vdf_text)?;
-    insta::assert_ron_snapshot!(vdf);
-
-    let rendered = vdf.to_string();
-    insta::assert_snapshot!(rendered);
-
-    Ok(())
-}
+parse_render_test!(basic, "basic.vdf");
+parse_render_test!(app_manifest, "app_manifest.vdf");
+parse_render_test!(comments, "comments.vdf");
+parse_render_test!(unquoted_strings, "unquoted_strings.vdf");

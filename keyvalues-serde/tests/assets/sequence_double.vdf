@@ -2,10 +2,10 @@
 {
 	"inner"
 	{
-		"field"	"Some String"
+		"inner"	"Some String"
 	}
 	"inner"
 	{
-		"field"	"Another String"
+		"inner"	"Another String"
 	}
 }

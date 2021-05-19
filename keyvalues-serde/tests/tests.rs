@@ -40,6 +40,14 @@ where
     Ok(())
 }
 
+macro_rules! test_ser_de {
+    ($test_val:ident, $file_name:literal) => {{
+        let vdf_text = read_asset_file($file_name)?;
+        test_vdf_deserialization(&vdf_text, &$test_val)?;
+        test_vdf_serialization(&vdf_text, &$test_val)
+    }};
+}
+
 #[test]
 fn basic_struct() -> BoxedResult<()> {
     #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -52,9 +60,7 @@ fn basic_struct() -> BoxedResult<()> {
         field1: -123,
         field2: String::from("Sample String"),
     };
-    let vdf_text = read_asset_file("basic_struct.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "basic_struct.vdf")
 }
 
 #[test]
@@ -89,10 +95,8 @@ fn basic_types() -> BoxedResult<()> {
         float32: 1.0,
         float64: 2.0,
     };
-    let vdf_text = read_asset_file("basic_types.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
     // TODO: fields get serializaed in alphabetical order so make sure that is fine
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "basic_types.vdf")
 }
 
 #[test]
@@ -100,27 +104,16 @@ fn nested_structs() -> BoxedResult<()> {
     #[derive(Deserialize, Serialize, Debug, PartialEq)]
     struct OuterStruct {
         field: String,
-        inner1: InnerStruct,
-        inner2: InnerStruct,
-    }
-
-    #[derive(Deserialize, Serialize, Debug, PartialEq)]
-    struct InnerStruct {
-        field: String,
+        inner1: Container<String>,
+        inner2: Container<String>,
     }
 
     let val = OuterStruct {
         field: String::from("Outer Value"),
-        inner1: InnerStruct {
-            field: String::from("Inner1 Value"),
-        },
-        inner2: InnerStruct {
-            field: String::from("Inner2 Value"),
-        },
+        inner1: Container::new(String::from("Inner1 Value")),
+        inner2: Container::new(String::from("Inner2 Value")),
     };
-    let vdf_text = read_asset_file("nested_structs.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "nested_structs.vdf")
 }
 
 #[test]
@@ -129,9 +122,7 @@ fn newtype_struct() -> BoxedResult<()> {
     struct I32Wrapper(i32);
 
     let val = Container::new(I32Wrapper(123));
-    let vdf_text = read_asset_file("newtype_struct.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "newtype_struct.vdf")
 }
 
 #[test]
@@ -143,24 +134,13 @@ fn unit_variant_enum() -> BoxedResult<()> {
     }
 
     let val = Container::new(SampleEnum::Foo);
-    let vdf_text = read_asset_file("unit_variant_enum.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "unit_variant_enum.vdf")
 }
 
 #[test]
 fn sequence_single() -> BoxedResult<()> {
-    #[derive(Deserialize, Serialize, Debug, PartialEq)]
-    struct Inner {
-        field: String,
-    }
-
-    let val = Container::new(vec![Inner {
-        field: String::from("Some String"),
-    }]);
-    let vdf_text = read_asset_file("sequence_single.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    let val = Container::new(vec![Container::new(String::from("Some String"))]);
+    test_ser_de!(val, "sequence_single.vdf")
 }
 
 #[test]
@@ -171,24 +151,16 @@ fn sequence_double() -> BoxedResult<()> {
     }
 
     let val = Container::new(vec![
-        Inner {
-            field: String::from("Some String"),
-        },
-        Inner {
-            field: String::from("Another String"),
-        },
+        Container::new(String::from("Some String")),
+        Container::new(String::from("Another String")),
     ]);
-    let vdf_text = read_asset_file("sequence_double.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "sequence_double.vdf")
 }
 
 #[test]
 fn tuple() -> BoxedResult<()> {
     let val = Container::new((true, 2, String::from("Sample Text")));
-    let vdf_text = read_asset_file("tuple.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "tuple.vdf")
 }
 
 #[test]
@@ -197,9 +169,7 @@ fn tuple_struct() -> BoxedResult<()> {
     struct TupleStruct(bool, i32, String);
 
     let val = Container::new(TupleStruct(true, 2, String::from("Sample Text")));
-    let vdf_text = read_asset_file("tuple.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "tuple.vdf")
 }
 
 // TODO: it's not clear if the ordering of values is expected to stay the same in vdf. If that is
@@ -212,9 +182,7 @@ fn hashmap_nested() -> BoxedResult<()> {
     inner.insert(1, "Bar".to_owned());
     inner.insert(2, "Baz".to_owned());
     let val = Container::new(inner);
-    let vdf_text = read_asset_file("hashmap_nested.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "hashmap_nested.vdf")
 }
 
 #[test]
@@ -234,18 +202,13 @@ fn hashmap_top_level() -> BoxedResult<()> {
 }
 
 #[test]
-// #[ignore = "Serialization fails since ignoring the value still has a key. Maybe use a marker?"]
 fn option_none() -> BoxedResult<()> {
     let val: Container<Option<String>> = Container::new(None);
-    let vdf_text = read_asset_file("option_none.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "option_none.vdf")
 }
 
 #[test]
 fn option_some() -> BoxedResult<()> {
     let val = Container::new(Some(String::from("Some value")));
-    let vdf_text = read_asset_file("option_some.vdf")?;
-    test_vdf_deserialization(&vdf_text, &val)?;
-    test_vdf_serialization(&vdf_text, &val)
+    test_ser_de!(val, "option_some.vdf")
 }
