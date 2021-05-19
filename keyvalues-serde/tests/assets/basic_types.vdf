@@ -2,8 +2,8 @@
 {
 	"boolean"	"0"
 	"character"	"a"
-	"float32"	"1.0"
-	"float64"	"2.0"
+	"float32"	"1"
+	"float64"	"2"
 	"signed16"	"2"
 	"signed32"	"3"
 	"signed64"	"4"

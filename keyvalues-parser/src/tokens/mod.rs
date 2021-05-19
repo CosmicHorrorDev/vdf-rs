@@ -76,16 +76,6 @@ impl<'a> TokenStream<'a> {
         )
     }
 
-    // This is pretty bad for performance. If it's an issue we can flip the direction of the tokens
-    // when we store it so that we can pop off the back instead
-    pub fn next(&mut self) -> Option<Token<'a>> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(self.remove(0))
-        }
-    }
-
     pub fn next_key(&mut self) -> Option<Cow<'a, str>> {
         if self.peek_is_key() {
             if let Some(Token::Key(s)) = self.next() {
@@ -112,6 +102,20 @@ impl<'a> TokenStream<'a> {
 
     pub fn next_key_or_str(&mut self) -> Option<Cow<'a, str>> {
         self.next_key().or_else(|| self.next_str())
+    }
+}
+
+impl<'a> Iterator for TokenStream<'a> {
+    type Item = Token<'a>;
+
+    // This is pretty bad for performance. If it's an issue we can flip the direction of the tokens
+    // when we store it so that we can pop off the back instead
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.is_empty() {
+            None
+        } else {
+            Some(self.remove(0))
+        }
     }
 }
 
