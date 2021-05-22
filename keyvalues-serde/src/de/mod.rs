@@ -39,6 +39,7 @@ pub struct Deserializer<'de> {
 }
 
 impl<'de> Deserializer<'de> {
+    // TODO: this error isn't super accurate since it works on Keys and Values
     fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
         self.next_key_or_str().ok_or(Error::EofWhileParsingValue)
     }
@@ -102,16 +103,13 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     fn deserialize_bool<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        if let Some(s) = self.next_key_or_str() {
-            if s == "0" {
-                visitor.visit_bool(false)
-            } else if s == "1" {
-                visitor.visit_bool(true)
-            } else {
-                Err(Error::InvalidBoolean)
-            }
+        let val = self.next_key_or_str_else_eof()?;
+        if val == "0" {
+            visitor.visit_bool(false)
+        } else if val == "1" {
+            visitor.visit_bool(true)
         } else {
-            Err(Error::EofWhileParsingValue)
+            Err(Error::InvalidBoolean)
         }
     }
 
