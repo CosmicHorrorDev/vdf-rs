@@ -6,6 +6,19 @@ fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
 }
 
+fn write_escaped_str<'a>(f: &mut fmt::Formatter<'_>, s: &str) -> fmt::Result {
+    f.write_char('"')?;
+
+    for c in s.chars() {
+        match c {
+            '\\' => f.write_str(r"\\"),
+            reg => f.write_char(reg),
+        }?
+    }
+
+    f.write_char('"')
+}
+
 fn write_pair<'a>(
     f: &mut fmt::Formatter<'_>,
     num_indents: usize,
@@ -13,7 +26,9 @@ fn write_pair<'a>(
     value: &Value<'a>,
 ) -> fmt::Result {
     // Write the indented key
-    write!(f, "{}\"{}\"", multiple_char('\t', num_indents), key)?;
+    f.write_str(&multiple_char('\t', num_indents))?;
+    write_escaped_str(f, key)?;
+    // write!(f, "{}\"{}\"", multiple_char('\t', num_indents), key)?;
 
     // Followed by the value
     if value.is_str() {
@@ -60,7 +75,7 @@ impl<'a> Value<'a> {
     fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
         // Only `Obj` gets indented
         match self {
-            Value::Str(s) => write!(f, "\"{}\"", s),
+            Value::Str(s) => write_escaped_str(f, s),
             Value::Obj(obj) => {
                 writeln!(f, "{}{{", multiple_char('\t', num_indents))?;
                 write_obj(f, num_indents + 1, obj)?;

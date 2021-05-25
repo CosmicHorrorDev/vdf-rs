@@ -37,19 +37,50 @@ fn parse_pair(grammar_pair: PestPair<'_, Rule>) -> (Cow<'_, str>, Value<'_>) {
 }
 
 fn parse_string(grammar_string: PestPair<'_, Rule>) -> Cow<'_, str> {
-    let s = match grammar_string.as_rule() {
+    match grammar_string.as_rule() {
         // Structure: quoted_string
         //            \ "
         //            \ quoted_inner <- Desired
         //            \ "
-        Rule::quoted_string => grammar_string.into_inner().next().unwrap(),
+        Rule::quoted_string => {
+            let s = grammar_string.into_inner().next().unwrap().as_str();
+            try_parse_escaped_string(s).unwrap()
+        }
         // Structure: unquoted_string <- Desired
-        Rule::unquoted_string => grammar_string,
+        Rule::unquoted_string => {
+            let s = grammar_string.as_str();
+            Cow::from(s)
+        }
         _ => unreachable!("Prevented by grammar"),
     }
-    .as_str();
+}
 
-    Cow::from(s)
+fn try_parse_escaped_string<'a>(s: &'a str) -> Result<Cow<'a, str>> {
+    if s.contains('\\') {
+        // escaped version won't be quite as long, but it will likely be close
+        let mut escaped = String::with_capacity(s.len());
+        let mut it = s.chars().peekable();
+
+        while let Some(ch) = it.next() {
+            if ch == '\\' {
+                // Character is escaped so time to determine the actual character
+                match it.next() {
+                    Some('n') => escaped.push('\n'),
+                    Some('t') => escaped.push('\t'),
+                    Some('\\') => escaped.push('\\'),
+                    Some('\"') => escaped.push('\"'),
+                    // TODO
+                    _ => todo!("Raise a custom error here, once we can find the location"),
+                }
+            } else {
+                escaped.push(ch)
+            }
+        }
+
+        Ok(Cow::from(escaped))
+    } else {
+        Ok(Cow::from(s))
+    }
 }
 
 impl<'a> Vdf<'a> {

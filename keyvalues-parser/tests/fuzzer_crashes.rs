@@ -11,7 +11,7 @@ fn read_crash_file(file_name: &str) -> String {
 type BoxedResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 #[test]
-fn failure1() -> BoxedResult<()> {
+fn fuzz_failure_1() -> BoxedResult<()> {
     let contents = read_crash_file("crash-1");
 
     let parsed = Vdf::parse(&contents).unwrap();
