@@ -77,8 +77,5 @@ jobs:
         with:
           command: install
           args: cargo-fuzz
-      - run: cd keyvalues-parser
-      - uses: actions-rs/cargo@v1
-        with:
-          command: fuzz
-          args: run parse -- -max_total_time=600
+      - name: Cargo Fuzz
+        run: cd keyvalues-parser && cargo fuzz run parse -- -max_total_time=600
