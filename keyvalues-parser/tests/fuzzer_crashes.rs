@@ -26,3 +26,4 @@ macro_rules! parse_fuzz_regression_test {
 
 parse_fuzz_regression_test!(fuzzer_crash_1, "crash-1");
 parse_fuzz_regression_test!(fuzzer_crash_2, "crash-2");
+parse_fuzz_regression_test!(fuzzer_crash_3, "crash-3");

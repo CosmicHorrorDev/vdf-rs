@@ -69,6 +69,7 @@ fn parse_escaped_string(inner: PestPair<'_, Rule>) -> Cow<'_, str> {
                 // character
                 match it.next() {
                     Some('n') => escaped.push('\n'),
+                    Some('r') => escaped.push('\r'),
                     Some('t') => escaped.push('\t'),
                     Some('\\') => escaped.push('\\'),
                     Some('\"') => escaped.push('\"'),
