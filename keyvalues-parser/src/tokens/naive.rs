@@ -40,7 +40,7 @@ impl DerefMut for NaiveTokenStream {
     }
 }
 
-// The conversion from `NaiveTokenStream` to `Vdf` leverages all the `proccess_*` functions which
+// The conversion from `NaiveTokenStream` to `Vdf` leverages all the `process_*` functions which
 // pass off an owned iterator through all of them to deal with the borrow checker
 impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     type Error = Error;

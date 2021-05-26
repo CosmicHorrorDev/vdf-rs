@@ -59,9 +59,9 @@ fn parse_escaped_string(inner: PestPair<'_, Rule>) -> Cow<'_, str> {
     let s = inner.as_str();
 
     if s.contains('\\') {
-        // escaped version won't be quite as long, but it will likely be close
+        // Escaped version won't be quite as long, but it will likely be close
         let mut escaped = String::with_capacity(s.len());
-        let mut it = s.chars().peekable();
+        let mut it = s.chars();
 
         while let Some(ch) = it.next() {
             if ch == '\\' {

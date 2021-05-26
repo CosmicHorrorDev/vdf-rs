@@ -62,3 +62,23 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+  fuzz:
+    name: "Fuzz (10 minutes)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-fuzz
+      - run: cd keyvalues-parser
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fuzz
+          args: run parse -- -max_total_time=600
