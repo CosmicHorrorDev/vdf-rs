@@ -6,7 +6,7 @@ fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
 }
 
-fn write_escaped_str<'a>(f: &mut fmt::Formatter<'_>, s: &str) -> fmt::Result {
+fn write_escaped_str(f: &mut fmt::Formatter<'_>, s: &str) -> fmt::Result {
     f.write_char('"')?;
 
     for c in s.chars() {
@@ -28,7 +28,6 @@ fn write_pair<'a>(
     // Write the indented key
     f.write_str(&multiple_char('\t', num_indents))?;
     write_escaped_str(f, key)?;
-    // write!(f, "{}\"{}\"", multiple_char('\t', num_indents), key)?;
 
     // Followed by the value
     if value.is_str() {
