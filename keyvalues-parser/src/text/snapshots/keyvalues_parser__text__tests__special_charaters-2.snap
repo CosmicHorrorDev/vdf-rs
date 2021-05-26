@@ -1,0 +1,13 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: rendered
+
+---
+"Outer Key"
+{
+	"Escaped Characters"	"\n\r\t\"\\"
+	"Mixed"	"\n\t\n\t\n\t\\\""
+	"Raw Newline"	"\n"
+	"Raw Tab"	"\t"
+}
+

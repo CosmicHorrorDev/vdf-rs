@@ -1,0 +1,13 @@
+"Outer Key"
+{
+	"Raw Tab" "	"
+
+	"Raw Newline" "
+"
+
+	"Escaped Characters" "\n\r\t\"\\"
+
+	"Mixed" "
+	\n\t
+	\\\""
+}
