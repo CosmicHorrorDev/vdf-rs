@@ -11,6 +11,9 @@ fn write_escaped_str(f: &mut fmt::Formatter<'_>, s: &str) -> fmt::Result {
 
     for c in s.chars() {
         match c {
+            '\n' => f.write_str(r"\n"),
+            '\t' => f.write_str(r"\t"),
+            '\"' => f.write_str(r#"\""#),
             '\\' => f.write_str(r"\\"),
             reg => f.write_char(reg),
         }?
