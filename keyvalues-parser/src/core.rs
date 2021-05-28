@@ -47,4 +47,20 @@ impl<'a> Value<'a> {
             None
         }
     }
+
+    pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
+        if let Value::Str(s) = self {
+            Some(s)
+        } else {
+            None
+        }
+    }
+
+    pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
+        if let Value::Obj(obj) = self {
+            Some(obj)
+        } else {
+            None
+        }
+    }
 }

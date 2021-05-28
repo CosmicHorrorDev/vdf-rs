@@ -6,7 +6,7 @@ Valve's Data Format v1 and v2 (VDF) also known as
 
 Currently the project is composed of
 
- - [`keyvalues-parser`](keyvalues-parse) - A lower(ish) level parser/renderer for VDF text files
+ - [`keyvalues-parser`](keyvalues-parser) - A lower(ish) level parser/renderer for VDF text files
  - [`keyvalues-serde`](keyvalues-serde) - (De)serialization built on the [`serde`](https://lib.rs/crates/serde) framework
 
 ## License
