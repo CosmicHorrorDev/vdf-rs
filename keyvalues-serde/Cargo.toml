@@ -4,10 +4,12 @@ version = "0.1.0"
 authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
+keywords = ["keyvalues", "vdf", "steam"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# TODO: update this to the actual package when published
 keyvalues-parser = { path = "../keyvalues-parser" }
 regex = "1.5.4"
 serde = { version = "1.0.125", features = ["derive"] }
