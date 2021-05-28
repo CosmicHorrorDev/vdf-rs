@@ -23,7 +23,7 @@ use crate::{
 /// keys is inferred from the general structure. This also performs validation that all keys have
 /// an associated value, all markers for mutli-token structures make sense, and that there can't
 /// be a sequence as a value in another sequence.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NaiveTokenStream(pub Vec<NaiveToken>);
 
 impl Deref for NaiveTokenStream {
@@ -171,7 +171,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum NaiveToken {
     Str(String),
     ObjBegin,

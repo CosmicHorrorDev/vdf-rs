@@ -22,6 +22,10 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: install
+          args: cargo-quickinstall
+      - uses: actions-rs/cargo@v1
+        with:
+          command: quickinstall
           args: cargo-fuzz
       - name: Cargo Fuzz
         run: cargo fuzz run parse -- -max_total_time=600 -verbosity=0

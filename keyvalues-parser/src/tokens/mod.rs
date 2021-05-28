@@ -53,7 +53,7 @@ use crate::core::{Obj, Value, Vdf};
 /// ```
 /// So in this way it's a linear sequence of keys and values where the value is either a str or
 /// an object.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TokenStream<'a>(pub Vec<Token<'a>>);
 
 impl<'a> TokenStream<'a> {
@@ -190,7 +190,7 @@ impl<'a> From<Obj<'a>> for TokenStream<'a> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Token<'a> {
     Key(Cow<'a, str>),
     Str(Cow<'a, str>),
