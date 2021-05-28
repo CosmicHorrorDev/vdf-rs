@@ -2,9 +2,11 @@ on:
   push:
     paths:
       - "keyvalues-parser/src/**"
+      - "keyvalues-parser/fuzz/**"
   pull_request:
     paths:
       - "keyvalues-parser/src/**"
+      - "keyvalues-parser/fuzz/**"
 
 name: Fuzz Parser
 
