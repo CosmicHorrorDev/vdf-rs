@@ -3,7 +3,7 @@ COMMENT = _{"//" ~ (!"\n" ~ ANY)* }
 
 vdf = _{ SOI ~ pair ~ EOI }
 
-pairs = { pair* }
+pairs = _{ pair* }
 
 pair = { key ~ value }
 

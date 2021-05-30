@@ -120,25 +120,16 @@ impl<'a> From<PestPair<'a, Rule>> for Value<'a> {
             // Structure: ( quoted_string | unquoted_string )
             Rule::quoted_string | Rule::unquoted_string => Self::Str(parse_string(grammar_value)),
             // Structure: obj
-            //            \ pairs <- Desired
+            //            \ pair* <- Desired
             Rule::obj => {
-                let grammar_pairs = grammar_value.into_inner().next().unwrap();
-
-                // Structure: pairs
-                //            \ pair* <- Desired
-                if let Rule::pairs = grammar_pairs.as_rule() {
-                    // Parse out each pair and add them to the `Obj`
-                    let mut obj = Obj::new();
-                    for grammar_pair in grammar_pairs.into_inner() {
-                        let (key, value) = parse_pair(grammar_pair);
-                        let entry = obj.entry(key).or_default();
-                        (*entry).push(value);
-                    }
-
-                    Self::Obj(obj)
-                } else {
-                    unreachable!("Prevented by grammar");
+                let mut obj = Obj::new();
+                for grammar_pair in grammar_value.into_inner() {
+                    let (key, value) = parse_pair(grammar_pair);
+                    let entry = obj.entry(key).or_default();
+                    (*entry).push(value);
                 }
+
+                Self::Obj(obj)
             }
             _ => unreachable!("Prevented by grammar"),
         }
