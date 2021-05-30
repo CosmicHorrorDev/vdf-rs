@@ -9,7 +9,7 @@ pair = { key ~ value }
 
 key = _{ quoted_string | unquoted_string }
 
-value = _{ obj | quoted_string | unquoted_string }
+value = _{ quoted_string | obj | unquoted_string }
 
 obj = { "{" ~ pairs ~ "}" }
 
