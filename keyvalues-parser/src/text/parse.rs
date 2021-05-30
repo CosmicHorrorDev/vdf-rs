@@ -55,6 +55,9 @@ fn parse_string(grammar_string: PestPair<'_, Rule>) -> Cow<'_, str> {
     }
 }
 
+// Note: there can be a slight performance win here by having the grammar skip capturing
+// quoted_inner and instead just slice off the starting and ending '"', but I'm going to pass since
+// it seems like a hack for a ~4% improvement
 fn parse_escaped_string(inner: PestPair<'_, Rule>) -> Cow<'_, str> {
     let s = inner.as_str();
 
