@@ -24,3 +24,9 @@ name = "parse"
 path = "fuzz_targets/parse.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "token_stream"
+path = "fuzz_targets/token_stream.rs"
+test = false
+doc = false

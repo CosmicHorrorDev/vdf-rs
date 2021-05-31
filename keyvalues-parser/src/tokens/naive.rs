@@ -8,6 +8,7 @@ use std::{
 use crate::{
     core::{Key, Obj, Value, Vdf},
     error::{Error, Result, TokenContext},
+    tokens::{Token, TokenStream},
 };
 
 // Used to easily deal with serializing VDF. The serializer spits out a `NaiveTokenStream` that can
@@ -171,6 +172,13 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     }
 }
 
+impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
+    fn from(token_stream: TokenStream<'a>) -> Self {
+        let inner = token_stream.into_iter().map(NaiveToken::from).collect();
+        Self(inner)
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum NaiveToken {
     Str(String),
@@ -184,5 +192,17 @@ pub enum NaiveToken {
 impl NaiveToken {
     pub fn str<S: ToString>(s: S) -> Self {
         Self::Str(s.to_string())
+    }
+}
+
+impl<'a> From<Token<'a>> for NaiveToken {
+    fn from(token: Token<'a>) -> Self {
+        match token {
+            Token::Key(s) | Token::Str(s) => Self::Str(s.into_owned()),
+            Token::ObjBegin => Self::ObjBegin,
+            Token::ObjEnd => Self::ObjEnd,
+            Token::SeqBegin => Self::SeqBegin,
+            Token::SeqEnd => Self::SeqEnd,
+        }
     }
 }
