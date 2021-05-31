@@ -13,6 +13,8 @@ text
 
 ## Installation
 
+_Note: this requires at least Rust `1.40.0`_
+
 Just add the library to your `Cargo.toml`
 
 ```toml
@@ -33,6 +35,10 @@ being taken
 
 - Not respecting the ordering of key-value pairs, where the pairs are stored in a `BTreeMap` that sorts the values based on the key
 - Because of limitations in representing sequences, an empty `Vec` of values will be rendered as a missing keyvalue pair
+
+## Benchmarks
+
+A simple set of benchmarks is available in the `benches` directory with more detail discussed in `benches/README.md`
 
 ## License
 

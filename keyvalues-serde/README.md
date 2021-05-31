@@ -8,6 +8,8 @@ makes it easy to deal with VDF text files using strongly typed Rust structures.
 
 ## Installation
 
+_Note: this requires at least Rust `1.40.0`_
+
 Just add the following to your `Cargo.toml`
 
 ```toml
@@ -44,7 +46,7 @@ the
     - Represented as several pairs with the same key
 - TupleStruct
     - Considered a wrapper over the contained tuple
-- Map (`HashMap`-like types
+- Map (`HashMap`-like types)
     - Represented by a list of pairs contained within curly-braces `{}`
 - Struct
     - The same as Map. The name of the struct is ignored unless it's the used for the top-level key

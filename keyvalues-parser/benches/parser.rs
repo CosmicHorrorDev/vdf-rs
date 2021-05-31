@@ -14,7 +14,7 @@ fn read_app_info() -> Result<String, std::io::Error> {
 pub fn parse_time(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
-    c.bench_function("parse app info", |b| {
+    c.bench_function("parse timing", |b| {
         b.iter(|| Vdf::parse(black_box(&vdf_text)))
     });
 }
