@@ -62,24 +62,18 @@ impl<'a> TokenStream<'a> {
     }
 
     pub fn peek_is_key(&self) -> bool {
-        match self.peek() {
-            Some(Token::Key(_)) => true,
-            _ => false,
-        }
+        matches!(self.peek(), Some(Token::Key(_)))
     }
 
     pub fn peek_is_str(&self) -> bool {
-        match self.peek() {
-            Some(Token::Str(_)) => true,
-            _ => false,
-        }
+        matches!(self.peek(), Some(Token::Str(_)))
     }
 
     pub fn peek_is_value(&self) -> bool {
-        match self.peek() {
-            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_)) => true,
-            _ => false,
-        }
+        matches!(
+            self.peek(),
+            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
+        )
     }
 
     pub fn next_key(&mut self) -> Option<Cow<'a, str>> {
