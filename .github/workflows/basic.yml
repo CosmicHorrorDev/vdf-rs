@@ -3,61 +3,54 @@ on: [push, pull_request]
 name: Continuous Integration
 
 jobs:
-  check:
-    name: Check
+  multiple_toolchains:
+    name: Build and Test
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - 1.42.0
 
-  test:
-    name: Test Suite
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+
+      - name: Install ${{ matrix.rust }} toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: ${{ matrix.rust }}
           override: true
-      - uses: actions-rs/cargo@v1
+
+      - name: Cargo Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Cargo Build
+        uses: actions-rs/cargo@v1
         with:
           command: test
 
-  fmt:
-    name: Rustfmt
+  msrv:
+    name: Format and Check Lints
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: stable
+          toolchain: 1.42.0
           override: true
-      - run: rustup component add rustfmt
+          components: rustfmt, clippy
+
       - uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - run: rustup component add clippy
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
