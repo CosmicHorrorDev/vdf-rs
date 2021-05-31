@@ -4,6 +4,7 @@ the ordinary for this project. The essentials are
 - Test with `cargo test`
 - Format code with `cargo fmt`
 - Fix lints found with `cargo clippy`
+- Benchmarks can be performed with `cargo bench` (optionally `cargo criterion`)
 
 and the third-party cargo extensions used are
 
