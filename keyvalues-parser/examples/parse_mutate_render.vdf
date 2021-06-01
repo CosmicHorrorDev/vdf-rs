@@ -1,0 +1,15 @@
+"controller_mappings"
+{
+	"version"		"2"
+	"group"
+	{
+		"mode"		"four_buttons"
+	}
+	"group"
+	{
+		"settings"
+		{
+			"requires_click"		"0"
+		}
+	}
+}

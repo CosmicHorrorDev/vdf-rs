@@ -1,0 +1,37 @@
+"controller_mappings"
+{
+    "version"  "2"
+    "game"     "Generic Gamepad"
+
+    "group"
+    {
+        "id"    "0"
+        "mode"  "four_buttons"
+        "bindings"
+        {
+            "button_a"  "xinput_button A"
+            "button_b"  "xinput_button B"
+            "button_x"  "xinput_button X"
+            "button_y"  "xinput_button Y"
+        }
+    }
+
+    "group"
+    {
+        "id"    "1"
+        "mode"  "dpad"
+        "bindings"
+        {
+            "dpad_north"  "xinput_button dpad_up"
+            "dpad_south"  "xinput_button dpad_down"
+            "dpad_east"   "xinput_button dpad_right"
+            "dpad_west"   "xinput_button dpad_left"
+        }
+    }
+
+    "group_source_bindings"
+    {
+        "0"    "button_diamond"
+        "1"    "left_trackpad"
+    }
+}

@@ -1,45 +1,13 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
-const VDF_TEXT: &str = r#"
-"controller_mappings"
-{
-    "version"  "2"
-    "game"     "Generic Gamepad"
+use std::{collections::HashMap, fs, path::Path};
 
-    "group"
-    {
-        "id"    "0"
-        "mode"  "four_buttons"
-        "bindings"
-        {
-            "button_a"  "xinput_button A"
-            "button_b"  "xinput_button B"
-            "button_x"  "xinput_button X"
-            "button_y"  "xinput_button Y"
-        }
-    }
-
-    "group"
-    {
-        "id"    "1"
-        "mode"  "dpad"
-        "bindings"
-        {
-            "dpad_north"  "xinput_button dpad_up"
-            "dpad_south"  "xinput_button dpad_down"
-            "dpad_east"   "xinput_button dpad_right"
-            "dpad_west"   "xinput_button dpad_left"
-        }
-    }
-
-    "group_source_bindings"
-    {
-        "0"    "button_diamond"
-        "1"    "left_trackpad"
-    }
+fn read_asset_file(file_name: &str) -> std::io::Result<String> {
+    let asset_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(file_name);
+    fs::read_to_string(asset_path)
 }
-"#;
 
 #[derive(Deserialize, Serialize, Debug)]
 struct ControllerMappings {
@@ -65,8 +33,10 @@ enum ControllerComponent {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let vdf_text = read_asset_file("controller_mappings.vdf")?;
+
     // Deserialize the VDF file
-    let mut mappings: ControllerMappings = keyvalues_serde::from_str(VDF_TEXT)?;
+    let mut mappings: ControllerMappings = keyvalues_serde::from_str(&vdf_text)?;
     println!("Deserialized representation:");
     println!("{:#?}", mappings);
 

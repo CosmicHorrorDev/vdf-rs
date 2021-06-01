@@ -1,24 +1,13 @@
 use keyvalues_parser::Vdf;
 
-use std::borrow::Cow;
+use std::{borrow::Cow, fs, path::Path};
 
-const VDF_TEXT: &str = r#"
-"controller_mappings"
-{
-	"version"		"2"
-	"group"
-	{
-		"mode"		"four_buttons"
-	}
-	"group"
-	{
-		"settings"
-		{
-			"requires_click"		"0"
-		}
-	}
+fn read_asset_file(file_name: &str) -> std::io::Result<String> {
+    let asset_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("examples")
+        .join(file_name);
+    fs::read_to_string(asset_path)
 }
-"#;
 
 fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a Cow<'a, str>> {
     controller_mappings
@@ -47,7 +36,8 @@ fn update_version<'text, 'func>(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut controller_mappings = Vdf::parse(VDF_TEXT)?;
+    let vdf_text = read_asset_file("parse_mutate_render.vdf")?;
+    let mut controller_mappings = Vdf::parse(&vdf_text)?;
 
     // Reading information from VDF:
     // This involves a lot of `Option`s so it's moved inside a function
