@@ -1,8 +1,8 @@
-use keyvalues_serde::{from_str, to_string, to_string_with_key};
+use keyvalues_serde::{from_str, from_str_with_key, to_string, to_string_with_key};
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
 
-use std::{collections::HashMap, error::Error, fmt, fs, path::Path};
+use std::{borrow::Cow, collections::HashMap, error::Error, fmt, fs, path::Path};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 struct Container<T> {
@@ -198,6 +198,15 @@ fn hashmap_top_level() -> BoxedResult<()> {
     // be passed in separately
     let val_text = to_string_with_key(&val, "Key")?;
     assert_eq!(vdf_text, val_text, "Failed serializing");
+    Ok(())
+}
+
+#[test]
+fn check_deserialization_key() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("hashmap_top_level.vdf")?;
+    let (_, key): (HashMap<u64, String>, Cow<str>) = from_str_with_key(&vdf_text)?;
+
+    assert_eq!(key, "Key", "Incorrect deserialization key");
     Ok(())
 }
 

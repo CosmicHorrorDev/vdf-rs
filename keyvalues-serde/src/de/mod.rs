@@ -2,8 +2,8 @@ mod map;
 mod seq;
 
 use keyvalues_parser::{
-    Vdf,
     tokens::{Token, TokenStream},
+    Vdf,
 };
 use regex::Regex;
 use serde::{
@@ -23,13 +23,22 @@ use crate::{
 };
 
 pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
-    let mut deserializer = Deserializer::try_from(s)?;
-    let t = T::deserialize(&mut deserializer)?;
+    let vals = from_str_with_key(s)?;
+    Ok(vals.0)
+}
 
-    if deserializer.is_empty() {
-        Ok(t)
+pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Cow<'a, str>)> {
+    let mut deserializer = Deserializer::try_from(s)?;
+    if let Token::Key(key) = deserializer.tokens[0].clone() {
+        let t = T::deserialize(&mut deserializer)?;
+
+        if deserializer.is_empty() {
+            Ok((t, key))
+        } else {
+            Err(Error::TrailingTokens)
+        }
     } else {
-        Err(Error::TrailingTokens)
+        unreachable!("Tokenstream must start with key");
     }
 }
 
