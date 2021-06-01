@@ -1,6 +1,8 @@
-pub mod naive;
+mod naive;
 #[cfg(test)]
 mod tests;
+
+pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 
 use std::{
     borrow::Cow,
@@ -14,8 +16,10 @@ use crate::{Obj, Value, Vdf};
 // a stream of tokens that serde can consume. In this way the Deserializer can just work on
 // munching through all the tokens instead of trying to mutate a more complex nested structure
 // containing different types
-/// A stream of tokens representing vdf. I think an example is the easiest way to understand the
-/// structure so something like
+/// A stream of [`Token`][Token]s representing a [`Vdf`][crate::Vdf]
+///
+/// I think an example is the easiest way to understand the structure so something like
+///
 /// ```no_test
 /// "Outer Key"
 /// {
@@ -25,7 +29,9 @@ use crate::{Obj, Value, Vdf};
 ///     }
 /// }
 /// ```
+///
 /// will be transformed into
+///
 /// ```no_test
 /// Vdf(
 ///     key: "Outer Key",
@@ -37,7 +43,9 @@ use crate::{Obj, Value, Vdf};
 ///     })
 /// )
 /// ```
+///
 /// which has the following token stream
+///
 /// ```no_test
 /// TokenStream([
 ///     Key("Outer Key"),
@@ -51,8 +59,9 @@ use crate::{Obj, Value, Vdf};
 ///     ObjEnd,
 /// )]
 /// ```
-/// So in this way it's a linear sequence of keys and values where the value is either a str or
-/// an object.
+///
+/// So in this way it's a linear sequence of keys and values where the value is either a str or an
+/// object.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TokenStream<'a>(pub Vec<Token<'a>>);
 
@@ -190,6 +199,7 @@ impl<'a> From<Obj<'a>> for TokenStream<'a> {
     }
 }
 
+/// A single VDF token
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Token<'a> {
     Key(Cow<'a, str>),

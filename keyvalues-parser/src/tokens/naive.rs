@@ -11,19 +11,19 @@ use crate::{
     Key, Obj, Value, Vdf,
 };
 
-// Used to easily deal with serializing VDF. The serializer spits out a `NaiveTokenStream` that can
-// then be converted to a `Vdf` object which can handle all the rendering functions.
-/// `NaiveTokenStream` is the token-stream that is emitted by the serialization process. This is
-/// done so that
+/// A stream of [`NaiveToken`][NaiveToken]s that do not encode what is a key vs a value
+///
+/// This is primarily provided to simplify serialization so that a serializer can emit a naive
+/// token stream that can later be used to create a VDF. This is due to the following reasons
 ///
 /// 1. The tokens can be owned values since there is no lifetime to tie the borrowed values to.
 /// 2. There isn't context about what are keys vs. values
 /// 3. Validation can be done in a separate step
 ///
-/// From there a `NaiveTokenStream` can be converted to a `TokenStream` where the position of the
-/// keys is inferred from the general structure. This also performs validation that all keys have
-/// an associated value, all markers for mutli-token structures make sense, and that there can't
-/// be a sequence as a value in another sequence.
+/// From there a `NaiveTokenStream` can be converted to a `Vdf` where the position of the keys is
+/// inferred from the general structure. This also performs validation that all keys have an
+/// associated value, all markers for mutli-token structures make sense, and that there can't be a
+/// sequence as a value in another sequence.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NaiveTokenStream(pub Vec<NaiveToken>);
 
@@ -179,6 +179,12 @@ impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
     }
 }
 
+/// A naive version of a [`Token`][crate::tokens::Token]
+///
+/// It is identical to [`Token`][crate::tokens::Token] except that
+///
+/// - It is owned instead of tied to a lifetime
+/// - There is no `Key` where instead a key _should_ be a `Str`
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum NaiveToken {
     Str(String),

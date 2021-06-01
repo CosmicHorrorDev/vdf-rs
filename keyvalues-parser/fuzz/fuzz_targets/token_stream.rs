@@ -1,7 +1,7 @@
 #![no_main]
 use keyvalues_parser::{
     Vdf,
-    tokens::{naive::NaiveTokenStream, TokenStream},
+    tokens::{NaiveTokenStream, TokenStream},
 };
 use libfuzzer_sys::fuzz_target;
 
