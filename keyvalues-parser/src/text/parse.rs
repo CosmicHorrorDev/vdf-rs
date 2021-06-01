@@ -1,4 +1,5 @@
 // Due to Pest generating variants that are all uppercase
+#![allow(renamed_and_removed_lints)]
 #![allow(clippy::unknown_clippy_lints)]
 #![allow(clippy::upper_case_acronyms)]
 

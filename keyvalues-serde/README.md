@@ -8,7 +8,7 @@ makes it easy to deal with VDF text files using strongly typed Rust structures.
 
 ## Installation
 
-_Note: this requires at least Rust `1.40.0`_
+_Note: this requires at least Rust `1.42.0`_
 
 Just add the following to your `Cargo.toml`
 

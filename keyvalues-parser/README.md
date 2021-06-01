@@ -13,7 +13,7 @@ text
 
 ## Installation
 
-_Note: this requires at least Rust `1.40.0`_
+_Note: this requires at least Rust `1.42.0`_
 
 Just add the library to your `Cargo.toml`
 
