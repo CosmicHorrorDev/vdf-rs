@@ -1,4 +1,4 @@
-use keyvalues_parser::core::Vdf;
+use keyvalues_parser::Vdf;
 
 use std::borrow::Cow;
 

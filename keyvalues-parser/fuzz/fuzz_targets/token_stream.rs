@@ -1,6 +1,6 @@
 #![no_main]
 use keyvalues_parser::{
-    core::Vdf,
+    Vdf,
     tokens::{naive::NaiveTokenStream, TokenStream},
 };
 use libfuzzer_sys::fuzz_target;

@@ -2,7 +2,7 @@ mod map;
 mod seq;
 
 use keyvalues_parser::{
-    core::Vdf,
+    Vdf,
     tokens::{Token, TokenStream},
 };
 use regex::Regex;

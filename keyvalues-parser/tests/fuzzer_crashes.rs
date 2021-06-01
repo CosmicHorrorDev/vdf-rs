@@ -1,4 +1,4 @@
-use keyvalues_parser::core::Vdf;
+use keyvalues_parser::Vdf;
 use pretty_assertions::assert_eq;
 
 use std::{fs, path::Path};

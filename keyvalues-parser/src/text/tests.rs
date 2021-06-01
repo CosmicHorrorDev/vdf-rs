@@ -1,6 +1,6 @@
 use std::{error::Error, fs, path::Path};
 
-use crate::core::Vdf;
+use crate::Vdf;
 
 type BoxedResult<T> = Result<T, Box<dyn Error>>;
 

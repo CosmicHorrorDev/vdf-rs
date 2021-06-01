@@ -6,9 +6,9 @@ use std::{
 };
 
 use crate::{
-    core::{Key, Obj, Value, Vdf},
     error::{Error, Result, TokenContext},
     tokens::{Token, TokenStream},
+    Key, Obj, Value, Vdf,
 };
 
 // Used to easily deal with serializing VDF. The serializer spits out a `NaiveTokenStream` that can

@@ -1,11 +1,11 @@
 use std::{borrow::Cow, convert::TryFrom};
 
 use crate::{
-    core::{Obj, Value, Vdf},
     tokens::{
         naive::{NaiveToken, NaiveTokenStream},
         Token, TokenStream,
     },
+    Obj, Value, Vdf,
 };
 
 // "outer"

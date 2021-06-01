@@ -1,4 +1,4 @@
-use keyvalues_parser::core::Vdf;
+use keyvalues_parser::Vdf;
 use keyvalues_parser::tokens::naive::{NaiveToken, NaiveTokenStream};
 use serde::{ser, Serialize};
 

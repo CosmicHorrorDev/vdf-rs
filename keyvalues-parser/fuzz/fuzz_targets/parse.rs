@@ -1,5 +1,5 @@
 #![no_main]
-use keyvalues_parser::core::Vdf;
+use keyvalues_parser::Vdf;
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {

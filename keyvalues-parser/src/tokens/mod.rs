@@ -7,7 +7,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::core::{Obj, Value, Vdf};
+use crate::{Obj, Value, Vdf};
 
 // I've been struggling to get serde to play nice with using a more complex internal structure in a
 // `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into

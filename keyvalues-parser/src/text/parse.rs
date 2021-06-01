@@ -9,8 +9,8 @@ use pest_derive::Parser;
 use std::{borrow::Cow, convert::TryFrom};
 
 use crate::{
-    core::{Obj, Value, Vdf},
     error::{Error, Result},
+    Obj, Value, Vdf,
 };
 
 #[derive(Parser)]
