@@ -10,25 +10,66 @@ on:
 
 name: Fuzz Parser
 
+# TODO: it would be nice to unify setting up cargo fuzz and then just use
+# separate runners for fuzzing. Might be able to do it by uploading and
+# downloading the artifacts, and then purging all of them at the end
 jobs:
-  fuzz:
-    name: "Fuzz (10 minutes)"
+  run_parse_fuzzer:
+    name: "Fuzz Parser (15 minutes)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+
+      # Nightly is needed for `cargo fuzz`
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: nightly
           override: true
-      - uses: actions-rs/cargo@v1
+
+      - name: Install cargo quickinstall
+        uses: actions-rs/cargo@v1
         with:
           command: install
           args: cargo-quickinstall
-      - uses: actions-rs/cargo@v1
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
         with:
           command: quickinstall
           args: cargo-fuzz
-      - name: Cargo Fuzz
-        run: cargo fuzz run parse -- -max_total_time=600 -verbosity=0
+
+      - name: Run parse fuzzer
+        run: cargo fuzz run parse -- -max_total_time=900 -verbosity=0
+        working-directory: keyvalues-parser
+
+  run_tokenstream_fuzzer:
+    name: "Fuzz TokenStream (15 minutes)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Nightly is needed for `cargo fuzz`
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo quickinstall
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-quickinstall
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
+        with:
+          command: quickinstall
+          args: cargo-fuzz
+
+      - name: Run tokenStream fuzzer
+        run: cargo fuzz run token_stream -- -max_total_time=900 -verbosity=0
         working-directory: keyvalues-parser
