@@ -1,5 +1,5 @@
-use keyvalues_parser::Vdf;
 use keyvalues_parser::tokens::{NaiveToken, NaiveTokenStream};
+use keyvalues_parser::Vdf;
 use serde::{ser, Serialize};
 
 use std::convert::TryFrom;
