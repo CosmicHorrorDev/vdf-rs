@@ -34,3 +34,4 @@ parse_render_test!(app_manifest, "app_manifest.vdf");
 parse_render_test!(comments, "comments.vdf");
 parse_render_test!(unquoted_strings, "unquoted_strings.vdf");
 parse_render_test!(special_charaters, "special_characters.vdf");
+parse_render_test!(app_info, "app_info.vdf");
