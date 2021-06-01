@@ -22,6 +22,8 @@ pub enum Error {
     EofWhileParsingKey,
     #[error("EOF while parsing a value")]
     EofWhileParsingValue,
+    #[error("EOF while parsing key or value")]
+    EofWhileParsingKeyOrValue,
     #[error("EOF while parsing an object")]
     EofWhileParsingObject,
     #[error("EOF while parsing a sequence")]

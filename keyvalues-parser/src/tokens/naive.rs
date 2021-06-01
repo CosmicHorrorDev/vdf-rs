@@ -87,7 +87,6 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                 Some(NaiveToken::SeqBegin) => {
                     let mut values = Vec::new();
                     loop {
-                        // TODO: match for EOF here
                         if let Some(NaiveToken::SeqEnd) = tokens.peek() {
                             // Pop off the marker
                             tokens.next();

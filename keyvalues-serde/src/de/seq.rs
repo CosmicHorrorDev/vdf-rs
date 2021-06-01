@@ -36,7 +36,8 @@ impl<'a, 'de> SeqBuilder<'a, 'de> {
             // TODO: these can be condensed once 1.53 lands
             (_, Some(Token::ObjBegin)) => Ok(SeqEater::new_single_value(self.de)),
             (_, Some(Token::Str(_))) => Ok(SeqEater::new_single_value(self.de)),
-            _ => Err(Error::ExpectedSomeValue),
+            (_, Some(_)) => Err(Error::ExpectedSomeValue),
+            (_, None) => Err(Error::EofWhileParsingSequence),
         }
     }
 }

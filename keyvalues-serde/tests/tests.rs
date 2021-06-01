@@ -95,7 +95,6 @@ fn basic_types() -> BoxedResult<()> {
         float32: 1.0,
         float64: 2.0,
     };
-    // TODO: fields get serializaed in alphabetical order so make sure that is fine
     test_ser_de!(val, "basic_types.vdf")
 }
 

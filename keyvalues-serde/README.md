@@ -19,8 +19,9 @@ keyvalues-serde = "0.1.0"
 
 ## Usage
 
-There is documentation available on TODO and there are examples available in
-the
+There is documentation available
+[here](https://docs.rs/keyvalues-serde/0.2.0/keyvalues_serde/) and there are
+examples available in the
 [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde/examples)
 
 ## Datatypes

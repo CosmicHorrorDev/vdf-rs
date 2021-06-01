@@ -48,9 +48,9 @@ pub struct Deserializer<'de> {
 }
 
 impl<'de> Deserializer<'de> {
-    // TODO: this error isn't super accurate since it works on Keys and Values
     fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
-        self.next_key_or_str().ok_or(Error::EofWhileParsingValue)
+        self.next_key_or_str()
+            .ok_or(Error::EofWhileParsingKeyOrValue)
     }
 }
 
@@ -86,6 +86,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
             Some(Token::Key(s)) | Some(Token::Str(s)) => {
+                // TODO: compiling the regex using lazy static should help with performance if this
+                // gets called a lot
                 // Falls back to using a regex to match several patterns. This will be far from
                 // efficient, but I'm feeling lazy for now
                 let neg_num_regex = Regex::new(r"^-\d+$").unwrap();
@@ -292,8 +294,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_str(visitor)
     }
 
-    // TODO: I think this will get hit if the vdf has extra keys that aren't used. Falling back
-    // to deserializing to an `Obj`, `Seq`, or `Str` based on the token should be a good heuristic
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         self.deserialize_any(visitor)
     }
