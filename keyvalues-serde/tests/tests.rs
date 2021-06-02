@@ -1,8 +1,19 @@
-use keyvalues_serde::{from_str, from_str_with_key, to_string, to_string_with_key};
+use insta::assert_snapshot;
+use keyvalues_serde::{
+    from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
+};
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
+use tempdir::TempDir;
 
-use std::{borrow::Cow, collections::HashMap, error::Error, fmt, fs, path::Path};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    error::Error,
+    fmt,
+    fs::{self, File},
+    path::Path,
+};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
 struct Container<T> {
@@ -37,6 +48,27 @@ where
 {
     let val_text = to_string(val)?;
     assert_eq!(ideal_text, val_text, "Failed serializing");
+    Ok(())
+}
+
+#[test]
+fn snapshot_writing_to_file() -> BoxedResult<()> {
+    let vdf_struct = Container::new(123);
+    let dir = TempDir::new("keyvalues-serde")?;
+    let file_path = dir.path().join("sample.vdf");
+
+    // Write a vdf to a file then verify it's correct
+    let mut file = File::create(&file_path)?;
+    to_writer(&mut file, &vdf_struct)?;
+    let vdf_text = fs::read_to_string(&file_path)?;
+    assert_snapshot!(vdf_text);
+
+    // And the same with a custom key
+    let mut file = File::create(&file_path)?;
+    to_writer_with_key(&mut file, &vdf_struct, "Custom")?;
+    let vdf_text = fs::read_to_string(&file_path)?;
+    assert_snapshot!(vdf_text);
+
     Ok(())
 }
 
