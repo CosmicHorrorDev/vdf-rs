@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use keyvalues_parser::core::Vdf;
+use keyvalues_parser::Vdf;
 
 use std::{fs, path::Path};
 

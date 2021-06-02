@@ -23,15 +23,21 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
-      - name: Cargo Build
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
           command: build
 
-      - name: Cargo Test
+      - name: Run the test suite
         uses: actions-rs/cargo@v1
         with:
           command: test
+
+      - name: Compile the benchmarks
+        uses: actions-rs/cargo@v1
+        with:
+          command: bench
+          args: --no-run
 
   msrv:
     name: Format and Check Lints
@@ -47,13 +53,13 @@ jobs:
           override: true
           components: rustfmt, clippy
 
-      - name: Cargo Format
+      - name: Check formatting
         uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
-      - name: Cargo Clippy
+      - name: Check clippy lints
         uses: actions-rs/cargo@v1
         with:
           command: clippy
