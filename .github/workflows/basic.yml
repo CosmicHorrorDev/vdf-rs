@@ -4,7 +4,7 @@ name: "Build, Test, Format, and Lint"
 
 jobs:
   multiple_toolchains:
-    name: Build and Test
+    name: Multiple toolchain tasks
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,13 +23,6 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
-      # Actually check the fuzzers so that they don't break silently
-      - name: Check parser fuzzers
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
-
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile
       - name: Check all targets
@@ -42,20 +35,6 @@ jobs:
         with:
           command: test
 
-  msrv:
-    name: Format and Check Lints
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install MSRV toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: 1.42.0
-          override: true
-          components: rustfmt, clippy
-
       - name: Check formatting
         uses: actions-rs/cargo@v1
         with:
@@ -67,3 +46,23 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+
+  nightly_only:
+    name: Nightly only tasks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      # Actually check the fuzzers so that they don't break silently
+      - name: Check parser fuzzers
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
