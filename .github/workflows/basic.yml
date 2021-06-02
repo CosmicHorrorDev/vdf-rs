@@ -22,13 +22,14 @@ jobs:
           profile: minimal
           toolchain: ${{ matrix.rust }}
           override: true
+          components: rustfmt, clippy
 
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile
-      - name: Check all targets
+      - name: Build all targets
         uses: actions-rs/cargo@v1
         with:
-          command: check
+          command: build
           args: --all-targets
 
       - name: Run the test suite
