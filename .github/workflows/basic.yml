@@ -1,6 +1,6 @@
 on: [push, pull_request]
 
-name: Continuous Integration
+name: "Build, Test, Format, and Lint"
 
 jobs:
   multiple_toolchains:
@@ -23,21 +23,24 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
 
-      - name: Build
+      # Actually check the fuzzers so that they don't break silently
+      - name: Check parser fuzzers
         uses: actions-rs/cargo@v1
         with:
-          command: build
+          command: check
+          args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
+
+      # Uses `--all-targets` here to make sure that things like benchmarks
+      # still compile
+      - name: Check all targets
+        uses: actions-rs/cargo@v1
+        with:
+          command: check --all-targets
 
       - name: Run the test suite
         uses: actions-rs/cargo@v1
         with:
           command: test
-
-      - name: Compile the benchmarks
-        uses: actions-rs/cargo@v1
-        with:
-          command: bench
-          args: --no-run
 
   msrv:
     name: Format and Check Lints
