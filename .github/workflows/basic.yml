@@ -28,7 +28,8 @@ jobs:
       - name: Check all targets
         uses: actions-rs/cargo@v1
         with:
-          command: check --all-targets
+          command: check
+          args: --all-targets
 
       - name: Run the test suite
         uses: actions-rs/cargo@v1
