@@ -2,12 +2,64 @@ use keyvalues_parser::tokens::{NaiveToken, NaiveTokenStream};
 use keyvalues_parser::Vdf;
 use serde::{ser, Serialize};
 
-use std::convert::TryFrom;
+use std::{convert::TryFrom, io::Write};
 
 use crate::error::{Error, Result};
 
 pub struct Serializer {
     tokens: NaiveTokenStream,
+}
+
+impl Serializer {
+    fn new() -> Self {
+        Self {
+            tokens: NaiveTokenStream::default(),
+        }
+    }
+}
+
+pub fn to_writer<W, T>(writer: &mut W, value: &T) -> Result<()>
+where
+    W: Write,
+    T: Serialize,
+{
+    _to_writer(writer, value, None)
+}
+
+pub fn to_writer_with_key<W, T>(writer: &mut W, value: &T, key: &str) -> Result<()>
+where
+    W: Write,
+    T: Serialize,
+{
+    _to_writer(writer, value, Some(key))
+}
+
+pub fn _to_writer<W, T>(writer: &mut W, value: &T, maybe_key: Option<&str>) -> Result<()>
+where
+    W: Write,
+    T: Serialize,
+{
+    let mut serializer = Serializer::new();
+    value.serialize(&mut serializer)?;
+
+    if let Some(key) = maybe_key {
+        match serializer.tokens.get(0) {
+            // Replace the old key
+            Some(NaiveToken::Str(_old_key)) => {
+                serializer.tokens[0] = NaiveToken::Str(key.to_owned());
+            }
+            // Push on the key
+            Some(_) => {
+                serializer.tokens.insert(0, NaiveToken::Str(key.to_owned()));
+            }
+            None => {}
+        }
+    }
+
+    let vdf = Vdf::try_from(&serializer.tokens)?;
+    write!(writer, "{}", vdf)?;
+
+    Ok(())
 }
 
 // Serialization process goes as follows:
@@ -26,41 +78,22 @@ pub fn to_string<T>(value: &T) -> Result<String>
 where
     T: Serialize,
 {
-    _to_string(value, None)
+    let mut buffer = Vec::new();
+    to_writer(&mut buffer, value)?;
+    let s = String::from_utf8(buffer)?;
+
+    Ok(s)
 }
 
 pub fn to_string_with_key<T>(value: &T, key: &str) -> Result<String>
 where
     T: Serialize,
 {
-    _to_string(value, Some(key))
-}
+    let mut buffer = Vec::new();
+    to_writer_with_key(&mut buffer, value, key)?;
+    let s = String::from_utf8(buffer)?;
 
-fn _to_string<T>(value: &T, maybe_key: Option<&str>) -> Result<String>
-where
-    T: Serialize,
-{
-    let mut serializer = Serializer {
-        tokens: NaiveTokenStream::default(),
-    };
-    value.serialize(&mut serializer)?;
-
-    if let Some(key) = maybe_key {
-        match serializer.tokens.get(0) {
-            // Replace the old key
-            Some(NaiveToken::Str(_old_key)) => {
-                serializer.tokens[0] = NaiveToken::Str(key.to_owned());
-            }
-            // Push on the key
-            Some(_) => {
-                serializer.tokens.insert(0, NaiveToken::Str(key.to_owned()));
-            }
-            None => {}
-        }
-    }
-
-    let token_stream = Vdf::try_from(&serializer.tokens)?;
-    Ok(token_stream.to_string())
+    Ok(s)
 }
 
 impl<'a> ser::Serializer for &'a mut Serializer {

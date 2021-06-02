@@ -3,18 +3,26 @@ use serde::{de, ser};
 
 use std::{
     fmt::Display,
+    io,
     num::{ParseFloatError, ParseIntError},
+    string::FromUtf8Error,
 };
 
 pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(thiserror::Error, Clone, Debug, PartialEq)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("{0}")]
     Message(String),
 
     #[error("Failed parsing VDF text")]
-    ParseError(#[from] ParserError),
+    Parse(#[from] ParserError),
+
+    #[error("Encountered I/O Error: {0}")]
+    Io(#[from] io::Error),
+
+    #[error("Encountered UTF8 Error: {0}")]
+    InvalidUtf8(#[from] FromUtf8Error),
 
     #[error("EOF while parsing unknown type")]
     EofWhileParsingAny,
