@@ -1,0 +1,42 @@
+on:
+  push:
+    paths:
+      - "keyvalues-serde/src/**"
+      - "keyvalues-serde/fuzz/**"
+  pull_request:
+    paths:
+      - "keyvalues-serde/src/**"
+      - "keyvalues-serde/fuzz/**"
+
+name: Fuzz Ser De
+
+jobs:
+  run_ser_de_fuzzer:
+    name: "Fuzz Ser De (15 minutes)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      # Nightly is needed for `cargo fuzz`
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo quickinstall
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-quickinstall
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
+        with:
+          command: quickinstall
+          args: cargo-fuzz
+
+      - name: Run ser de fuzzer
+        run: cargo fuzz run serde -- -max_total_time=900 -verbosity=0
+        working-directory: keyvalues-serde
