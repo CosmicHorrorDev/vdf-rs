@@ -68,3 +68,9 @@ jobs:
         with:
           command: check
           args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
+
+      - name: Check ser de fuzzers
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --manifest-path keyvalues-serde/fuzz/Cargo.toml
