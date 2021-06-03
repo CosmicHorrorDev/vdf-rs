@@ -80,7 +80,7 @@ where
 {
     let mut buffer = Vec::new();
     to_writer(&mut buffer, value)?;
-    let s = String::from_utf8(buffer)?;
+    let s = String::from_utf8(buffer).expect("Input was all valid UTF-8");
 
     Ok(s)
 }
@@ -91,7 +91,7 @@ where
 {
     let mut buffer = Vec::new();
     to_writer_with_key(&mut buffer, value, key)?;
-    let s = String::from_utf8(buffer)?;
+    let s = String::from_utf8(buffer).expect("Input was all valid UTF-8");
 
     Ok(s)
 }

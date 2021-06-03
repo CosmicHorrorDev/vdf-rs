@@ -5,7 +5,6 @@ use std::{
     fmt::Display,
     io,
     num::{ParseFloatError, ParseIntError},
-    string::FromUtf8Error,
 };
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -20,9 +19,6 @@ pub enum Error {
 
     #[error("Encountered I/O Error: {0}")]
     Io(#[from] io::Error),
-
-    #[error("Encountered UTF8 Error: {0}")]
-    InvalidUtf8(#[from] FromUtf8Error),
 
     #[error("EOF while parsing unknown type")]
     EofWhileParsingAny,
