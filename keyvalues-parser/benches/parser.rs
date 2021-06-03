@@ -28,6 +28,25 @@ pub fn parse_throughput(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(timings, parse_time);
-criterion_group!(throughput, parse_throughput);
+pub fn render_time(c: &mut Criterion) {
+    let vdf_text = read_app_info().unwrap();
+    let vdf = Vdf::parse(&vdf_text).unwrap();
+
+    c.bench_function("render timing", |b| {
+        b.iter(|| vdf.to_string());
+    });
+}
+
+pub fn render_throughput(c: &mut Criterion) {
+    let vdf_text = read_app_info().unwrap();
+    let vdf = Vdf::parse(&vdf_text).unwrap();
+
+    let mut group = c.benchmark_group("render throughput");
+    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
+    group.bench_function("render", |b| b.iter(|| vdf.to_string()));
+    group.finish();
+}
+
+criterion_group!(timings, parse_time, render_time);
+criterion_group!(throughput, parse_throughput, render_throughput);
 criterion_main!(timings, throughput);
