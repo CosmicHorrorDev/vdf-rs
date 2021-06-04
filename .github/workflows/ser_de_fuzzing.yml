@@ -12,7 +12,6 @@ on:
 
 name: Fuzz Ser De
 
-# TODO: restore release cache for fuzzer
 jobs:
   run_ser_de_fuzzer:
     name: "Fuzz Ser De (15 minutes)"
@@ -25,7 +24,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2021-06-01
           override: true
 
       - name: Get rustc version
@@ -37,7 +36,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: run_ser_de_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}
+          key: run_ser_de_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}-1
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: keyvalues-serde/fuzz/target
+          key: run_ser_de_fuzzer-cargo-build-${{ steps.get-version.outputs.version }}
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1

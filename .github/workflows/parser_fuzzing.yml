@@ -15,7 +15,6 @@ name: Fuzz Parser
 # TODO: it would be nice to unify setting up cargo fuzz and then just use
 # separate runners for fuzzing. Might be able to do it by uploading and
 # downloading the artifacts, and then purging all of them at the end
-# TODO: restore release cache for fuzzer
 jobs:
   run_parse_fuzzer:
     name: "Fuzz Parser (15 minutes)"
@@ -28,7 +27,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2021-06-01
           override: true
 
       - name: Get rustc version
@@ -40,7 +39,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: run_parse_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}
+          key: run_parse_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}-1
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: keyvalues-parser/fuzz/target
+          key: run_parse_fuzzer-cargo-build-${{ steps.get-version.outputs.version }}
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1
@@ -58,7 +63,6 @@ jobs:
         run: cargo fuzz run parse -- -max_total_time=900 -verbosity=0
         working-directory: keyvalues-parser
 
-# TODO: restore release cache for fuzzer
   run_tokenstream_fuzzer:
     name: "Fuzz TokenStream (15 minutes)"
     runs-on: ubuntu-latest
@@ -70,7 +74,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: nightly
+          toolchain: nightly-2021-06-01
           override: true
 
       - name: Get rustc version
@@ -82,7 +86,13 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: run_tokenstream_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}
+          key: run_tokenstream_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}-1
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: keyvalues-parser/fuzz/target
+          key: run_tokenstream_fuzzer-cargo-build-${{ steps.get-version.outputs.version }}
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1
