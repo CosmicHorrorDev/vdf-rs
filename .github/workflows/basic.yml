@@ -98,8 +98,10 @@ jobs:
       - name: Cargo build cache
         uses: actions/cache@v2
         with:
-          path: target
-          key: nightly_only-cargo-build-${{ steps.get-version.outputs.version }}
+          path: |
+            keyvalues-parser/fuzz/target
+            keyvalues-serde/fuzz/target
+          key: nightly_only-cargo-build-${{ steps.get-version.outputs.version }}-1
 
       # Actually check the fuzzers so that they don't break silently
       - name: Check parser fuzzers
