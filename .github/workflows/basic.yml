@@ -30,12 +30,17 @@ jobs:
         run: |
           echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
 
-      # Key is infallible since the registry is version inspecific AFAIK
       - name: Cargo registry cache
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: cargo-registry
+          key: multiple_toolchains-cargo-registry-${{ steps.get-version.outputs.version }}
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: multiple_toolchains-cargo-build-${{ steps.get-version.outputs.version }}
 
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile
@@ -79,12 +84,22 @@ jobs:
           toolchain: nightly-2021-06-01
           override: true
       
-      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Get rustc version
+        id: get-version
+        run: |
+          echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
+
       - name: Cargo registry cache
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: cargo-registry
+          key: nightly_only-cargo-registry-${{ steps.get-version.outputs.version }}
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: nightly_only-cargo-build-${{ steps.get-version.outputs.version }}
 
       # Actually check the fuzzers so that they don't break silently
       - name: Check parser fuzzers
