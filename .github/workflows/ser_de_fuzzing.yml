@@ -14,7 +14,7 @@ name: Fuzz Ser De
 
 jobs:
   run_ser_de_fuzzer:
-    name: "Fuzz Ser De (15 minutes)"
+    name: "Fuzz Ser De (5 minutes)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -57,5 +57,5 @@ jobs:
           args: cargo-fuzz
 
       - name: Run ser de fuzzer
-        run: cargo fuzz run serde -- -max_total_time=900 -verbosity=0
+        run: cargo fuzz run serde -- -max_total_time=300 -verbosity=0
         working-directory: keyvalues-serde

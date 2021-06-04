@@ -17,7 +17,7 @@ name: Fuzz Parser
 # downloading the artifacts, and then purging all of them at the end
 jobs:
   run_parse_fuzzer:
-    name: "Fuzz Parser (15 minutes)"
+    name: "Fuzz Parser (5 minutes)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -60,11 +60,11 @@ jobs:
           args: cargo-fuzz
 
       - name: Run parse fuzzer
-        run: cargo fuzz run parse -- -max_total_time=900 -verbosity=0
+        run: cargo fuzz run parse -- -max_total_time=300 -verbosity=0
         working-directory: keyvalues-parser
 
   run_tokenstream_fuzzer:
-    name: "Fuzz TokenStream (15 minutes)"
+    name: "Fuzz TokenStream (5 minutes)"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -106,6 +106,6 @@ jobs:
           command: quickinstall
           args: cargo-fuzz
 
-      - name: Run tokenStream fuzzer
-        run: cargo fuzz run token_stream -- -max_total_time=900 -verbosity=0
+      - name: Run token_stream fuzzer
+        run: cargo fuzz run token_stream -- -max_total_time=300 -verbosity=0
         working-directory: keyvalues-parser
