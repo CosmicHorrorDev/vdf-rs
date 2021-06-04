@@ -28,12 +28,16 @@ jobs:
           toolchain: nightly
           override: true
 
-      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Get rustc version
+        id: get-version
+        run: |
+          echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
+
       - name: Cargo registry cache
         uses: actions/cache@v2
         with:
           path: ~/.cargo/registry
-          key: cargo-registry
+          key: run_ser_de_fuzzer-cargo-registry-${{ steps.get-version.outputs.version }}
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1
