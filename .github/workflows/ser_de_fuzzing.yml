@@ -1,10 +1,12 @@
 on:
   push:
     paths:
+      - ".github/workflows/ser_de_fuzzing.yml"
       - "keyvalues-serde/src/**"
       - "keyvalues-serde/fuzz/**"
   pull_request:
     paths:
+      - ".github/workflows/ser_de_fuzzing.yml"
       - "keyvalues-serde/src/**"
       - "keyvalues-serde/fuzz/**"
 

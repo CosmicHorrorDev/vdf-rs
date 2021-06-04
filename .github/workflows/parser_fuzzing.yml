@@ -1,10 +1,12 @@
 on:
   push:
     paths:
+      - ".github/workflows/parser_fuzzing.yml"
       - "keyvalues-parser/src/**"
       - "keyvalues-parser/fuzz/**"
   pull_request:
     paths:
+      - ".github/workflows/parser_fuzzing.yml"
       - "keyvalues-parser/src/**"
       - "keyvalues-parser/fuzz/**"
 
