@@ -15,6 +15,7 @@ name: Fuzz Parser
 # TODO: it would be nice to unify setting up cargo fuzz and then just use
 # separate runners for fuzzing. Might be able to do it by uploading and
 # downloading the artifacts, and then purging all of them at the end
+# TODO: restore release cache for fuzzer
 jobs:
   run_parse_fuzzer:
     name: "Fuzz Parser (15 minutes)"
@@ -29,6 +30,13 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
+
+      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Cargo registry cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1
@@ -46,6 +54,7 @@ jobs:
         run: cargo fuzz run parse -- -max_total_time=900 -verbosity=0
         working-directory: keyvalues-parser
 
+# TODO: restore release cache for fuzzer
   run_tokenstream_fuzzer:
     name: "Fuzz TokenStream (15 minutes)"
     runs-on: ubuntu-latest
@@ -59,6 +68,13 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
+
+      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Cargo registry cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1

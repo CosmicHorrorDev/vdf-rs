@@ -14,7 +14,6 @@ jobs:
           - 1.42.0
 
     # TODO: restore target cache based on rust version
-    # TODO: restore cache from cargo registry
     steps:
       - uses: actions/checkout@v2
 
@@ -25,6 +24,13 @@ jobs:
           toolchain: ${{ matrix.rust }}
           override: true
           components: rustfmt, clippy
+
+      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Cargo registry cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry
 
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile

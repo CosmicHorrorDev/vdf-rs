@@ -12,6 +12,7 @@ on:
 
 name: Fuzz Ser De
 
+# TODO: restore release cache for fuzzer
 jobs:
   run_ser_de_fuzzer:
     name: "Fuzz Ser De (15 minutes)"
@@ -26,6 +27,13 @@ jobs:
           profile: minimal
           toolchain: nightly
           override: true
+
+      # Key is infallible since the registry is version inspecific AFAIK
+      - name: Cargo registry cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: cargo-registry
 
       - name: Install cargo quickinstall
         uses: actions-rs/cargo@v1
