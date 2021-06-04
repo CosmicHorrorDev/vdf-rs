@@ -13,7 +13,6 @@ jobs:
           - beta
           - 1.42.0
 
-    # TODO: restore target cache based on rust version
     steps:
       - uses: actions/checkout@v2
 
@@ -67,7 +66,6 @@ jobs:
           command: clippy
           args: -- -D warnings
 
-  # TODO: restore cache from both fuzzers target dir (debug)
   nightly_only:
     name: Nightly only tasks
     runs-on: ubuntu-latest
