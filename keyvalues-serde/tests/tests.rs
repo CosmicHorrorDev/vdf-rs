@@ -99,10 +99,9 @@ fn check_deserialization_key() -> BoxedResult<()> {
 }
 
 #[test]
-fn abnormal_float_serialization_failure() {
+fn non_finite_float_serialization_failure() {
     let vdf = Container::new(f32::NAN);
-
-    if let Err(Error::AbnormalFloat(f)) = to_string(&vdf) {
+    if let Err(Error::NonFiniteFloat(f)) = to_string(&vdf) {
         assert!(f.is_nan());
     } else {
         panic!("Serialization should fail with NaN float");
@@ -110,14 +109,23 @@ fn abnormal_float_serialization_failure() {
 }
 
 #[test]
-fn abnormal_float_deserialization_failure() -> BoxedResult<()> {
+fn non_finite_float_deserialization_failure() -> BoxedResult<()> {
     let vdf_text = read_asset_file("subnormal_float.vdf")?;
-    if let Err(Error::AbnormalFloat(f)) = from_str::<Container<f32>>(&vdf_text) {
+    if let Err(Error::NonFiniteFloat(f)) = from_str::<Container<f32>>(&vdf_text) {
         assert!(f.is_infinite());
     } else {
         panic!("Deserialization should fail with inf float");
     }
 
+    Ok(())
+}
+
+#[test]
+fn non_normal_but_finite_float_serialization() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("zero_float.vdf")?;
+    let vdf: Container<f32> = from_str(&vdf_text)?;
+
+    assert_eq!(vdf, Container::new(0.0f32));
     Ok(())
 }
 

@@ -52,6 +52,15 @@ impl<'de> Deserializer<'de> {
         self.next_key_or_str()
             .ok_or(Error::EofWhileParsingKeyOrValue)
     }
+
+    fn next_finite_float_else_eof(&mut self) -> Result<f32> {
+        let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
+        if float.is_finite() {
+            Ok(float)
+        } else {
+            Err(Error::NonFiniteFloat(float))
+        }
+    }
 }
 
 impl<'de> TryFrom<&'de str> for Deserializer<'de> {
@@ -157,22 +166,14 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     fn deserialize_f32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
-        if float.is_normal() {
-            visitor.visit_f32(float)
-        } else {
-            Err(Error::AbnormalFloat(float))
-        }
+        let float = self.next_finite_float_else_eof()?;
+        visitor.visit_f32(float)
     }
 
     fn deserialize_f64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
+        let float = self.next_finite_float_else_eof()?;
         // Note: All floats are represented as through f32 since I believe that's what steam uses
-        if float.is_normal() {
-            visitor.visit_f64(f64::from(float))
-        } else {
-            Err(Error::AbnormalFloat(float))
-        }
+        visitor.visit_f64(f64::from(float))
     }
 
     fn deserialize_char<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {

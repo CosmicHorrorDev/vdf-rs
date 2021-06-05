@@ -146,10 +146,10 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
-        if v.is_normal() {
+        if v.is_finite() {
             self.serialize_str(&v.to_string())
         } else {
-            Err(Error::AbnormalFloat(v))
+            Err(Error::NonFiniteFloat(v))
         }
     }
 

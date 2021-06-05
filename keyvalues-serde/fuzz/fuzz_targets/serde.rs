@@ -43,11 +43,11 @@ enum InnerEnum {
 struct InnerTupleStruct(bool, i32, String);
 
 fuzz_target!(|initial: KitchenSink| {
-    // Only normal floats are allowed
-    if initial.float32.is_normal() {
-        let vdf_text = to_string(&initial).unwrap();
+    // TODO: might want to manually implement arbitrary, but non_finite floats aren't allowed and
+    // will cause the conversion to fail
+    let _ = to_string(&initial).map(|vdf_text| {
         let reparsed = from_str(&vdf_text).unwrap();
 
         assert_eq!(initial, reparsed);
-    }
+    });
 });

@@ -20,8 +20,8 @@ pub enum Error {
     #[error("Encountered I/O Error: {0}")]
     Io(#[from] io::Error),
 
-    #[error("Only normal f32 values are allowed. Instead got: {0}")]
-    AbnormalFloat(f32),
+    #[error("Only finite f32 values are allowed. Instead got: {0}")]
+    NonFiniteFloat(f32),
 
     #[error("EOF while parsing unknown type")]
     EofWhileParsingAny,
