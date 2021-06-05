@@ -100,7 +100,7 @@ fn check_deserialization_key() -> BoxedResult<()> {
 
 #[test]
 fn non_finite_float_serialization_failure() {
-    let vdf = Container::new(f32::NAN);
+    let vdf = Container::new(std::f32::NAN);
     if let Err(Error::NonFiniteFloat(f)) = to_string(&vdf) {
         assert!(f.is_nan());
     } else {
