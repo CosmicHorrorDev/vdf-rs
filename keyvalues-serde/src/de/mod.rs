@@ -157,11 +157,22 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     fn deserialize_f32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_f32(self.next_key_or_str_else_eof()?.parse()?)
+        let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
+        if float.is_normal() {
+            visitor.visit_f32(float)
+        } else {
+            Err(Error::AbnormalFloat(float))
+        }
     }
 
     fn deserialize_f64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_f64(self.next_key_or_str_else_eof()?.parse()?)
+        let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
+        // Note: All floats are represented as through f32 since I believe that's what steam uses
+        if float.is_normal() {
+            visitor.visit_f64(f64::from(float))
+        } else {
+            Err(Error::AbnormalFloat(float))
+        }
     }
 
     fn deserialize_char<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
@@ -188,6 +199,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_bytes<V: Visitor<'de>>(self, _visitor: V) -> Result<V::Value> {
         // It's unclear how `bytes` would be represented in vdf
+        // TODO: convert this to an enum?
         Err(Error::Unsupported("Bytes"))
     }
 

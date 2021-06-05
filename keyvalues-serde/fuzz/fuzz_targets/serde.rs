@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 struct KitchenSink {
     boolean: bool,
     character: char,
+    // f64 isn't included since it just gets represented as an f32
     float32: f32,
-    float64: f64,
     signed08: i8,
     signed16: i16,
     signed32: i32,
@@ -43,12 +43,11 @@ enum InnerEnum {
 struct InnerTupleStruct(bool, i32, String);
 
 fuzz_target!(|initial: KitchenSink| {
-    // TODO: make this error
-    // Only normal real numbers are allowed
-    if initial.float32.is_normal() && initial.float64.is_normal() {
+    // Only normal floats are allowed
+    if initial.float32.is_normal() {
         let vdf_text = to_string(&initial).unwrap();
         let reparsed = from_str(&vdf_text).unwrap();
 
-        assert_eq!(initial, reparsed,);
+        assert_eq!(initial, reparsed);
     }
 });

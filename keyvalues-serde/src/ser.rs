@@ -34,6 +34,13 @@ where
     _to_writer(writer, value, Some(key))
 }
 
+// Serialization process goes as follows:
+// value: &T
+// -> NaiveTokenStream
+// -> Vdf (fails on invalid VDF structure like nested sequences)
+// -> Formatted
+// Which is a bit of a long-winded process just to serialize some text, but it comes with
+// validation (NaiveTokenStream -> Vdf) and reuses portions from the parser (Vdf -> Formatted)
 pub fn _to_writer<W, T>(writer: &mut W, value: &T, maybe_key: Option<&str>) -> Result<()>
 where
     W: Write,
@@ -62,13 +69,6 @@ where
     Ok(())
 }
 
-// Serialization process goes as follows:
-// value: &T
-// -> NaiveTokenStream
-// -> Vdf (fails on invalid VDF structure like nested sequences)
-// -> String
-// Which is a bit of a long-winded process just to serialize some text, but it comes with
-// validation (NaiveTokenStream -> Vdf) and reuses portions from the parser (Vdf -> String)
 /// Attempts to serialize some input to VDF text.
 ///
 /// # Errors
@@ -146,11 +146,19 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
-        self.serialize_f64(f64::from(v))
+        if v.is_normal() {
+            self.serialize_str(&v.to_string())
+        } else {
+            Err(Error::AbnormalFloat(v))
+        }
     }
 
     fn serialize_f64(self, v: f64) -> Result<()> {
-        self.serialize_str(&v.to_string())
+        // TODO: include this and empty vecs and nested Option<Vec> in potential pitfalls
+        // TODO: look into this more, might be the other way around if the wiki is wrong
+        // Note: I believe floats in VDF are considered f32 so even when you use an f64 it will get
+        // converted to an f32 when serialized
+        self.serialize_f32(v as f32)
     }
 
     fn serialize_char(self, v: char) -> Result<()> {
