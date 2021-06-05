@@ -1,6 +1,7 @@
 use insta::assert_snapshot;
 use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
+    Error,
 };
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,6 @@ use tempdir::TempDir;
 use std::{
     borrow::Cow,
     collections::HashMap,
-    error::Error,
     fmt,
     fs::{self, File},
     path::Path,
@@ -26,7 +26,7 @@ impl<T> Container<T> {
     }
 }
 
-type BoxedResult<T> = Result<T, Box<dyn Error>>;
+type BoxedResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     let val = fs::read_to_string(Path::new("tests").join("assets").join(file_name))?;
@@ -95,6 +95,29 @@ fn check_deserialization_key() -> BoxedResult<()> {
     let (_, key): (HashMap<u64, String>, Cow<str>) = from_str_with_key(&vdf_text)?;
 
     assert_eq!(key, "Key", "Incorrect deserialization key");
+    Ok(())
+}
+
+#[test]
+fn abnormal_float_serialization_failure() {
+    let vdf = Container::new(f32::NAN);
+
+    if let Err(Error::AbnormalFloat(f)) = to_string(&vdf) {
+        assert!(f.is_nan());
+    } else {
+        panic!("Serialization should fail with NaN float");
+    }
+}
+
+#[test]
+fn abnormal_float_deserialization_failure() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("subnormal_float.vdf")?;
+    if let Err(Error::AbnormalFloat(f)) = from_str::<Container<f32>>(&vdf_text) {
+        assert!(f.is_infinite());
+    } else {
+        panic!("Deserialization should fail with inf float");
+    }
+
     Ok(())
 }
 

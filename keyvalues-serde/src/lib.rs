@@ -1,4 +1,5 @@
 mod de;
+// TODO: should this be private?
 mod error;
 mod ser;
 
