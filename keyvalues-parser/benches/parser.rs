@@ -11,14 +11,6 @@ fn read_app_info() -> Result<String, std::io::Error> {
     fs::read_to_string(vdf_path)
 }
 
-pub fn parse_time(c: &mut Criterion) {
-    let vdf_text = read_app_info().unwrap();
-
-    c.bench_function("parse timing", |b| {
-        b.iter(|| Vdf::parse(black_box(&vdf_text)))
-    });
-}
-
 pub fn parse_throughput(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
@@ -26,15 +18,6 @@ pub fn parse_throughput(c: &mut Criterion) {
     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
     group.bench_function("parse", |b| b.iter(|| Vdf::parse(black_box(&vdf_text))));
     group.finish();
-}
-
-pub fn render_time(c: &mut Criterion) {
-    let vdf_text = read_app_info().unwrap();
-    let vdf = Vdf::parse(&vdf_text).unwrap();
-
-    c.bench_function("render timing", |b| {
-        b.iter(|| vdf.to_string());
-    });
 }
 
 pub fn render_throughput(c: &mut Criterion) {
@@ -47,6 +30,5 @@ pub fn render_throughput(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(timings, parse_time, render_time);
 criterion_group!(throughput, parse_throughput, render_throughput);
-criterion_main!(timings, throughput);
+criterion_main!(throughput);
