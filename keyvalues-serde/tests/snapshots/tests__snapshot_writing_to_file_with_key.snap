@@ -1,0 +1,10 @@
+---
+source: keyvalues-serde/tests/tests.rs
+expression: vdf_text
+
+---
+"Custom"
+{
+	"inner"	"123"
+}
+
