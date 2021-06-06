@@ -184,6 +184,7 @@ impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
 ///
 /// - It is owned instead of tied to a lifetime
 /// - There is no `Key` where instead a key _should_ be a `Str`
+/// - There is a `Null` variant that is needed to retain ordering to know what is a key or value
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum NaiveToken {
     Str(String),
