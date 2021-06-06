@@ -104,27 +104,51 @@ struct Branch {
     timeupdated: u64,
 }
 
-#[derive(Deserialize)]
-struct AppInfoExtract;
+#[derive(Deserialize, Debug)]
+struct AppInfoExtract {
+    branches: BranchesExtract,
+}
 
-pub fn de_all_timing(c: &mut Criterion) {
+#[derive(Deserialize, Debug)]
+struct BranchesExtract {
+    public: BranchExtract,
+}
+
+#[derive(Deserialize, Debug)]
+struct BranchExtract {
+    buildid: Id,
+}
+
+pub fn de_timing(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
-    c.bench_function("de all timing", |b| {
+    let mut group = c.benchmark_group("de timing");
+    group.bench_function("de all timing", |b| {
         b.iter(|| {
             let _: AppInfoAll = from_str(black_box(&vdf_text)).unwrap();
         })
     });
+    group.bench_function("de extract timing", |b| {
+        b.iter(|| {
+            let _: AppInfoExtract = from_str(black_box(&vdf_text)).unwrap();
+        })
+    });
+    group.finish();
 }
 
-pub fn de_all_throughput(c: &mut Criterion) {
+pub fn de_throughput(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
-    let mut group = c.benchmark_group("de all throughput");
+    let mut group = c.benchmark_group("de throughput");
     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
-    group.bench_function("de", |b| {
+    group.bench_function("all", |b| {
         b.iter(|| {
             let _: AppInfoAll = from_str(black_box(&vdf_text)).unwrap();
+        })
+    });
+    group.bench_function("extract", |b| {
+        b.iter(|| {
+            let _: AppInfoExtract = from_str(black_box(&vdf_text)).unwrap();
         })
     });
     group.finish();
@@ -159,6 +183,6 @@ pub fn de_all_throughput(c: &mut Criterion) {
 //     group.finish();
 // }
 
-criterion_group!(timings, de_all_timing);
-criterion_group!(throughput, de_all_throughput);
+criterion_group!(timings, de_timing);
+criterion_group!(throughput, de_throughput);
 criterion_main!(timings, throughput);
