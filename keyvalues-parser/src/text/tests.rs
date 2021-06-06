@@ -9,11 +9,17 @@ fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     Ok(val)
 }
 
-fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
+fn snapshot_test_parse(file_name: &str) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse(&vdf_text)?;
     insta::assert_ron_snapshot!(vdf);
 
+    Ok(())
+}
+
+fn snapshot_test_render(file_name: &str) -> BoxedResult<()> {
+    let vdf_text = read_asset_file(file_name)?;
+    let vdf = Vdf::parse(&vdf_text)?;
     let rendered = vdf.to_string();
     insta::assert_snapshot!(rendered);
 
@@ -22,9 +28,18 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
 
 macro_rules! parse_render_test {
     ($func_name:ident, $file_name: literal) => {
-        #[test]
-        fn $func_name() -> BoxedResult<()> {
-            snapshot_test_parse_and_render($file_name)
+        mod $func_name {
+            use super::*;
+
+            #[test]
+            fn parse() -> BoxedResult<()> {
+                snapshot_test_parse($file_name)
+            }
+
+            #[test]
+            fn render() -> BoxedResult<()> {
+                snapshot_test_render($file_name)
+            }
         }
     };
 }

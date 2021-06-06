@@ -63,6 +63,15 @@ fn snapshot_writing_to_file() -> BoxedResult<()> {
     let vdf_text = fs::read_to_string(&file_path)?;
     assert_snapshot!(vdf_text);
 
+    Ok(())
+}
+
+#[test]
+fn snapshot_writing_to_file_with_key() -> BoxedResult<()> {
+    let vdf_struct = Container::new(123);
+    let dir = TempDir::new("keyvalues-serde")?;
+    let file_path = dir.path().join("sample.vdf");
+
     // And the same with a custom key
     let mut file = File::create(&file_path)?;
     to_writer_with_key(&mut file, &vdf_struct, "Custom")?;
