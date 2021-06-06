@@ -119,18 +119,25 @@ struct BranchExtract {
     buildid: Id,
 }
 
+fn from_str_helper<'de, T>(s: &'de str) -> T
+where
+    T: Deserialize<'de>,
+{
+    from_str(black_box(s)).unwrap()
+}
+
 pub fn de_timing(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
     let mut group = c.benchmark_group("de timing");
     group.bench_function("de all timing", |b| {
         b.iter(|| {
-            let _: AppInfoAll = from_str(black_box(&vdf_text)).unwrap();
+            let _: AppInfoAll = from_str_helper(&vdf_text);
         })
     });
     group.bench_function("de extract timing", |b| {
         b.iter(|| {
-            let _: AppInfoExtract = from_str(black_box(&vdf_text)).unwrap();
+            let _: AppInfoExtract = from_str_helper(&vdf_text);
         })
     });
     group.finish();
@@ -143,26 +150,16 @@ pub fn de_throughput(c: &mut Criterion) {
     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
     group.bench_function("all", |b| {
         b.iter(|| {
-            let _: AppInfoAll = from_str(black_box(&vdf_text)).unwrap();
+            let _: AppInfoAll = from_str_helper(&vdf_text);
         })
     });
     group.bench_function("extract", |b| {
         b.iter(|| {
-            let _: AppInfoExtract = from_str(black_box(&vdf_text)).unwrap();
+            let _: AppInfoExtract = from_str_helper(&vdf_text);
         })
     });
     group.finish();
 }
-
-// pub fn de_extract_deeply_nested_timing(c: &mut Criterion) {
-//     let vdf_text = read_app_info().unwrap();
-
-//     c.bench_function("de all timing", |b| {
-//         b.iter(|| {
-//             let _: AppInfoExtract = from_str(&vdf_text).unwrap();
-//         })
-//     });
-// }
 
 // pub fn render_time(c: &mut Criterion) {
 //     let vdf_text = read_app_info().unwrap();
