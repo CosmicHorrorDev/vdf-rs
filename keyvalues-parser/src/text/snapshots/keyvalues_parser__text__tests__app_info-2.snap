@@ -5,6 +5,28 @@ expression: rendered
 ---
 "896660"
 {
+	"branches"
+	{
+		"experimental"
+		{
+			"buildid"	"6263839"
+			"description"	"Experimental version of Valheim"
+			"pwdrequired"	"1"
+			"timeupdated"	"1613728251"
+		}
+		"public"
+		{
+			"buildid"	"6246034"
+			"timeupdated"	"1613558776"
+		}
+		"unstable"
+		{
+			"buildid"	"6246034"
+			"description"	"Unstable test version of valheim"
+			"pwdrequired"	"1"
+			"timeupdated"	"1613469743"
+		}
+	}
 	"common"
 	{
 		"ReleaseState"	"released"
@@ -48,113 +70,93 @@ expression: rendered
 			}
 		}
 	}
-	"depots"
+	"depot"
 	{
-		"1004"
+		"config"
 		{
-			"config"
-			{
-				"oslist"	"windows"
-			}
-			"depotfromapp"	"1007"
-			"manifests"
-			{
-				"public"	"6473168357831043306"
-			}
-			"maxsize"	"39546856"
-			"name"	"Steamworks SDK Redist (WIN32)"
+			"oslist"	"windows"
 		}
-		"1005"
+		"depotfromapp"	"1007"
+		"id"	"1004"
+		"manifests"
 		{
-			"config"
-			{
-				"oslist"	"macos"
-			}
-			"depotfromapp"	"1007"
-			"manifests"
-			{
-				"public"	"2135359612286175146"
-			}
-			"name"	"Steamworks SDK Redist (OSX32)"
+			"public"	"6473168357831043306"
 		}
-		"1006"
+		"maxsize"	"39546856"
+		"name"	"Steamworks SDK Redist (WIN32)"
+	}
+	"depot"
+	{
+		"config"
 		{
-			"config"
-			{
-				"oslist"	"linux"
-			}
-			"depotfromapp"	"1007"
-			"manifests"
-			{
-				"public"	"6688153055340488873"
-			}
-			"maxsize"	"59862244"
-			"name"	"Steamworks SDK Redist (LINUX32)"
+			"oslist"	"macos"
 		}
-		"896661"
+		"depotfromapp"	"1007"
+		"id"	"1005"
+		"manifests"
 		{
-			"config"
-			{
-				"oslist"	"linux"
-			}
-			"encryptedmanifests"
-			{
-				"experimental"
-				{
-					"encrypted_gid_2"	"BEDF872D73873D16C025EF87E27C2BDB"
-					"encrypted_size_2"	"2559486959C6E5DCEA5C71ED32BA9080"
-				}
-			}
-			"manifests"
-			{
-				"public"	"521795651741005384"
-			}
-			"maxsize"	"985409357"
-			"name"	"Valheim dedicated server Linux"
+			"public"	"2135359612286175146"
 		}
-		"896662"
+		"name"	"Steamworks SDK Redist (OSX32)"
+	}
+	"depot"
+	{
+		"config"
 		{
-			"config"
-			{
-				"oslist"	"windows"
-			}
-			"encryptedmanifests"
-			{
-				"experimental"
-				{
-					"encrypted_gid_2"	"9FD2B7B42FACB1D1FC439DD83ED2BED9"
-					"encrypted_size_2"	"B2D602E667364DEDCB7C3D6EE9AA7374"
-				}
-			}
-			"manifests"
-			{
-				"public"	"5449924312569304795"
-			}
-			"maxsize"	"963189471"
-			"name"	"Valheim dedicated server Windows"
+			"oslist"	"linux"
 		}
-		"branches"
+		"depotfromapp"	"1007"
+		"id"	"1006"
+		"manifests"
+		{
+			"public"	"6688153055340488873"
+		}
+		"maxsize"	"59862244"
+		"name"	"Steamworks SDK Redist (LINUX32)"
+	}
+	"depot"
+	{
+		"config"
+		{
+			"oslist"	"linux"
+		}
+		"encryptedmanifests"
 		{
 			"experimental"
 			{
-				"buildid"	"6263839"
-				"description"	"Experimental version of Valheim"
-				"pwdrequired"	"1"
-				"timeupdated"	"1613728251"
-			}
-			"public"
-			{
-				"buildid"	"6246034"
-				"timeupdated"	"1613558776"
-			}
-			"unstable"
-			{
-				"buildid"	"6246034"
-				"description"	"Unstable test version of valheim"
-				"pwdrequired"	"1"
-				"timeupdated"	"1613469743"
+				"encrypted_gid_2"	"BEDF872D73873D16C025EF87E27C2BDB"
+				"encrypted_size_2"	"2559486959C6E5DCEA5C71ED32BA9080"
 			}
 		}
+		"id"	"896661"
+		"manifests"
+		{
+			"public"	"521795651741005384"
+		}
+		"maxsize"	"985409357"
+		"name"	"Valheim dedicated server Linux"
+	}
+	"depot"
+	{
+		"config"
+		{
+			"oslist"	"windows"
+		}
+		"encryptedmanifests"
+		{
+			"experimental"
+			{
+				"encrypted_gid_2"	"9FD2B7B42FACB1D1FC439DD83ED2BED9"
+				"encrypted_size_2"	"B2D602E667364DEDCB7C3D6EE9AA7374"
+			}
+		}
+		"id"	"896662"
+		"manifests"
+		{
+			"public"	"5449924312569304795"
+		}
+		"maxsize"	"963189471"
+		"name"	"Valheim dedicated server Windows"
 	}
 }
 
