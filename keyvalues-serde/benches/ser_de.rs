@@ -1,6 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use keyvalues_serde::from_str;
-use serde::Deserialize;
+use keyvalues_serde::{from_str, to_string};
+use serde::{Deserialize, Serialize};
 
 use std::{collections::HashMap, fs, path::Path};
 
@@ -15,7 +15,7 @@ fn read_app_info() -> Result<String, std::io::Error> {
 type Id = u64;
 
 // Representation of the app_info file
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct AppInfoAll {
     common: Common,
     config: AppInfoConfig,
@@ -24,7 +24,7 @@ struct AppInfoAll {
     branches: Branches,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Common {
     name: String,
     #[serde(rename = "type")]
@@ -44,13 +44,13 @@ struct Common {
     gameid: Id,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct AppInfoConfig {
     installdir: String,
     launch: HashMap<Id, Launch>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Launch {
     executable: String,
     #[serde(rename = "type")]
@@ -58,12 +58,12 @@ struct Launch {
     config: LaunchConfig,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct LaunchConfig {
     oslist: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Depot {
     id: Id,
     name: String,
@@ -74,29 +74,29 @@ struct Depot {
     encryptedmanifests: Option<EncryptedManifest>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct DepotConfig {
     oslist: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Manifest {
     public: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct EncryptedManifest {
     experimental: HashMap<String, String>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Branches {
     public: Branch,
     experimental: Branch,
     unstable: Branch,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct Branch {
     buildid: Id,
     description: Option<String>,
@@ -104,17 +104,17 @@ struct Branch {
     timeupdated: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct AppInfoExtract {
     branches: BranchesExtract,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct BranchesExtract {
     public: BranchExtract,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Serialize, Debug)]
 struct BranchExtract {
     buildid: Id,
 }
@@ -126,19 +126,22 @@ where
     from_str(black_box(s)).unwrap()
 }
 
+fn to_string_helper<T>(t: &T) -> String
+where
+    T: Serialize,
+{
+    to_string(black_box(t)).unwrap()
+}
+
 pub fn de_timing(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
     let mut group = c.benchmark_group("de timing");
     group.bench_function("de all timing", |b| {
-        b.iter(|| {
-            let _: AppInfoAll = from_str_helper(&vdf_text);
-        })
+        b.iter(|| from_str_helper::<AppInfoAll>(&vdf_text))
     });
     group.bench_function("de extract timing", |b| {
-        b.iter(|| {
-            let _: AppInfoExtract = from_str_helper(&vdf_text);
-        })
+        b.iter(|| from_str_helper::<AppInfoExtract>(&vdf_text))
     });
     group.finish();
 }
@@ -149,37 +152,36 @@ pub fn de_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("de throughput");
     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
     group.bench_function("all", |b| {
-        b.iter(|| {
-            let _: AppInfoAll = from_str_helper(&vdf_text);
-        })
+        b.iter(|| from_str_helper::<AppInfoAll>(&vdf_text))
     });
     group.bench_function("extract", |b| {
-        b.iter(|| {
-            let _: AppInfoExtract = from_str_helper(&vdf_text);
-        })
+        b.iter(|| from_str_helper::<AppInfoExtract>(&vdf_text))
     });
     group.finish();
 }
 
-// pub fn render_time(c: &mut Criterion) {
-//     let vdf_text = read_app_info().unwrap();
-//     let vdf = Vdf::parse(&vdf_text).unwrap();
+// It doesn't really make sense to reserialize just the extracted content
+pub fn ser_all_timing(c: &mut Criterion) {
+    let vdf_text = read_app_info().unwrap();
+    let app_info_all: AppInfoAll = from_str_helper(&vdf_text);
 
-//     c.bench_function("render timing", |b| {
-//         b.iter(|| vdf.to_string());
-//     });
-// }
+    c.bench_function("ser all timing", |b| {
+        b.iter(|| to_string_helper::<AppInfoAll>(&app_info_all))
+    });
+}
 
-// pub fn render_throughput(c: &mut Criterion) {
-//     let vdf_text = read_app_info().unwrap();
-//     let vdf = Vdf::parse(&vdf_text).unwrap();
+pub fn ser_all_throughput(c: &mut Criterion) {
+    let vdf_text = read_app_info().unwrap();
+    let app_info_all: AppInfoAll = from_str_helper(&vdf_text);
 
-//     let mut group = c.benchmark_group("render throughput");
-//     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
-//     group.bench_function("render", |b| b.iter(|| vdf.to_string()));
-//     group.finish();
-// }
+    let mut group = c.benchmark_group("ser throughput");
+    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
+    group.bench_function("all", |b| {
+        b.iter(|| to_string_helper::<AppInfoAll>(&app_info_all))
+    });
+    group.finish();
+}
 
-criterion_group!(timings, de_timing);
-criterion_group!(throughput, de_throughput);
+criterion_group!(timings, de_timing, ser_all_timing);
+criterion_group!(throughput, de_throughput, ser_all_throughput);
 criterion_main!(timings, throughput);
