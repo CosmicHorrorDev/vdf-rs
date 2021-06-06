@@ -6,6 +6,52 @@ expression: vdf
 Vdf(
   key: "896660",
   value: Obj({
+    "branches": [
+      Obj({
+        "experimental": [
+          Obj({
+            "buildid": [
+              Str("6263839"),
+            ],
+            "description": [
+              Str("Experimental version of Valheim"),
+            ],
+            "pwdrequired": [
+              Str("1"),
+            ],
+            "timeupdated": [
+              Str("1613728251"),
+            ],
+          }),
+        ],
+        "public": [
+          Obj({
+            "buildid": [
+              Str("6246034"),
+            ],
+            "timeupdated": [
+              Str("1613558776"),
+            ],
+          }),
+        ],
+        "unstable": [
+          Obj({
+            "buildid": [
+              Str("6246034"),
+            ],
+            "description": [
+              Str("Unstable test version of valheim"),
+            ],
+            "pwdrequired": [
+              Str("1"),
+            ],
+            "timeupdated": [
+              Str("1613469743"),
+            ],
+          }),
+        ],
+      }),
+    ],
     "common": [
       Obj({
         "ReleaseState": [
@@ -94,207 +140,164 @@ Vdf(
         ],
       }),
     ],
-    "depots": [
+    "depot": [
       Obj({
-        "1004": [
+        "config": [
           Obj({
-            "config": [
-              Obj({
-                "oslist": [
-                  Str("windows"),
-                ],
-              }),
-            ],
-            "depotfromapp": [
-              Str("1007"),
-            ],
-            "manifests": [
-              Obj({
-                "public": [
-                  Str("6473168357831043306"),
-                ],
-              }),
-            ],
-            "maxsize": [
-              Str("39546856"),
-            ],
-            "name": [
-              Str("Steamworks SDK Redist (WIN32)"),
+            "oslist": [
+              Str("windows"),
             ],
           }),
         ],
-        "1005": [
+        "depotfromapp": [
+          Str("1007"),
+        ],
+        "id": [
+          Str("1004"),
+        ],
+        "manifests": [
           Obj({
-            "config": [
-              Obj({
-                "oslist": [
-                  Str("macos"),
-                ],
-              }),
-            ],
-            "depotfromapp": [
-              Str("1007"),
-            ],
-            "manifests": [
-              Obj({
-                "public": [
-                  Str("2135359612286175146"),
-                ],
-              }),
-            ],
-            "name": [
-              Str("Steamworks SDK Redist (OSX32)"),
+            "public": [
+              Str("6473168357831043306"),
             ],
           }),
         ],
-        "1006": [
+        "maxsize": [
+          Str("39546856"),
+        ],
+        "name": [
+          Str("Steamworks SDK Redist (WIN32)"),
+        ],
+      }),
+      Obj({
+        "config": [
           Obj({
-            "config": [
-              Obj({
-                "oslist": [
-                  Str("linux"),
-                ],
-              }),
-            ],
-            "depotfromapp": [
-              Str("1007"),
-            ],
-            "manifests": [
-              Obj({
-                "public": [
-                  Str("6688153055340488873"),
-                ],
-              }),
-            ],
-            "maxsize": [
-              Str("59862244"),
-            ],
-            "name": [
-              Str("Steamworks SDK Redist (LINUX32)"),
+            "oslist": [
+              Str("macos"),
             ],
           }),
         ],
-        "896661": [
+        "depotfromapp": [
+          Str("1007"),
+        ],
+        "id": [
+          Str("1005"),
+        ],
+        "manifests": [
           Obj({
-            "config": [
-              Obj({
-                "oslist": [
-                  Str("linux"),
-                ],
-              }),
-            ],
-            "encryptedmanifests": [
-              Obj({
-                "experimental": [
-                  Obj({
-                    "encrypted_gid_2": [
-                      Str("BEDF872D73873D16C025EF87E27C2BDB"),
-                    ],
-                    "encrypted_size_2": [
-                      Str("2559486959C6E5DCEA5C71ED32BA9080"),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-            "manifests": [
-              Obj({
-                "public": [
-                  Str("521795651741005384"),
-                ],
-              }),
-            ],
-            "maxsize": [
-              Str("985409357"),
-            ],
-            "name": [
-              Str("Valheim dedicated server Linux"),
+            "public": [
+              Str("2135359612286175146"),
             ],
           }),
         ],
-        "896662": [
+        "name": [
+          Str("Steamworks SDK Redist (OSX32)"),
+        ],
+      }),
+      Obj({
+        "config": [
           Obj({
-            "config": [
-              Obj({
-                "oslist": [
-                  Str("windows"),
-                ],
-              }),
-            ],
-            "encryptedmanifests": [
-              Obj({
-                "experimental": [
-                  Obj({
-                    "encrypted_gid_2": [
-                      Str("9FD2B7B42FACB1D1FC439DD83ED2BED9"),
-                    ],
-                    "encrypted_size_2": [
-                      Str("B2D602E667364DEDCB7C3D6EE9AA7374"),
-                    ],
-                  }),
-                ],
-              }),
-            ],
-            "manifests": [
-              Obj({
-                "public": [
-                  Str("5449924312569304795"),
-                ],
-              }),
-            ],
-            "maxsize": [
-              Str("963189471"),
-            ],
-            "name": [
-              Str("Valheim dedicated server Windows"),
+            "oslist": [
+              Str("linux"),
             ],
           }),
         ],
-        "branches": [
+        "depotfromapp": [
+          Str("1007"),
+        ],
+        "id": [
+          Str("1006"),
+        ],
+        "manifests": [
+          Obj({
+            "public": [
+              Str("6688153055340488873"),
+            ],
+          }),
+        ],
+        "maxsize": [
+          Str("59862244"),
+        ],
+        "name": [
+          Str("Steamworks SDK Redist (LINUX32)"),
+        ],
+      }),
+      Obj({
+        "config": [
+          Obj({
+            "oslist": [
+              Str("linux"),
+            ],
+          }),
+        ],
+        "encryptedmanifests": [
           Obj({
             "experimental": [
               Obj({
-                "buildid": [
-                  Str("6263839"),
+                "encrypted_gid_2": [
+                  Str("BEDF872D73873D16C025EF87E27C2BDB"),
                 ],
-                "description": [
-                  Str("Experimental version of Valheim"),
-                ],
-                "pwdrequired": [
-                  Str("1"),
-                ],
-                "timeupdated": [
-                  Str("1613728251"),
-                ],
-              }),
-            ],
-            "public": [
-              Obj({
-                "buildid": [
-                  Str("6246034"),
-                ],
-                "timeupdated": [
-                  Str("1613558776"),
-                ],
-              }),
-            ],
-            "unstable": [
-              Obj({
-                "buildid": [
-                  Str("6246034"),
-                ],
-                "description": [
-                  Str("Unstable test version of valheim"),
-                ],
-                "pwdrequired": [
-                  Str("1"),
-                ],
-                "timeupdated": [
-                  Str("1613469743"),
+                "encrypted_size_2": [
+                  Str("2559486959C6E5DCEA5C71ED32BA9080"),
                 ],
               }),
             ],
           }),
+        ],
+        "id": [
+          Str("896661"),
+        ],
+        "manifests": [
+          Obj({
+            "public": [
+              Str("521795651741005384"),
+            ],
+          }),
+        ],
+        "maxsize": [
+          Str("985409357"),
+        ],
+        "name": [
+          Str("Valheim dedicated server Linux"),
+        ],
+      }),
+      Obj({
+        "config": [
+          Obj({
+            "oslist": [
+              Str("windows"),
+            ],
+          }),
+        ],
+        "encryptedmanifests": [
+          Obj({
+            "experimental": [
+              Obj({
+                "encrypted_gid_2": [
+                  Str("9FD2B7B42FACB1D1FC439DD83ED2BED9"),
+                ],
+                "encrypted_size_2": [
+                  Str("B2D602E667364DEDCB7C3D6EE9AA7374"),
+                ],
+              }),
+            ],
+          }),
+        ],
+        "id": [
+          Str("896662"),
+        ],
+        "manifests": [
+          Obj({
+            "public": [
+              Str("5449924312569304795"),
+            ],
+          }),
+        ],
+        "maxsize": [
+          Str("963189471"),
+        ],
+        "name": [
+          Str("Valheim dedicated server Windows"),
         ],
       }),
     ],
