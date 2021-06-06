@@ -1,0 +1,14 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+Vdf(
+  key: "OuterKey",
+  value: Obj({
+    "SequenceKey": [
+      Str("SequenceVal"),
+      Obj({}),
+    ],
+  }),
+)

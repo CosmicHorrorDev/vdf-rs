@@ -1,0 +1,88 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+Vdf(
+  key: "AppState",
+  value: Obj({
+    "AllowOtherDownloadsWhileRunning": [
+      Str("0"),
+    ],
+    "AutoUpdateBehavior": [
+      Str("0"),
+    ],
+    "BytesDownloaded": [
+      Str("564763584"),
+    ],
+    "BytesStaged": [
+      Str("1045271601"),
+    ],
+    "BytesToDownload": [
+      Str("564763584"),
+    ],
+    "BytesToStage": [
+      Str("1045271601"),
+    ],
+    "InstalledDepots": [
+      Obj({
+        "1006": [
+          Obj({
+            "manifest": [
+              Str("6688153055340488873"),
+            ],
+            "size": [
+              Str("59862244"),
+            ],
+          }),
+        ],
+        "896661": [
+          Obj({
+            "manifest": [
+              Str("521795651741005384"),
+            ],
+            "size": [
+              Str("985409357"),
+            ],
+          }),
+        ],
+      }),
+    ],
+    "LastOwner": [
+      Str("76561201190449363"),
+    ],
+    "LastUpdated": [
+      Str("1613644649"),
+    ],
+    "ScheduledAutoUpdate": [
+      Str("0"),
+    ],
+    "SizeOnDisk": [
+      Str("1045271601"),
+    ],
+    "StateFlags": [
+      Str("4"),
+    ],
+    "Universe": [
+      Str("1"),
+    ],
+    "UpdateResult": [
+      Str("0"),
+    ],
+    "UserConfig": [
+      Obj({}),
+    ],
+    "appid": [
+      Str("896660"),
+    ],
+    "buildid": [
+      Str("6246034"),
+    ],
+    "installdir": [
+      Str("Valheim dedicated server"),
+    ],
+    "name": [
+      Str("Valheim Dedicated Server"),
+    ],
+  }),
+)
