@@ -10,6 +10,7 @@ keywords = ["keyvalues", "vdf", "steam"]
 
 [dependencies]
 keyvalues-parser = { version = "0.1.0", path = "../keyvalues-parser" }
+once_cell = "1.7.2"
 regex = "1.5.4"
 serde = { version = "1.0.125", features = ["derive"] }
 thiserror = "1.0.24"

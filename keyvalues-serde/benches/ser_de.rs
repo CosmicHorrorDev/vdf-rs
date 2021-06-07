@@ -133,14 +133,6 @@ where
     to_string(black_box(t)).unwrap()
 }
 
-pub fn de_extract_timing(c: &mut Criterion) {
-    let vdf_text = read_app_info().unwrap();
-
-    c.bench_function("de extract timing", |b| {
-        b.iter(|| from_str_helper::<AppInfoExtract>(&vdf_text))
-    });
-}
-
 pub fn de_all_throughput(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
 
@@ -149,6 +141,9 @@ pub fn de_all_throughput(c: &mut Criterion) {
     group.bench_function("all", |b| {
         b.iter(|| from_str_helper::<AppInfoAll>(&vdf_text))
     });
+    group.bench_function("single", |b| {
+        b.iter(|| from_str_helper::<AppInfoExtract>(&vdf_text))
+    });
     group.finish();
 }
 
@@ -156,15 +151,15 @@ pub fn de_all_throughput(c: &mut Criterion) {
 pub fn ser_all_throughput(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
     let app_info_all: AppInfoAll = from_str_helper(&vdf_text);
+    let ser_len = to_string_helper::<AppInfoAll>(&app_info_all).len();
 
     let mut group = c.benchmark_group("ser throughput");
-    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
+    group.throughput(Throughput::Bytes(ser_len as u64));
     group.bench_function("all", |b| {
         b.iter(|| to_string_helper::<AppInfoAll>(&app_info_all))
     });
     group.finish();
 }
 
-criterion_group!(timings, de_extract_timing);
 criterion_group!(throughput, de_all_throughput, ser_all_throughput);
-criterion_main!(timings, throughput);
+criterion_main!(throughput);

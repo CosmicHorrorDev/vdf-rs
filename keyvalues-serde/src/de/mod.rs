@@ -5,6 +5,7 @@ use keyvalues_parser::{
     tokens::{Token, TokenStream},
     Vdf,
 };
+use once_cell::sync::Lazy;
 use regex::Regex;
 use serde::{
     de::{self, IntoDeserializer, Visitor},
@@ -87,6 +88,11 @@ impl<'de> DerefMut for Deserializer<'de> {
     }
 }
 
+// Lazy statics used for `deserialize_any` regexes to avoid re-initializing
+static NEG_NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-\d+$").unwrap());
+static NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+$").unwrap());
+static REAL_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-?\d+\.\d+$").unwrap());
+
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
@@ -95,22 +101,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
             Some(Token::Key(s)) | Some(Token::Str(s)) => {
-                // TODO: compiling the regex using lazy static should help with performance if this
-                // gets called a lot
                 // Falls back to using a regex to match several patterns. This will be far from
                 // efficient, but I'm feeling lazy for now
-                let neg_num_regex = Regex::new(r"^-\d+$").unwrap();
-                let num_regex = Regex::new(r"^\d+$").unwrap();
-                let real_regex = Regex::new(r"^-?\d+\.\d+$").unwrap();
-
                 // Check from more specific to more general types
                 if s == "0" || s == "1" {
                     self.deserialize_bool(visitor)
-                } else if neg_num_regex.is_match(s) {
+                } else if NEG_NUM_REGEX.is_match(s) {
                     self.deserialize_i64(visitor)
-                } else if num_regex.is_match(s) {
+                } else if NUM_REGEX.is_match(s) {
                     self.deserialize_u64(visitor)
-                } else if real_regex.is_match(s) {
+                } else if REAL_REGEX.is_match(s) {
                     self.deserialize_f64(visitor)
                 } else {
                     self.deserialize_str(visitor)
@@ -307,6 +307,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_str(visitor)
     }
 
+    // TODO: is there any use to actually having this deserialize to types. We could just pop off
+    // the appropriate amount of tokens and push a `None` or something
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         self.deserialize_any(visitor)
     }
