@@ -307,9 +307,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         self.deserialize_str(visitor)
     }
 
-    // TODO: is there any use to actually having this deserialize to types. We could just pop off
-    // the appropriate amount of tokens and push a `None` or something
+    // AFAIK this is just used for making sure that the deserializer travels through the right
+    // amount of data so it's safe to ignore more finer grain types
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        self.deserialize_any(visitor)
+        match self.peek() {
+            Some(Token::Key(_)) | Some(Token::Str(_)) => self.deserialize_str(visitor),
+            Some(Token::ObjBegin) => self.deserialize_map(visitor),
+            Some(Token::SeqBegin) => self.deserialize_seq(visitor),
+            Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
+            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
+            None => Err(Error::EofWhileParsingAny),
+        }
     }
 }
