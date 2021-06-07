@@ -1,3 +1,5 @@
+// TODO: a lot of this can probably be slimmed down at this point
+
 mod naive;
 #[cfg(test)]
 mod tests;

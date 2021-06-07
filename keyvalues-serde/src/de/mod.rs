@@ -14,8 +14,9 @@ use serde::{
 
 use std::{
     borrow::Cow,
-    convert::TryFrom,
+    iter::Peekable,
     ops::{Deref, DerefMut},
+    vec::IntoIter,
 };
 
 use crate::{
@@ -29,26 +30,59 @@ pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
 }
 
 pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Cow<'a, str>)> {
-    let mut deserializer = Deserializer::try_from(s)?;
-    if let Token::Key(key) = deserializer.tokens[0].clone() {
-        let t = T::deserialize(&mut deserializer)?;
+    let (mut deserializer, key) = Deserializer::new_with_key(s)?;
+    let t = T::deserialize(&mut deserializer)?;
 
-        if deserializer.is_empty() {
-            Ok((t, key))
-        } else {
-            Err(Error::TrailingTokens)
-        }
+    if deserializer.is_empty() {
+        Ok((t, key))
     } else {
-        unreachable!("Tokenstream must start with key");
+        Err(Error::TrailingTokens)
     }
 }
 
 #[derive(Debug)]
 pub struct Deserializer<'de> {
-    tokens: TokenStream<'de>,
+    tokens: Peekable<IntoIter<Token<'de>>>,
 }
 
 impl<'de> Deserializer<'de> {
+    fn new_with_key(s: &'de str) -> Result<(Self, Cow<'de, str>)> {
+        let vdf = Vdf::parse(s)?;
+        let token_stream = TokenStream::from(vdf);
+
+        if !token_stream.is_empty() {
+            if let Token::Key(key) = token_stream[0].clone() {
+                let tokens = token_stream.0.into_iter().peekable();
+                Ok((Self { tokens }, key))
+            } else {
+                unreachable!("Valid tokenstream must start with key");
+            }
+        } else {
+            unreachable!("Valid tokenstream must start with key");
+        }
+    }
+
+    fn is_empty(&mut self) -> bool {
+        self.peek().is_none()
+    }
+
+    fn peek_is_value(&mut self) -> bool {
+        matches!(
+            self.peek(),
+            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
+        )
+    }
+
+    fn next_key_or_str(&mut self) -> Option<Cow<'de, str>> {
+        match self.peek() {
+            Some(Token::Key(_)) | Some(Token::Str(_)) => match self.next() {
+                Some(Token::Key(s)) | Some(Token::Str(s)) => Some(s),
+                _ => unreachable!("Token was peeked"),
+            },
+            _ => None,
+        }
+    }
+
     fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
         self.next_key_or_str()
             .ok_or(Error::EofWhileParsingKeyOrValue)
@@ -64,18 +98,8 @@ impl<'de> Deserializer<'de> {
     }
 }
 
-impl<'de> TryFrom<&'de str> for Deserializer<'de> {
-    type Error = Error;
-
-    fn try_from(value: &'de str) -> Result<Self> {
-        let vdf = Vdf::parse(value)?;
-        let tokens = TokenStream::from(vdf);
-        Ok(Self { tokens })
-    }
-}
-
 impl<'de> Deref for Deserializer<'de> {
-    type Target = TokenStream<'de>;
+    type Target = Peekable<IntoIter<Token<'de>>>;
 
     fn deref(&self) -> &Self::Target {
         &self.tokens
