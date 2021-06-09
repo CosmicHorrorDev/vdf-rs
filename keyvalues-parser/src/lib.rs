@@ -2,6 +2,7 @@ use std::{borrow::Cow, collections::BTreeMap};
 
 pub mod error;
 mod text;
+#[cfg(feature = "unstable")]
 pub mod tokens;
 
 pub type Key<'a> = Cow<'a, str>;

@@ -50,16 +50,14 @@ impl<'de> Deserializer<'de> {
         let vdf = Vdf::parse(s)?;
         let token_stream = TokenStream::from(vdf);
 
-        if !token_stream.is_empty() {
-            if let Token::Key(key) = token_stream[0].clone() {
-                let tokens = token_stream.0.into_iter().peekable();
-                Ok((Self { tokens }, key))
-            } else {
-                unreachable!("Valid tokenstream must start with key");
-            }
+        let key = if let Some(Token::Key(key)) = token_stream.get(0) {
+            key.to_owned()
         } else {
-            unreachable!("Valid tokenstream must start with key");
-        }
+            unreachable!("Tokenstream must start with key");
+        };
+
+        let tokens = token_stream.0.into_iter().peekable();
+        Ok((Self { tokens }, key.clone()))
     }
 
     fn is_empty(&mut self) -> bool {

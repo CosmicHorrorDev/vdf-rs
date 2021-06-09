@@ -1,4 +1,5 @@
 // TODO: a lot of this can probably be slimmed down at this point
+// TODO: implement a validate function
 
 mod naive;
 #[cfg(test)]
@@ -66,69 +67,6 @@ use crate::{Obj, Value, Vdf};
 /// object.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TokenStream<'a>(pub Vec<Token<'a>>);
-
-impl<'a> TokenStream<'a> {
-    pub fn peek(&self) -> Option<&Token<'a>> {
-        self.get(0)
-    }
-
-    pub fn peek_is_key(&self) -> bool {
-        matches!(self.peek(), Some(Token::Key(_)))
-    }
-
-    pub fn peek_is_str(&self) -> bool {
-        matches!(self.peek(), Some(Token::Str(_)))
-    }
-
-    pub fn peek_is_value(&self) -> bool {
-        matches!(
-            self.peek(),
-            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
-        )
-    }
-
-    pub fn next_key(&mut self) -> Option<Cow<'a, str>> {
-        if self.peek_is_key() {
-            if let Some(Token::Key(s)) = self.next() {
-                Some(s)
-            } else {
-                unreachable!("Key was peeked");
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn next_str(&mut self) -> Option<Cow<'a, str>> {
-        if self.peek_is_str() {
-            if let Some(Token::Str(s)) = self.next() {
-                Some(s)
-            } else {
-                unreachable!("Str was peeked");
-            }
-        } else {
-            None
-        }
-    }
-
-    pub fn next_key_or_str(&mut self) -> Option<Cow<'a, str>> {
-        self.next_key().or_else(|| self.next_str())
-    }
-}
-
-impl<'a> Iterator for TokenStream<'a> {
-    type Item = Token<'a>;
-
-    // This is pretty bad for performance. If it's an issue we can flip the direction of the tokens
-    // when we store it so that we can pop off the back instead
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.is_empty() {
-            None
-        } else {
-            Some(self.remove(0))
-        }
-    }
-}
 
 impl<'a> Deref for TokenStream<'a> {
     type Target = Vec<Token<'a>>;

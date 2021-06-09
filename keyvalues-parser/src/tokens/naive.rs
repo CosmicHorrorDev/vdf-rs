@@ -173,7 +173,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
 
 impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
     fn from(token_stream: TokenStream<'a>) -> Self {
-        let inner = token_stream.map(NaiveToken::from).collect();
+        let inner = token_stream.0.into_iter().map(NaiveToken::from).collect();
         Self(inner)
     }
 }
