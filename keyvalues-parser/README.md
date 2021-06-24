@@ -13,7 +13,7 @@ text
 
 ## Installation
 
-_Note: this requires at least Rust `1.42.0`_
+**Note: this requires at least Rust `1.42.0`**
 
 Just add the library to your `Cargo.toml`
 
@@ -24,10 +24,43 @@ keyvalues-parser = "0.1.0"
 
 ## Usage
 
+<!-- TODO: just use a badge for this. The link can very easily fall out of date -->
 There is documentation available
-[here](https://docs.rs/keyvalues-parser/0.2.0/keyvalues_parser/) and there are
+[here](https://docs.rs/keyvalues-parser/0.1.0/keyvalues_parser/) and there are
 examples available in the
 [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/examples)
+
+### Quickstart
+
+`loginusers.vdf`
+
+```text
+"users"
+{
+	"12345678901234567"
+	{
+		"AccountName"		"ACCOUNT_NAME"
+		"PersonaName"		"PERSONA_NAME"
+		"RememberPassword"	"1"
+		"MostRecent"		"1"
+		"Timestamp"		"1234567890"
+	}
+}
+```
+
+`main.rs`
+
+```rust
+use keyvalues_parser::Vdf;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let vdf_text = std::fs::read_to_string("loginusers.vdf")?;
+    let vdf = Vdf::parse(&vdf_text)?;
+    assert_eq!(Some("12345678901234567"), vdf.value.keys().next());
+
+    Ok(())
+}
+```
 
 ## Limitations
 
@@ -39,7 +72,11 @@ being taken
 
 ## Benchmarks
 
-A simple set of benchmarks is available in the `benches` directory with more detail discussed in `benches/README.md`
+A set of basic benchmarks can be found in the 
+[benches directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/benches)
+
+These just test timing and throughput for both parsing and rendering of a
+fairly typical VDF file
 
 ## License
 
