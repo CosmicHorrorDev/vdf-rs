@@ -1,6 +1,5 @@
 use std::{
     fmt::{self, Write},
-    io,
 };
 
 use crate::{Obj, Value, Vdf};
@@ -64,14 +63,6 @@ impl<'a> fmt::Display for Vdf<'a> {
 }
 
 impl<'a> Vdf<'a> {
-    // TODO: Is this needed? Can't you simply `format!(writer, "{}", vdf)`?
-    pub fn write_to<W>(&self, writer: &mut W) -> io::Result<()>
-    where
-        W: io::Write,
-    {
-        write!(writer, "{}", self)
-    }
-
     fn write_indented(&self, f: &mut fmt::Formatter<'_>, num_indents: usize) -> fmt::Result {
         write_pair(f, num_indents, &self.key, &self.value)
     }

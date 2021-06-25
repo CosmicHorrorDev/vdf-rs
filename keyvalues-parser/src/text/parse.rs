@@ -92,7 +92,7 @@ fn parse_escaped_string(inner: PestPair<'_, Rule>) -> Cow<'_, str> {
 }
 
 impl<'a> Vdf<'a> {
-    /// TODO
+    /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
     pub fn parse(s: &'a str) -> Result<Self> {
         Self::try_from(s)
     }

@@ -130,7 +130,6 @@ pub type Obj<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 /// // Mutate: i.e. remove the last "Inner Key" pair
 /// parsed
 ///     .value
-///     # // TODO: add in a `unwrap_*` and `expect_*` variants
 ///     .get_mut_obj()
 ///     .unwrap()
 ///     .get_mut("Inner Key")
@@ -186,17 +185,17 @@ pub enum Value<'a> {
 }
 
 impl<'a> Value<'a> {
-    /// Returns if the current value is the Str variant
+    /// Returns if the current value is the `Str` variant
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
 
-    /// Returns if the current value is the Obj variant
+    /// Returns if the current value is the `Obj` variant
     pub fn is_obj(&self) -> bool {
         self.get_obj().is_some()
     }
 
-    /// Gets the inner `&str` if this value is a Str else None
+    /// Gets the inner `&str` if this is a `Value::Str`
     pub fn get_str(&self) -> Option<&str> {
         if let Value::Str(s) = self {
             Some(s)
@@ -205,16 +204,16 @@ impl<'a> Value<'a> {
         }
     }
 
-    /// Gets the inner `&Obj` if this value is an obj else None
+    /// Gets the inner `&Obj` if this value is a `Value::Obj`
     pub fn get_obj(&self) -> Option<&Obj> {
         if let Value::Obj(obj) = self {
-            Some(&obj)
+            Some(obj)
         } else {
             None
         }
     }
 
-    /// Gets the inner `&mut str` if this value is Str else None
+    /// Gets the inner `&mut str` if this is a `Value::Str`
     pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
         if let Value::Str(s) = self {
             Some(s)
@@ -223,7 +222,7 @@ impl<'a> Value<'a> {
         }
     }
 
-    /// Gets the inner `&mut Obj` if this value is obj else None
+    /// Gets the inner `&mut Obj` if this is a `Value::Obj`
     pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
         if let Value::Obj(obj) = self {
             Some(obj)
