@@ -9,7 +9,7 @@ fn read_asset_file(file_name: &str) -> std::io::Result<String> {
     fs::read_to_string(asset_path)
 }
 
-fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a Cow<'a, str>> {
+fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a str> {
     controller_mappings
         .value
         .get_obj()?
@@ -51,7 +51,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Render the VDF:
     // `Vdf` implements `Display` which also provides `.to_string()`
     println!("{}", controller_mappings);
-    assert_eq!(get_version(&controller_mappings), Some(&Cow::from("3")));
+    assert_eq!(get_version(&controller_mappings), Some("3"));
 
     Ok(())
 }

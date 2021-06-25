@@ -1,5 +1,5 @@
 ---
-source: keyvalues-serde/tests/tests.rs
+source: keyvalues-serde/tests/special_cases.rs
 expression: vdf_text
 
 ---

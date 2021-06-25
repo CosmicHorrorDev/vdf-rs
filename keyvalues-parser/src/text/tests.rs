@@ -20,18 +20,18 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
-macro_rules! parse_render_test {
-    ($func_name:ident, $file_name: literal) => {
+macro_rules! parse_render_test_infer_file {
+    ($func_name:ident) => {
         #[test]
         fn $func_name() -> BoxedResult<()> {
-            snapshot_test_parse_and_render($file_name)
+            snapshot_test_parse_and_render(&format!("{}.vdf", stringify!($func_name)))
         }
     };
 }
 
-parse_render_test!(basic, "basic.vdf");
-parse_render_test!(app_manifest, "app_manifest.vdf");
-parse_render_test!(comments, "comments.vdf");
-parse_render_test!(unquoted_strings, "unquoted_strings.vdf");
-parse_render_test!(special_charaters, "special_characters.vdf");
-parse_render_test!(app_info, "app_info.vdf");
+parse_render_test_infer_file!(basic);
+parse_render_test_infer_file!(app_manifest);
+parse_render_test_infer_file!(comments);
+parse_render_test_infer_file!(unquoted_strings);
+parse_render_test_infer_file!(special_characters);
+parse_render_test_infer_file!(app_info);

@@ -213,6 +213,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     fn deserialize_str<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
+        // TODO: it should be possible to use `.visit_borrowed_str()` here to support zero-copy
+        // strings (I'm assuming that's what would allow for it). The only issue is that currently
+        // `.next_key_or_str_else_eof()` returns an owned `Cow` since the `Deserializer` consumes
+        // the tokenstream. If instead the iterator traversed the tokenstream without consuming it
+        // (say by just indexing instead), then this should be feasible
         visitor.visit_str(&self.next_key_or_str_else_eof()?)
     }
 

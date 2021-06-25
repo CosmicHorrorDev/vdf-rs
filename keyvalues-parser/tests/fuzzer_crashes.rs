@@ -19,15 +19,15 @@ fn parse_fuzz_test(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
-macro_rules! parse_fuzz_regression_test {
-    ($func_name:ident, $file_name:literal) => {
+macro_rules! parse_fuzzer_crash_infer_file {
+    ($func_name:ident) => {
         #[test]
         fn $func_name() -> BoxedResult<()> {
-            parse_fuzz_test($file_name)
+            parse_fuzz_test(stringify!($func_name))
         }
     };
 }
 
-parse_fuzz_regression_test!(fuzzer_crash_1, "crash-1");
-parse_fuzz_regression_test!(fuzzer_crash_2, "crash-2");
-parse_fuzz_regression_test!(fuzzer_crash_3, "crash-3");
+parse_fuzzer_crash_infer_file!(crash_1);
+parse_fuzzer_crash_infer_file!(crash_2);
+parse_fuzzer_crash_infer_file!(crash_3);
