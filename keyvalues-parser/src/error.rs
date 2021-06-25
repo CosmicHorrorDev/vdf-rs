@@ -1,9 +1,17 @@
+//! All error information for parsing and rendering
+
 use std::fmt;
 
 use crate::text::parse::PestError;
 
+/// Just a type alias for `Result` with a [`keyvalues::error::Error`][Error]
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// All possible errors when parsing or rendering VDF text
+///
+/// Currently the two variants are `ParseError` which currently only occurs when `pest` encounters
+/// an error in parsing text based on the grammar or `InvalidTokenStream` which all stem from
+/// converting any tokenstream back to [`Vdf`][crate::Vdf]
 #[derive(thiserror::Error, Clone, Debug, PartialEq)]
 pub enum Error {
     #[error("Failed parsing input Error: {0}")]
@@ -18,6 +26,7 @@ impl From<TokenContext> for Error {
     }
 }
 
+/// Provides context on the specific tokenstream error
 #[derive(Clone, Debug, PartialEq)]
 pub enum TokenContext {
     EofWhileParsingKey,

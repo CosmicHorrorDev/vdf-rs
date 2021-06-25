@@ -1,3 +1,80 @@
+//! `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
+//! [VDF text v1 and v2](https://developer.valvesoftware.com/wiki/KeyValues)
+//! files to an untyped Rust structure to ease manipulation and navigation. The
+//! parser provides an untyped `Vdf` representation as well as a linear
+//! `TokenStream`
+//!
+//! The library is primarily used in conjunction with
+//! [`keyvalues-serde`](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde)
+//! which provides a more ergonommic (yet more limiting) means of dealing with VDF
+//! text
+//!
+//! ## Installation
+//!
+//! **Note: this requires at least Rust `1.42.0`**
+//!
+//! Just add the library to your `Cargo.toml`
+//!
+//! ```toml
+//! [dependencies]
+//! keyvalues-parser = "0.1.0"
+//! ```
+//!
+//! ## Usage
+//!
+//! There is documentation available
+//! [here](https://docs.rs/keyvalues-parser/0.1.0/keyvalues_parser/) and there are
+//! examples available in the
+//! [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/examples)
+//!
+//! ### Quickstart
+//!
+//! `loginusers.vdf`
+//!
+//! ```text
+//! "users"
+//! {
+//! 	"12345678901234567"
+//! 	{
+//! 		"AccountName"		"ACCOUNT_NAME"
+//! 		"PersonaName"		"PERSONA_NAME"
+//! 		"RememberPassword"	"1"
+//! 		"MostRecent"		"1"
+//! 		"Timestamp"		"1234567890"
+//! 	}
+//! }
+//! ```
+//!
+//! `main.rs`
+//!
+//! ```no_run
+//! use keyvalues_parser::Vdf;
+//!
+//! let vdf_text = std::fs::read_to_string("loginusers.vdf")?;
+//! let vdf = Vdf::parse(&vdf_text)?;
+//! assert_eq!(
+//!     "12345678901234567",
+//!     vdf.value.get_obj().unwrap().keys().next().unwrap()
+//! );
+//! # Ok::<(), Box<dyn std::error::Error>>(())
+//! ```
+//!
+//! ## Limitations
+//!
+//! VDF text is drastically underspecified. This leads to the following liberties
+//! being taken
+//!
+//! - Not respecting the ordering of key-value pairs, where the pairs are stored in a `BTreeMap` that sorts the values based on the key
+//! - Because of limitations in representing sequences, an empty `Vec` of values will be rendered as a missing keyvalue pair
+//!
+//! ## Benchmarks
+//!
+//! A set of basic benchmarks can be found in the
+//! [benches directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/benches)
+//!
+//! These just test timing and throughput for both parsing and rendering of a
+//! fairly typical VDF file
+
 use std::{borrow::Cow, collections::BTreeMap};
 
 pub mod error;
@@ -5,9 +82,76 @@ mod text;
 #[cfg(feature = "unstable")]
 pub mod tokens;
 
+/// A Key is simply an alias for `Cow<str>`
 pub type Key<'a> = Cow<'a, str>;
+
+/// An `Obj` is represented as a `BTreeMap` which maps keys to their corresponding values
+///
+/// The values in this case is a `Vec` since a single key can map to multiple values to form a
+/// sequence. This is represented as the same key being used within an object to map to different
+/// values.
 pub type Obj<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
+/// A loosely typed representation of VDF text
+///
+/// `Vdf` is represented as a single [`Key`][Key] mapped to a single [`Value`][Value]
+///
+/// ## Parse
+///
+/// `Vdf`s will generally be created through the use of [`Vdf::parse()`][Vdf::parse] which takes a
+/// string representing VDF text and attempts to parse it to a `Vdf` representation.
+///
+/// ## Mutate
+///
+/// From there you can manipulate/extract from the representation as desired by using the standard
+/// conventions on the internal types (plain old `BTreeMap`s, `Vec`s, and `Cow`s all the way down)
+///
+/// ## Render
+///
+/// The `Vdf` can also be rendered back to its text form through its `Display` implementation
+///
+/// ## Example
+///
+/// ```
+/// use keyvalues_parser::Vdf;
+///
+/// // Parse
+/// let vdf_text = r#"
+/// "Outer Key"
+/// {
+///     "Inner Key" "Inner Value"
+///     "Inner Key"
+///     {
+///     }
+/// }
+/// "#;
+/// let mut parsed = Vdf::parse(vdf_text)?;
+///
+/// // Mutate: i.e. remove the last "Inner Key" pair
+/// parsed
+///     .value
+///     # // TODO: add in a `unwrap_*` and `expect_*` variants
+///     .get_mut_obj()
+///     .unwrap()
+///     .get_mut("Inner Key")
+///     .unwrap()
+///     .pop();
+///
+/// // Render: prints
+/// // "Outer Key"
+/// // {
+/// //     "Inner Key" "Inner Value"
+/// // }
+/// println!("{}", parsed);
+/// # // Just to make sure the comment above holds true
+/// # let expected = r#""Outer Key"
+/// # {
+/// # 	"Inner Key"	"Inner Value"
+/// # }
+/// # "#;
+/// # assert_eq!(expected, parsed.to_string());
+/// # Ok::<(), keyvalues_parser::error::Error>(())
+/// ```
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Vdf<'a> {
@@ -16,11 +160,24 @@ pub struct Vdf<'a> {
 }
 
 impl<'a> Vdf<'a> {
+    /// Creates a [`Vdf`][Vdf] using a provided key and value
+    ///
+    /// ```
+    /// use keyvalues_parser::{Vdf, Value};
+    /// use std::borrow::Cow;
+    ///
+    /// let vdf = Vdf::new(Cow::from("Much Key"), Value::Str(Cow::from("Such Wow")));
+    /// ```
     pub fn new(key: Key<'a>, value: Value<'a>) -> Self {
         Self { key, value }
     }
 }
 
+/// Enum representing all valid VDF values
+///
+/// VDF is composed of [`Key`s][Key] and their respective [`Value`s][Value] where this represents
+/// the latter. A value is either going to be a string (`Cow<str>`), or an object ([`Obj`][Obj])
+/// that contains a list of keys and values.
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
@@ -29,15 +186,18 @@ pub enum Value<'a> {
 }
 
 impl<'a> Value<'a> {
+    /// Returns if the current value is the Str variant
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
 
+    /// Returns if the current value is the Obj variant
     pub fn is_obj(&self) -> bool {
         self.get_obj().is_some()
     }
 
-    pub fn get_str(&self) -> Option<&Cow<'a, str>> {
+    /// Gets the inner `&str` if this value is a Str else None
+    pub fn get_str(&self) -> Option<&str> {
         if let Value::Str(s) = self {
             Some(s)
         } else {
@@ -45,6 +205,7 @@ impl<'a> Value<'a> {
         }
     }
 
+    /// Gets the inner `&Obj` if this value is an obj else None
     pub fn get_obj(&self) -> Option<&Obj> {
         if let Value::Obj(obj) = self {
             Some(&obj)
@@ -53,6 +214,7 @@ impl<'a> Value<'a> {
         }
     }
 
+    /// Gets the inner `&mut str` if this value is Str else None
     pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
         if let Value::Str(s) = self {
             Some(s)
@@ -61,6 +223,7 @@ impl<'a> Value<'a> {
         }
     }
 
+    /// Gets the inner `&mut Obj` if this value is obj else None
     pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
         if let Value::Obj(obj) = self {
             Some(obj)

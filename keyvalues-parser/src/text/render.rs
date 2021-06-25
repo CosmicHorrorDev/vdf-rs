@@ -64,6 +64,7 @@ impl<'a> fmt::Display for Vdf<'a> {
 }
 
 impl<'a> Vdf<'a> {
+    // TODO: Is this needed? Can't you simply `format!(writer, "{}", vdf)`?
     pub fn write_to<W>(&self, writer: &mut W) -> io::Result<()>
     where
         W: io::Write,
