@@ -9,7 +9,7 @@
 //! which provides a more ergonommic (yet more limiting) means of dealing with VDF
 //! text
 //!
-//! ## Installation
+//! # Installation
 //!
 //! **Note: this requires at least Rust `1.42.0`**
 //!
@@ -20,14 +20,14 @@
 //! keyvalues-parser = "0.1.0"
 //! ```
 //!
-//! ## Usage
+//! # Usage
 //!
 //! There is documentation available
 //! [here](https://docs.rs/keyvalues-parser/0.1.0/keyvalues_parser/) and there are
 //! examples available in the
 //! [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/examples)
 //!
-//! ### Quickstart
+//! ## Quickstart
 //!
 //! `loginusers.vdf`
 //!
@@ -54,12 +54,12 @@
 //! let vdf = Vdf::parse(&vdf_text)?;
 //! assert_eq!(
 //!     "12345678901234567",
-//!     vdf.value.get_obj().unwrap().keys().next().unwrap()
+//!     vdf.value.unwrap_obj().keys().next().unwrap()
 //! );
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 //!
-//! ## Limitations
+//! # Limitations
 //!
 //! VDF text is drastically underspecified. This leads to the following liberties
 //! being taken
@@ -67,7 +67,7 @@
 //! - Not respecting the ordering of key-value pairs, where the pairs are stored in a `BTreeMap` that sorts the values based on the key
 //! - Because of limitations in representing sequences, an empty `Vec` of values will be rendered as a missing keyvalue pair
 //!
-//! ## Benchmarks
+//! # Benchmarks
 //!
 //! A set of basic benchmarks can be found in the
 //! [benches directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/benches)
@@ -166,6 +166,9 @@ impl<'a> Vdf<'a> {
     /// use std::borrow::Cow;
     ///
     /// let vdf = Vdf::new(Cow::from("Much Key"), Value::Str(Cow::from("Such Wow")));
+    /// // prints
+    /// // "Much Key"  "Such Wow"
+    /// println!("{}", vdf);
     /// ```
     pub fn new(key: Key<'a>, value: Value<'a>) -> Self {
         Self { key, value }
@@ -175,8 +178,8 @@ impl<'a> Vdf<'a> {
 /// Enum representing all valid VDF values
 ///
 /// VDF is composed of [`Key`s][Key] and their respective [`Value`s][Value] where this represents
-/// the latter. A value is either going to be a string (`Cow<str>`), or an object ([`Obj`][Obj])
-/// that contains a list of keys and values.
+/// the latter. A value is either going to be a `Str(Cow<str>)`, or an `Obj(Obj)` that contains a
+/// list of keys and values.
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
@@ -228,6 +231,79 @@ impl<'a> Value<'a> {
             Some(obj)
         } else {
             None
+        }
+    }
+
+    /// Unwraps the `Cow<str>` from the `Value::Str`
+    ///
+    /// # Panics
+    ///
+    /// If the variant was `Value::Obj`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use keyvalues_parser::Value;
+    /// use std::borrow::Cow;
+    ///
+    /// let value = Value::Str(Cow::from("Sample text"));
+    /// assert_eq!(value.unwrap_str(), "Sample text");
+    /// ```
+    ///
+    /// ```should_panic
+    /// use keyvalues_parser::Value;
+    /// use std::collections::BTreeMap;
+    ///
+    /// let value = Value::Obj(BTreeMap::new());
+    /// value.unwrap_str(); // <-- panics
+    /// ```
+    pub fn unwrap_str(self) -> Cow<'a, str> {
+        self.expect_str("Called `unwrap_str` on a `Value::Obj` variant")
+    }
+
+    /// Unwraps the [`Obj`][Obj] from the `Value::Obj`
+    ///
+    /// # Panics
+    ///
+    /// If the variant was `Value::Str`
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use keyvalues_parser::Value;
+    /// use std::collections::BTreeMap;
+    ///
+    /// let empty_map = BTreeMap::new();
+    /// let value = Value::Obj(empty_map.clone());
+    /// assert_eq!(value.unwrap_obj(), empty_map);
+    /// ```
+    ///
+    /// ```should_panic
+    /// use keyvalues_parser::Value;
+    /// use std::borrow::Cow;
+    ///
+    /// let value = Value::Str(Cow::from("D'Oh"));
+    /// value.unwrap_obj(); // <-- panics
+    /// ```
+    pub fn unwrap_obj(self) -> Obj<'a> {
+        self.expect_obj("Called `unwrap_obj` on a `Value::Str` variant")
+    }
+
+    /// Refer to [Value::unwrap_str]. Same situation, but with a custom message
+    pub fn expect_str(self, msg: &str) -> Cow<'a, str> {
+        if let Value::Str(s) = self {
+            s
+        } else {
+            panic!("{}", msg)
+        }
+    }
+
+    /// Refer to [Value::unwrap_obj]. Same situation, but with a custom message
+    pub fn expect_obj(self, msg: &str) -> Obj<'a> {
+        if let Value::Obj(obj) = self {
+            obj
+        } else {
+            panic!("{}", msg)
         }
     }
 }
