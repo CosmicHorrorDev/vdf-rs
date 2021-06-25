@@ -1,6 +1,6 @@
 use keyvalues_parser::Vdf;
 
-use std::{borrow::Cow, fs, path::Path};
+use std::{fs, path::Path};
 
 fn read_asset_file(file_name: &str) -> std::io::Result<String> {
     let asset_path = Path::new(env!("CARGO_MANIFEST_DIR"))

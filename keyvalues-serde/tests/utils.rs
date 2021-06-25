@@ -31,6 +31,8 @@ where
     Ok(())
 }
 
+// I'm too tired to be able to wrap my head around why just this one function is causing trouble
+#[allow(dead_code)]
 pub fn test_vdf_serialization<T>(ideal_text: &str, val: &T) -> BoxedResult<()>
 where
     T: fmt::Debug + PartialEq + Serialize,
