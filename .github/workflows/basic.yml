@@ -47,12 +47,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-targets
+          args: --all-targets --all-features
 
       - name: Run the test suite
         uses: actions-rs/cargo@v1
         with:
-          command: test
+          command: test --all-features
 
       - name: Check formatting
         uses: actions-rs/cargo@v1
