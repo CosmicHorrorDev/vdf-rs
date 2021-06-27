@@ -1,3 +1,5 @@
+//! Contains error information for `keyvalues-serde`
+
 use keyvalues_parser::error::Error as ParserError;
 use serde::{de, ser};
 
@@ -7,8 +9,10 @@ use std::{
     num::{ParseFloatError, ParseIntError},
 };
 
+/// Alias for the result with [`Error`][Error] as the error type
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// All the possible errors that can be encountered when (de)serializing VDF text
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error("{0}")]

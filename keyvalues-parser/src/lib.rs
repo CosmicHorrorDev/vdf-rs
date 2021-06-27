@@ -34,14 +34,14 @@
 //! ```text
 //! "users"
 //! {
-//! 	"12345678901234567"
-//! 	{
-//! 		"AccountName"		"ACCOUNT_NAME"
-//! 		"PersonaName"		"PERSONA_NAME"
-//! 		"RememberPassword"	"1"
-//! 		"MostRecent"		"1"
-//! 		"Timestamp"		"1234567890"
-//! 	}
+//!     "12345678901234567"
+//!     {
+//!         "AccountName"        "ACCOUNT_NAME"
+//!         "PersonaName"        "PERSONA_NAME"
+//!         "RememberPassword"    "1"
+//!         "MostRecent"        "1"
+//!         "Timestamp"        "1234567890"
+//!     }
 //! }
 //! ```
 //!
@@ -142,13 +142,6 @@ pub type Obj<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 /// //     "Inner Key" "Inner Value"
 /// // }
 /// println!("{}", parsed);
-/// # // Just to make sure the comment above holds true
-/// # let expected = r#""Outer Key"
-/// # {
-/// # 	"Inner Key"	"Inner Value"
-/// # }
-/// # "#;
-/// # assert_eq!(expected, parsed.to_string());
 /// # Ok::<(), keyvalues_parser::error::Error>(())
 /// ```
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]

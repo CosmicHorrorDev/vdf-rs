@@ -24,6 +24,88 @@ There is documentation available
 examples available in the
 [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde/examples)
 
+### Quickstart
+
+```toml
+[dependencies]
+keyvalues-serde = "0.1.0"
+serde = { version = "1.0.0", features = ["derive"] }
+```
+
+```rust
+use keyvalues_serde::{from_str, Result as VdfResult};
+use serde::Deserialize;
+
+// Contents take from my ~/.data/Steam/steam/games/PlatformMenu.vdf
+const VDF_TEXT: &str = r##"
+// this file defines the contents of the platform menu
+"Platform"
+{
+    "Menu"
+    {
+        "Games"
+        {
+            "dll"       "steamui"
+            "interface" "SteamUIGames001"
+            "MenuName"  "#Steam_Games"
+            "SteamApp"  "1"
+        }
+        "Friends"
+        {
+            "dll"       "bin/friendsui"
+            "interface" "VGuiModuleTracker001"
+            "MenuName"  "#App_Friends"
+        }
+        "Servers"
+        {
+            "dll"       "bin/serverbrowser"
+            "interface" "VGuiModuleServerBrowser001"
+            "MenuName"  "#App_Servers"
+        }
+        "Settings"
+        {
+            "dll"       "steamui"
+            "interface" "VGuiModuleSettings001"
+            "MenuName"  "#App_Settings"
+            "SteamApp"  "1"
+        }
+    }
+}
+"##;
+
+#[derive(Deserialize, Debug)]
+struct Platform {
+    #[serde(rename = "Menu")]
+    menu: Menu,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "PascalCase")]
+struct Menu {
+    games: MenuModule,
+    friends: MenuModule,
+    servers: MenuModule,
+    settings: MenuModule,
+}
+
+#[derive(Deserialize, Debug)]
+struct MenuModule {
+    dll: String,
+    interface: String,
+    #[serde(rename = "MenuName")]
+    menu_name: String,
+    #[serde(rename = "SteamApp")]
+    steam_app: Option<bool>,
+}
+
+fn main() -> VdfResult<()> {
+    let platform: Platform = from_str(VDF_TEXT)?;
+    println!("{:#?}", platform);
+
+    Ok(())
+}
+```
+
 ## Datatypes
 
 ### Supported

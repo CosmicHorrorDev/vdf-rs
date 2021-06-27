@@ -1,3 +1,5 @@
+//! Serialize Rust types to VDF text
+
 use keyvalues_parser::tokens::{NaiveToken, NaiveTokenStream};
 use keyvalues_parser::Vdf;
 use serde::{ser, Serialize};
@@ -6,18 +8,27 @@ use std::{convert::TryFrom, io::Write};
 
 use crate::error::{Error, Result};
 
+/// The struct for serializing Rust values into VDF text
+///
+/// This typically doesn't need to be invoked directly when [`to_writer()`][to_writer] and
+/// [`to_writer_with_key()`][to_writer_with_key] can be used instead
+#[derive(Default)]
 pub struct Serializer {
     tokens: NaiveTokenStream,
 }
 
 impl Serializer {
-    fn new() -> Self {
-        Self {
-            tokens: NaiveTokenStream::default(),
-        }
+    /// Creates a new VDF serializer
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 
+/// Serialize the `value` into an IO stream of VDF text
+///
+/// # Errors
+///
+/// This will return an error if the input can't be represented with valid VDF
 pub fn to_writer<W, T>(writer: &mut W, value: &T) -> Result<()>
 where
     W: Write,
@@ -26,6 +37,11 @@ where
     _to_writer(writer, value, None)
 }
 
+/// Serialize the `value` into an IO stream of VDF text with a custom top level VDF key
+///
+/// # Errors
+///
+/// This will return an error if the input can't be represented with valid VDF
 pub fn to_writer_with_key<W, T>(writer: &mut W, value: &T, key: &str) -> Result<()>
 where
     W: Write,
@@ -69,11 +85,11 @@ where
     Ok(())
 }
 
-/// Attempts to serialize some input to VDF text.
+/// Attempts to serialize some input to VDF text
 ///
 /// # Errors
 ///
-/// This will return an error if the input can't be represented with valid VDF.
+/// This will return an error if the input can't be represented with valid VDF
 pub fn to_string<T>(value: &T) -> Result<String>
 where
     T: Serialize,
@@ -85,6 +101,11 @@ where
     Ok(s)
 }
 
+/// Attempts to serialize some input to VDF text with a custom top level VDF key
+///
+/// # Errors
+///
+/// This will return an error if the input can't be represented with valid VDF
 pub fn to_string_with_key<T>(value: &T, key: &str) -> Result<String>
 where
     T: Serialize,

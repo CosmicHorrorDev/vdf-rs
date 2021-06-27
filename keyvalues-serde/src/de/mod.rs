@@ -1,9 +1,11 @@
+//! Deserialize VDF text to Rust types
+
 mod map;
 mod seq;
 
 use keyvalues_parser::{
     tokens::{Token, TokenStream},
-    Vdf,
+    Key, Vdf,
 };
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -24,12 +26,14 @@ use crate::{
     error::{Error, Result},
 };
 
+/// Attempts to deserialize a string of VDF text to some type T
 pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
     let vals = from_str_with_key(s)?;
     Ok(vals.0)
 }
 
-pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Cow<'a, str>)> {
+/// The same as [`from_str()`][from_str], but also returns the top level VDF key
+pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'a>)> {
     let (mut deserializer, key) = Deserializer::new_with_key(s)?;
     let t = T::deserialize(&mut deserializer)?;
 
@@ -40,13 +44,18 @@ pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Cow<'
     }
 }
 
+/// The struct that handles deserializing VDF into Rust structs
+///
+/// This typically doesn't need to be invoked directly when [`from_str()`][from_str] and
+/// [`from_str_with_key()`][from_str_with_key] can be used instead
 #[derive(Debug)]
 pub struct Deserializer<'de> {
     tokens: Peekable<IntoIter<Token<'de>>>,
 }
 
 impl<'de> Deserializer<'de> {
-    fn new_with_key(s: &'de str) -> Result<(Self, Cow<'de, str>)> {
+    /// Attempts to create a new VDF deserializer along with returning the top level VDF key
+    pub fn new_with_key(s: &'de str) -> Result<(Self, Key<'de>)> {
         let vdf = Vdf::parse(s)?;
         let token_stream = TokenStream::from(vdf);
 
@@ -60,18 +69,21 @@ impl<'de> Deserializer<'de> {
         Ok((Self { tokens }, key.clone()))
     }
 
-    fn is_empty(&mut self) -> bool {
+    /// Returns if the internal tokenstream is empty
+    pub fn is_empty(&mut self) -> bool {
         self.peek().is_none()
     }
 
-    fn peek_is_value(&mut self) -> bool {
+    /// Returns if the next token is a value type (str, object, or sequence)
+    pub fn peek_is_value(&mut self) -> bool {
         matches!(
             self.peek(),
             Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
         )
     }
 
-    fn next_key_or_str(&mut self) -> Option<Cow<'de, str>> {
+    /// Returns the next key or str if available
+    pub fn next_key_or_str(&mut self) -> Option<Cow<'de, str>> {
         match self.peek() {
             Some(Token::Key(_)) | Some(Token::Str(_)) => match self.next() {
                 Some(Token::Key(s)) | Some(Token::Str(s)) => Some(s),
@@ -81,12 +93,15 @@ impl<'de> Deserializer<'de> {
         }
     }
 
-    fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
+    /// Returns the next key or str or returns an appropriate error
+    pub fn next_key_or_str_else_eof(&mut self) -> Result<Cow<'de, str>> {
         self.next_key_or_str()
             .ok_or(Error::EofWhileParsingKeyOrValue)
     }
 
-    fn next_finite_float_else_eof(&mut self) -> Result<f32> {
+    // TODO: this name is bad
+    /// Returns the next finite float or returns an appropriate error
+    pub fn next_finite_float_else_eof(&mut self) -> Result<f32> {
         let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
         if float.is_finite() {
             Ok(float)

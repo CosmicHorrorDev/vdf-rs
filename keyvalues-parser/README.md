@@ -37,14 +37,14 @@ examples available in the
 ```text
 "users"
 {
-	"12345678901234567"
-	{
-		"AccountName"		"ACCOUNT_NAME"
-		"PersonaName"		"PERSONA_NAME"
-		"RememberPassword"	"1"
-		"MostRecent"		"1"
-		"Timestamp"		"1234567890"
-	}
+    "12345678901234567"
+    {
+        "AccountName"        "ACCOUNT_NAME"
+        "PersonaName"        "PERSONA_NAME"
+        "RememberPassword"    "1"
+        "MostRecent"        "1"
+        "Timestamp"        "1234567890"
+    }
 }
 ```
 

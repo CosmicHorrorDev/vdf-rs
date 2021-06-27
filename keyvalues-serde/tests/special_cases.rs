@@ -16,6 +16,8 @@ mod utils;
 
 use utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Container};
 
+// TODO: what happens if you try to serialize a hashmap without providing a key?
+
 #[test]
 fn snapshot_writing_to_file() -> BoxedResult<()> {
     let vdf_struct = Container::new(123);
