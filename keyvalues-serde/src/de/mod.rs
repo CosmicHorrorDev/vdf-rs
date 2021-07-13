@@ -130,6 +130,14 @@ static NEG_NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-\d+$").unwrap())
 static NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+$").unwrap());
 static REAL_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-?\d+\.\d+$").unwrap());
 
+macro_rules! forward_deserializing_to_parse {
+    ($deserializer_method:ident, $visitor_method:ident) => {
+        fn $deserializer_method<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
+            visitor.$visitor_method(self.next_key_or_str_else_eof()?.parse()?)
+        }
+    };
+}
+
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
@@ -170,37 +178,15 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    fn deserialize_i8<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i8(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i16<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i16(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i32(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i64(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u8<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u8(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u16<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u16(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u32(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u64(self.next_key_or_str_else_eof()?.parse()?)
-    }
+    // All integer types just call `.next_key_or_str_else_eof()?.parse()?` to parse the value
+    forward_deserializing_to_parse!(deserialize_i8, visit_i8);
+    forward_deserializing_to_parse!(deserialize_i16, visit_i16);
+    forward_deserializing_to_parse!(deserialize_i32, visit_i32);
+    forward_deserializing_to_parse!(deserialize_i64, visit_i64);
+    forward_deserializing_to_parse!(deserialize_u8, visit_u8);
+    forward_deserializing_to_parse!(deserialize_u16, visit_u16);
+    forward_deserializing_to_parse!(deserialize_u32, visit_u32);
+    forward_deserializing_to_parse!(deserialize_u64, visit_u64);
 
     fn deserialize_f32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         let float = self.next_finite_float_else_eof()?;

@@ -117,6 +117,14 @@ where
     Ok(s)
 }
 
+macro_rules! forward_to_serialize_str {
+    ($serializer_method:ident, $value_type:ty) => {
+        fn $serializer_method(self, v: $value_type) -> Result<()> {
+            self.serialize_str(&v.to_string())
+        }
+    };
+}
+
 impl<'a> ser::Serializer for &'a mut Serializer {
     type Ok = ();
 
@@ -134,37 +142,21 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.serialize_str(if v { "1" } else { "0" })
     }
 
-    fn serialize_i8(self, v: i8) -> Result<()> {
-        self.serialize_i64(i64::from(v))
-    }
-
-    fn serialize_i16(self, v: i16) -> Result<()> {
-        self.serialize_i64(i64::from(v))
-    }
-
-    fn serialize_i32(self, v: i32) -> Result<()> {
-        self.serialize_i64(i64::from(v))
-    }
-
-    fn serialize_i64(self, v: i64) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u8(self, v: u8) -> Result<()> {
-        self.serialize_u64(u64::from(v))
-    }
-
-    fn serialize_u16(self, v: u16) -> Result<()> {
-        self.serialize_u64(u64::from(v))
-    }
-
-    fn serialize_u32(self, v: u32) -> Result<()> {
-        self.serialize_u64(u64::from(v))
-    }
-
-    fn serialize_u64(self, v: u64) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
+    // TODO: using quote would allow for doing something like:
+    // forward_types_to_serialize_str!(i8, i16, i32, i64);
+    // forward_types_to_serialize_str!(u8, u16, u32, u64);
+    // forward_types_to_serialize_str!(char);
+    //
+    // All the types that just get converted to a string and forwarded to `self.serialize_str()`
+    forward_to_serialize_str!(serialize_i8, i8);
+    forward_to_serialize_str!(serialize_i16, i16);
+    forward_to_serialize_str!(serialize_i32, i32);
+    forward_to_serialize_str!(serialize_i64, i64);
+    forward_to_serialize_str!(serialize_u8, u8);
+    forward_to_serialize_str!(serialize_u16, u16);
+    forward_to_serialize_str!(serialize_u32, u32);
+    forward_to_serialize_str!(serialize_u64, u64);
+    forward_to_serialize_str!(serialize_char, char);
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         if v.is_finite() {
@@ -180,10 +172,6 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         // Note: I believe floats in VDF are considered f32 so even when you use an f64 it will get
         // converted to an f32 when serialized
         self.serialize_f32(v as f32)
-    }
-
-    fn serialize_char(self, v: char) -> Result<()> {
-        self.serialize_str(&v.to_string())
     }
 
     fn serialize_str(self, v: &str) -> Result<()> {
