@@ -2,6 +2,7 @@
 
 use keyvalues_parser::error::Error as ParserError;
 use serde::{de, ser};
+use thiserror::Error as ThisError;
 
 use std::{
     fmt::Display,
@@ -13,7 +14,7 @@ use std::{
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// All the possible errors that can be encountered when (de)serializing VDF text
-#[derive(thiserror::Error, Debug)]
+#[derive(ThisError, Debug)]
 pub enum Error {
     #[error("{0}")]
     Message(String),

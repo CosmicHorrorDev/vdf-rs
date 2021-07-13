@@ -1,5 +1,7 @@
 //! All error information for parsing and rendering
 
+use thiserror::Error as ThisError;
+
 use std::fmt;
 
 use crate::text::parse::PestError;
@@ -12,7 +14,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Currently the two variants are `ParseError` which currently only occurs when `pest` encounters
 /// an error in parsing text based on the grammar or `InvalidTokenStream` which all stem from
 /// converting any tokenstream back to [`Vdf`][crate::Vdf]
-#[derive(thiserror::Error, Clone, Debug, PartialEq)]
+#[derive(ThisError, Clone, Debug, PartialEq)]
 pub enum Error {
     #[error("Failed parsing input Error: {0}")]
     ParseError(#[from] PestError),
