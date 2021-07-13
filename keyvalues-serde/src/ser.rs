@@ -142,11 +142,6 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.serialize_str(if v { "1" } else { "0" })
     }
 
-    // TODO: using quote would allow for doing something like:
-    // forward_types_to_serialize_str!(i8, i16, i32, i64);
-    // forward_types_to_serialize_str!(u8, u16, u32, u64);
-    // forward_types_to_serialize_str!(char);
-    //
     // All the types that just get converted to a string and forwarded to `self.serialize_str()`
     forward_to_serialize_str!(serialize_i8, i8);
     forward_to_serialize_str!(serialize_i16, i16);
