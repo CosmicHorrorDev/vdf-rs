@@ -2,6 +2,7 @@
 
 use keyvalues_parser::tokens::{NaiveToken, NaiveTokenStream};
 use keyvalues_parser::Vdf;
+use paste::paste;
 use serde::{ser, Serialize};
 
 use std::{convert::TryFrom, io::Write};
@@ -117,10 +118,15 @@ where
     Ok(s)
 }
 
-macro_rules! forward_to_serialize_str {
-    ($serializer_method:ident, $value_type:ty) => {
-        fn $serializer_method(self, v: $value_type) -> Result<()> {
-            self.serialize_str(&v.to_string())
+// Expands out a list of types to a list of `serialize_<type>` methods
+macro_rules! serialize_types_as_str {
+    ( $( $types:ty ),* ) => {
+        paste! {
+            $(
+                fn [<serialize_ $types >](self, v: $types) -> Result<()> {
+                    self.serialize_str(&v.to_string())
+                }
+            )*
         }
     };
 }
@@ -143,15 +149,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     // All the types that just get converted to a string and forwarded to `self.serialize_str()`
-    forward_to_serialize_str!(serialize_i8, i8);
-    forward_to_serialize_str!(serialize_i16, i16);
-    forward_to_serialize_str!(serialize_i32, i32);
-    forward_to_serialize_str!(serialize_i64, i64);
-    forward_to_serialize_str!(serialize_u8, u8);
-    forward_to_serialize_str!(serialize_u16, u16);
-    forward_to_serialize_str!(serialize_u32, u32);
-    forward_to_serialize_str!(serialize_u64, u64);
-    forward_to_serialize_str!(serialize_char, char);
+    serialize_types_as_str!(i8, i16, i32, i64, u8, u16, u32, u64, char);
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         if v.is_finite() {
@@ -192,7 +190,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     fn serialize_unit(self) -> Result<()> {
-        Err(Error::Unsupported("Unit Struct"))
+        Err(Error::Unsupported("Unit Type"))
     }
 
     fn serialize_unit_struct(self, _name: &'static str) -> Result<()> {
@@ -227,7 +225,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Newtype Variant"))
     }
 
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
@@ -254,7 +252,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Tuple Variant"))
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
@@ -278,7 +276,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Struct Variant"))
     }
 }
 
