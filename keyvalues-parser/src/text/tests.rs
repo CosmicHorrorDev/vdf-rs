@@ -1,3 +1,5 @@
+use insta::{assert_ron_snapshot, assert_snapshot};
+
 use std::{error::Error, fs, path::Path};
 
 use crate::Vdf;
@@ -9,29 +11,35 @@ fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     Ok(val)
 }
 
+// Snapshots both parsing and re-rendering the text from a file
 fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse(&vdf_text)?;
-    insta::assert_ron_snapshot!(vdf);
+    assert_ron_snapshot!(vdf);
 
     let rendered = vdf.to_string();
-    insta::assert_snapshot!(rendered);
+    assert_snapshot!(rendered);
 
     Ok(())
 }
 
-macro_rules! parse_render_test_infer_file {
-    ($func_name:ident) => {
-        #[test]
-        fn $func_name() -> BoxedResult<()> {
-            snapshot_test_parse_and_render(&format!("{}.vdf", stringify!($func_name)))
-        }
-    };
+// Generates tests where the `name`s indicate the unit test name and the file without an extension
+macro_rules! parse_render_tests_from_files {
+    ( $( $name:ident ),* ) => {
+        $(
+            #[test]
+            fn $name() -> BoxedResult<()> {
+                snapshot_test_parse_and_render(&format!("{}.vdf", stringify!($name)))
+            }
+        )*
+    }
 }
 
-parse_render_test_infer_file!(basic);
-parse_render_test_infer_file!(app_manifest);
-parse_render_test_infer_file!(comments);
-parse_render_test_infer_file!(unquoted_strings);
-parse_render_test_infer_file!(special_characters);
-parse_render_test_infer_file!(app_info);
+parse_render_tests_from_files!(
+    basic,
+    app_manifest,
+    comments,
+    unquoted_strings,
+    special_characters,
+    app_info
+);

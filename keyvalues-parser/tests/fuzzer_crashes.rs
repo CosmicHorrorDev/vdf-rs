@@ -5,6 +5,7 @@ use std::{fs, path::Path};
 
 type BoxedResult<T> = Result<T, Box<dyn std::error::Error>>;
 
+// Mimics the behavior of the parse fuzzer test for regressions testing
 fn parse_fuzz_test(file_name: &str) -> BoxedResult<()> {
     let crash_file = Path::new("tests").join("crash_outputs").join(file_name);
     let contents = fs::read_to_string(crash_file)?;
@@ -19,15 +20,16 @@ fn parse_fuzz_test(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
-macro_rules! parse_fuzzer_crash_infer_file {
-    ($func_name:ident) => {
-        #[test]
-        fn $func_name() -> BoxedResult<()> {
-            parse_fuzz_test(stringify!($func_name))
-        }
+// Generates a tests for each `name` that indicates both the test name and file name
+macro_rules! parse_fuzzer_crash_infer_files {
+    ( $( $name:ident ),* ) => {
+        $(
+            #[test]
+            fn $name() -> BoxedResult<()> {
+                parse_fuzz_test(stringify!($name))
+            }
+        )*
     };
 }
 
-parse_fuzzer_crash_infer_file!(crash_1);
-parse_fuzzer_crash_infer_file!(crash_2);
-parse_fuzzer_crash_infer_file!(crash_3);
+parse_fuzzer_crash_infer_files!(crash_1, crash_2, crash_3);
