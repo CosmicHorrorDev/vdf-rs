@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Reading information from VDF:
     // This involves a lot of `Option`s so it's moved inside a function
     let version = get_version(&controller_mappings).expect("controller_mappings must have version");
-    println!("Controller Mappings Version: {}", version);
+    println!("Old Controller Mappings Version: {}", version);
 
     // Mutating information from VDF:
     // Updating the version
@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Render the VDF:
     // `Vdf` implements `Display` which also provides `.to_string()`
-    println!("{}", controller_mappings);
+    println!("Updated Controller Mappings:\n{}", controller_mappings);
     assert_eq!(get_version(&controller_mappings), Some("3"));
 
     Ok(())
