@@ -1,10 +1,14 @@
 [package]
 name = "keyvalues-serde"
 version = "0.1.0"
-authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-keywords = ["keyvalues", "vdf", "steam"]
+
+authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
+keywords = ["keyvalues", "vdf", "steam", "serde"]
+description = "(De)serialize VDF text with serde"
+homepage = "https://github.com/lovecraftianhorror/vdf-rs"
+repository = "https://github.com/lovecraftianhorror/vdf-rs"
 
 [dependencies]
 keyvalues-parser = { version = "0.1.0", features = ["unstable"], path = "../keyvalues-parser" }

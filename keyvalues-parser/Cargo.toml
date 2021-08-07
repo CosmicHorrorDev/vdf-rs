@@ -1,10 +1,14 @@
 [package]
 name = "keyvalues-parser"
 version = "0.1.0"
-authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"
-keywords = ["keyvalues", "vdf", "steam"]
+
+authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
+keywords = ["keyvalues", "vdf", "steam", "parser"]
+description = "A parser/renderer for vdf text"
+homepage = "https://github.com/lovecraftianhorror/vdf-rs"
+repository = "https://github.com/lovecraftianhorror/vdf-rs"
 
 [dependencies]
 pest = "2.1"
