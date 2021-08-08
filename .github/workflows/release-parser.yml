@@ -77,7 +77,7 @@ jobs:
           args: cargo-fuzz
 
       - name: Run fuzzer
-        run: cargo fuzz run tokenstream -- -max_total_time=1800 -verbosity=0
+        run: cargo fuzz run token_stream -- -max_total_time=1800 -verbosity=0
         working-directory: keyvalues-parser
 
   release:
