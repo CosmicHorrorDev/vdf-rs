@@ -1,0 +1,76 @@
+# NOTE: The parser release and serde release workflow are nearly identical, so
+# make sure to keep them in sync
+
+name: Serde Release
+
+on:
+  push:
+    tags:
+      - 'serde-v*'
+
+# Job run style is as follows:
+# test -> all fuzzers -> release
+#      \>    ...      /
+jobs:
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: cargo test --all-features
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --manifest-path keyvalues-serde/Cargo.toml
+
+  fuzz_serde:
+    needs: test
+
+    name: "Run serde fuzzer (30 minutes)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          # Nightly is required by `cargo-fuzz`
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-fuzz
+
+      - name: Run fuzzer
+        run: cargo fuzz run serde -- -max_total_time=1800 -verbosity=0
+        working-directory: keyvalues-serde
+
+  release:
+    needs: fuzz_serde
+
+    name: Upload Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Publish serde library
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --dry-run --manifest-path keyvalues-serde/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}

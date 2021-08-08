@@ -1,0 +1,101 @@
+# NOTE: The parser release and serde release workflow are nearly identical, so
+# make sure to keep them in sync
+
+name: Parser Release
+
+on:
+  push:
+    tags:
+      - 'parser-v*'
+
+# Job run style is as follows:
+# test -> all fuzzers -> release
+#      \>    ...      /
+jobs:
+  test:
+    name: Run test suite
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: cargo test --all-features
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --all-features --manifest-path keyvalues-parser/Cargo.toml
+
+  fuzz_parse:
+    needs: test
+
+    name: "Run parse fuzzer (30 minutes)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          # Nightly is required by `cargo-fuzz`
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-fuzz
+
+      - name: Run fuzzer
+        run: cargo fuzz run parse -- -max_total_time=1800 -verbosity=0
+        working-directory: keyvalues-parser
+
+  fuzz_tokenstream:
+    needs: test
+
+    name: "Run tokenstream fuzzer (30 minutes)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          # Nightly is required by `cargo-fuzz`
+          toolchain: nightly
+          override: true
+
+      - name: Install cargo fuzz
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-fuzz
+
+      - name: Run fuzzer
+        run: cargo fuzz run tokenstream -- -max_total_time=1800 -verbosity=0
+        working-directory: keyvalues-parser
+
+  release:
+    needs: [fuzz_parse, fuzz_tokenstream]
+
+    name: Upload Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Publish parser library
+        uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --dry-run --manifest-path keyvalues-parser/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}
