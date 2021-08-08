@@ -100,7 +100,6 @@ impl<'de> Deserializer<'de> {
             .ok_or(Error::EofWhileParsingKeyOrValue)
     }
 
-    // TODO: this name is bad
     /// Returns the next finite float or returns an appropriate error
     pub fn next_finite_float_else_eof(&mut self) -> Result<f32> {
         let float: f32 = self.next_key_or_str_else_eof()?.parse()?;
@@ -227,7 +226,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_bytes<V: Visitor<'de>>(self, _visitor: V) -> Result<V::Value> {
         // It's unclear how `bytes` would be represented in vdf
-        // TODO: convert this to an enum?
         Err(Error::Unsupported("Bytes"))
     }
 
