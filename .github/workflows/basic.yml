@@ -11,7 +11,6 @@ jobs:
         rust:
           - stable
           - beta
-          - 1.42.0
 
     steps:
       - uses: actions/checkout@v2
@@ -60,6 +59,54 @@ jobs:
         with:
           command: fmt
           args: --all -- --check
+
+      - name: Check clippy lints
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  # Only check building and clippy on MSRV since the other tasks are prone to
+  # problems from dev dependencies having higher MSRVs
+  msrv_only:
+    name: Check MSRV compilation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install MSRV toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.42.0
+          override: true
+          components: clippy
+
+      - name: Get rustc version
+        id: get-version
+        run: |
+          echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
+
+      - name: Cargo registry cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cargo/registry
+          key: msrv_only-cargo-registry-${{ steps.get-version.outputs.version }}
+
+      - name: Cargo build cache
+        uses: actions/cache@v2
+        with:
+          path: target
+          key: msrv_only-cargo-build-${{ steps.get-version.outputs.version }}
+
+      # Uses `--all-targets` here to make sure that things like benchmarks
+      # still compile
+      - name: Build all targets
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all-targets --all-features
 
       - name: Check clippy lints
         uses: actions-rs/cargo@v1

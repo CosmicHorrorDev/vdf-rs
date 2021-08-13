@@ -34,7 +34,7 @@ examples available in the
 
 `loginusers.vdf`
 
-```text
+```vdf
 "users"
 {
     "12345678901234567"
