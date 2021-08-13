@@ -18,10 +18,7 @@ fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a str> {
         .get_str()
 }
 
-fn update_version<'text, 'func>(
-    controller_mappings: &'func mut Vdf<'text>,
-    new_version: &str,
-) -> Option<()> {
+fn update_version<'text>(controller_mappings: &mut Vdf<'text>, new_version: String) -> Option<()> {
     let version = controller_mappings
         .value
         .get_mut_obj()?
@@ -30,7 +27,7 @@ fn update_version<'text, 'func>(
         .get_mut_str()?
         .to_mut();
 
-    *version = String::from(new_version);
+    *version = new_version;
 
     Some(())
 }
@@ -46,7 +43,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Mutating information from VDF:
     // Updating the version
-    update_version(&mut controller_mappings, "3").expect("controller_mappings must have version");
+    update_version(&mut controller_mappings, "3".to_string())
+        .expect("controller_mappings must have version");
 
     // Render the VDF:
     // `Vdf` implements `Display` which also provides `.to_string()`

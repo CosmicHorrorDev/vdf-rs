@@ -193,7 +193,7 @@ impl<'a> Value<'a> {
 
     /// Gets the inner `&str` if this is a `Value::Str`
     pub fn get_str(&self) -> Option<&str> {
-        if let Value::Str(s) = self {
+        if let Self::Str(s) = self {
             Some(s)
         } else {
             None
@@ -202,7 +202,7 @@ impl<'a> Value<'a> {
 
     /// Gets the inner `&Obj` if this value is a `Value::Obj`
     pub fn get_obj(&self) -> Option<&Obj> {
-        if let Value::Obj(obj) = self {
+        if let Self::Obj(obj) = self {
             Some(obj)
         } else {
             None
@@ -211,7 +211,7 @@ impl<'a> Value<'a> {
 
     /// Gets the inner `&mut str` if this is a `Value::Str`
     pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
-        if let Value::Str(s) = self {
+        if let Self::Str(s) = self {
             Some(s)
         } else {
             None
@@ -220,7 +220,7 @@ impl<'a> Value<'a> {
 
     /// Gets the inner `&mut Obj` if this is a `Value::Obj`
     pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
-        if let Value::Obj(obj) = self {
+        if let Self::Obj(obj) = self {
             Some(obj)
         } else {
             None
@@ -284,7 +284,7 @@ impl<'a> Value<'a> {
 
     /// Refer to [Value::unwrap_str]. Same situation, but with a custom message
     pub fn expect_str(self, msg: &str) -> Cow<'a, str> {
-        if let Value::Str(s) = self {
+        if let Self::Str(s) = self {
             s
         } else {
             panic!("{}", msg)
@@ -293,7 +293,7 @@ impl<'a> Value<'a> {
 
     /// Refer to [Value::unwrap_obj]. Same situation, but with a custom message
     pub fn expect_obj(self, msg: &str) -> Obj<'a> {
-        if let Value::Obj(obj) = self {
+        if let Self::Obj(obj) = self {
             obj
         } else {
             panic!("{}", msg)
