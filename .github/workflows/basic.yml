@@ -100,13 +100,12 @@ jobs:
           path: target
           key: msrv_only-cargo-build-${{ steps.get-version.outputs.version }}
 
-      # Uses `--all-targets` here to make sure that things like benchmarks
-      # still compile
+      # All targets isn't used here due to MSRV issues with `clap`
       - name: Build all targets
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --all-targets --all-features
+          args: --all-features
 
       - name: Check clippy lints
         uses: actions-rs/cargo@v1
