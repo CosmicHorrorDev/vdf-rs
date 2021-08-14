@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, fmt};
 
 use crate::{error::Result, Value, Vdf};
 
@@ -13,12 +13,24 @@ pub struct OwnedVdf {
     pub value: OwnedValue,
 }
 
+impl<'a> From<Vdf<'a>> for OwnedVdf {
+    fn from(vdf: Vdf<'a>) -> Self {
+        Self::from(&vdf)
+    }
+}
+
 impl<'a> From<&Vdf<'a>> for OwnedVdf {
     fn from(vdf: &Vdf<'a>) -> Self {
         Self {
             key: vdf.key.to_string(),
             value: OwnedValue::from(&vdf.value),
         }
+    }
+}
+
+impl fmt::Display for OwnedVdf {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Vdf::from(self))
     }
 }
 
@@ -40,6 +52,12 @@ pub enum OwnedValue {
     Obj(OwnedObj),
 }
 
+impl<'a> From<Value<'a>> for OwnedValue {
+    fn from(value: Value<'a>) -> Self {
+        Self::from(&value)
+    }
+}
+
 impl<'a> From<&Value<'a>> for OwnedValue {
     fn from(value: &Value<'a>) -> Self {
         match value {
@@ -49,7 +67,7 @@ impl<'a> From<&Value<'a>> for OwnedValue {
                     .iter()
                     .map(|(key, vals)| {
                         let owned_key = key.to_string();
-                        let owned_vals = vals.iter().map(OwnedValue::from).collect();
+                        let owned_vals = vals.iter().map(Self::from).collect();
                         (owned_key, owned_vals)
                     })
                     .collect();
@@ -57,6 +75,12 @@ impl<'a> From<&Value<'a>> for OwnedValue {
                 Self::Obj(owned_obj)
             }
         }
+    }
+}
+
+impl fmt::Display for OwnedValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", Value::from(self))
     }
 }
 

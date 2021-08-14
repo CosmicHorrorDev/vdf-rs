@@ -77,6 +77,8 @@
 
 use std::{borrow::Cow, collections::BTreeMap};
 
+use crate::owned::{OwnedValue, OwnedVdf};
+
 pub mod error;
 pub mod owned;
 mod text;
@@ -152,6 +154,15 @@ pub struct Vdf<'a> {
     pub value: Value<'a>,
 }
 
+impl<'a> From<&'a OwnedVdf> for Vdf<'a> {
+    fn from(owned_vdf: &'a OwnedVdf) -> Self {
+        Self {
+            key: Cow::from(&owned_vdf.key),
+            value: Value::from(&owned_vdf.value),
+        }
+    }
+}
+
 impl<'a> Vdf<'a> {
     /// Creates a [`Vdf`][Vdf] using a provided key and value
     ///
@@ -179,6 +190,26 @@ impl<'a> Vdf<'a> {
 pub enum Value<'a> {
     Str(Cow<'a, str>),
     Obj(Obj<'a>),
+}
+
+impl<'a> From<&'a OwnedValue> for Value<'a> {
+    fn from(owned_value: &'a OwnedValue) -> Self {
+        match owned_value {
+            OwnedValue::Str(s) => Self::Str(Cow::from(s)),
+            OwnedValue::Obj(obj) => {
+                let ref_obj = obj
+                    .iter()
+                    .map(|(key, vals)| {
+                        let ref_key = Cow::from(key);
+                        let ref_vals = vals.iter().map(Self::from).collect();
+                        (ref_key, ref_vals)
+                    })
+                    .collect();
+
+                Self::Obj(ref_obj)
+            }
+        }
+    }
 }
 
 impl<'a> Value<'a> {
