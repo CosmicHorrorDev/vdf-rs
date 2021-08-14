@@ -78,6 +78,7 @@
 use std::{borrow::Cow, collections::BTreeMap};
 
 pub mod error;
+pub mod owned;
 mod text;
 #[cfg(feature = "unstable")]
 pub mod tokens;
