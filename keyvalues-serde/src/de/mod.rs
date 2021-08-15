@@ -7,9 +7,7 @@ use keyvalues_parser::{
     tokens::{Token, TokenStream},
     Key, Vdf,
 };
-use once_cell::sync::Lazy;
 use paste::paste;
-use regex::Regex;
 use serde::{
     de::{self, IntoDeserializer, Visitor},
     Deserialize,
@@ -125,11 +123,6 @@ impl<'de> DerefMut for Deserializer<'de> {
     }
 }
 
-// Lazy statics used for `deserialize_any` regexes to avoid re-initializing
-static NEG_NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-\d+$").unwrap());
-static NUM_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^\d+$").unwrap());
-static REAL_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"^-?\d+\.\d+$").unwrap());
-
 // Generates a `deserialize_<type>` method for each type that just calls parse on the next token
 macro_rules! deserialize_types_with_parse {
     ( $( $types:ty ),* ) => {
@@ -150,22 +143,9 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match self.peek() {
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
-            Some(Token::Key(s)) | Some(Token::Str(s)) => {
-                // Falls back to using a regex to match several patterns. This will be far from
-                // efficient, but I'm feeling lazy for now
-                // Check from more specific to more general types
-                if s == "0" || s == "1" {
-                    self.deserialize_bool(visitor)
-                } else if NEG_NUM_REGEX.is_match(s) {
-                    self.deserialize_i64(visitor)
-                } else if NUM_REGEX.is_match(s) {
-                    self.deserialize_u64(visitor)
-                } else if REAL_REGEX.is_match(s) {
-                    self.deserialize_f64(visitor)
-                } else {
-                    self.deserialize_str(visitor)
-                }
-            }
+            // `Any` always falls back to a `str` when possible, because the VDF format doesn't
+            // give any reasonable type information
+            Some(Token::Key(_)) | Some(Token::Str(_)) => self.deserialize_str(visitor),
             Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
             Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
             None => Err(Error::EofWhileParsingAny),
