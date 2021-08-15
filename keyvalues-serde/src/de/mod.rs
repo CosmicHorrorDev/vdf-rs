@@ -316,7 +316,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     // amount of data so it's safe to ignore more finer grain types
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         match self.peek() {
-            Some(Token::Key(_)) | Some(Token::Str(_)) => self.deserialize_str(visitor),
+            Some(Token::Key(_)) | Some(Token::Str(_)) => {
+                self.next().expect("Token was peeked");
+                visitor.visit_none()
+            }
             Some(Token::ObjBegin) => self.deserialize_map(visitor),
             Some(Token::SeqBegin) => self.deserialize_seq(visitor),
             Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
