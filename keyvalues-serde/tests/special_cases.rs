@@ -95,3 +95,12 @@ fn non_normal_but_finite_float_serialization() -> BoxedResult<()> {
     assert_eq!(vdf, Container::new(0.0f32));
     Ok(())
 }
+
+#[test]
+fn extract_only_some_members() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("multiple_members.vdf")?;
+    let vdf: Container<String> = from_str(&vdf_text)?;
+
+    assert_eq!(vdf, Container::new(String::from("Value")));
+    Ok(())
+}

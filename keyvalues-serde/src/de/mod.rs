@@ -140,15 +140,16 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
     fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        match self.peek() {
-            Some(Token::ObjBegin) => self.deserialize_map(visitor),
-            Some(Token::SeqBegin) => self.deserialize_seq(visitor),
+        match self
+            .peek()
+            .expect("Tokenstream structure prevents premature end")
+        {
+            Token::ObjBegin => self.deserialize_map(visitor),
+            Token::SeqBegin => self.deserialize_seq(visitor),
             // `Any` always falls back to a `str` when possible, because the VDF format doesn't
             // give any reasonable type information
-            Some(Token::Key(_)) | Some(Token::Str(_)) => self.deserialize_str(visitor),
-            Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
-            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
-            None => Err(Error::EofWhileParsingAny),
+            Token::Key(_) | Token::Str(_) => self.deserialize_str(visitor),
+            Token::ObjEnd | Token::SeqEnd => unreachable!("End is always consumed with a Begin"),
         }
     }
 
@@ -196,7 +197,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match val {
             // The borrowed content can be tied to the original text's lifetime
             Cow::Borrowed(borrowed) => visitor.visit_borrowed_str(borrowed),
-            Cow::Owned(owned) => visitor.visit_str(&owned),
+            Cow::Owned(_) => unreachable!(),
         }
     }
 
@@ -315,16 +316,17 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     // AFAIK this is just used for making sure that the deserializer travels through the right
     // amount of data so it's safe to ignore more finer grain types
     fn deserialize_ignored_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        match self.peek() {
-            Some(Token::Key(_)) | Some(Token::Str(_)) => {
+        match self
+            .peek()
+            .expect("Tokenstream structure prevents premature end")
+        {
+            Token::Key(_) | Token::Str(_) => {
                 self.next().expect("Token was peeked");
                 visitor.visit_none()
             }
-            Some(Token::ObjBegin) => self.deserialize_map(visitor),
-            Some(Token::SeqBegin) => self.deserialize_seq(visitor),
-            Some(Token::ObjEnd) => Err(Error::UnexpectedEndOfObject),
-            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
-            None => Err(Error::EofWhileParsingAny),
+            Token::ObjBegin => self.deserialize_map(visitor),
+            Token::SeqBegin => self.deserialize_seq(visitor),
+            Token::ObjEnd | Token::SeqEnd => unreachable!("End is always consumed with a Begin"),
         }
     }
 }

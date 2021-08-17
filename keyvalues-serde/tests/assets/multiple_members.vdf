@@ -1,0 +1,9 @@
+"Container"
+{
+    "inner" "Value"
+    "ignored str" "String"
+    "ignored obj"
+    {
+        "key" "value"
+    }
+}
