@@ -104,3 +104,12 @@ fn extract_only_some_members() -> BoxedResult<()> {
     assert_eq!(vdf, Container::new(String::from("Value")));
     Ok(())
 }
+
+#[test]
+fn borrowed_escaped_string() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("escaped_string.vdf")?;
+    let vdf: Container<Cow<str>> = from_str(&vdf_text)?;
+
+    assert_eq!(vdf, Container::new(Cow::from("tab\tseparated")));
+    Ok(())
+}
