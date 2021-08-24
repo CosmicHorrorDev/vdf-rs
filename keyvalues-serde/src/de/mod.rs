@@ -4,17 +4,19 @@ mod map;
 mod seq;
 
 use keyvalues_parser::{
+    owned::OwnedKey,
     tokens::{Token, TokenStream},
     Key, Vdf,
 };
 use paste::paste;
 use serde::{
-    de::{self, IntoDeserializer, Visitor},
+    de::{self, DeserializeOwned, IntoDeserializer, Visitor},
     Deserialize,
 };
 
 use std::{
     borrow::Cow,
+    io::Read,
     iter::Peekable,
     ops::{Deref, DerefMut},
     vec::IntoIter,
@@ -24,6 +26,17 @@ use crate::{
     de::{map::ObjEater, seq::SeqBuilder},
     error::{Error, Result},
 };
+
+pub fn from_reader<R: Read, T: DeserializeOwned>(rdr: R) -> Result<T> {
+    from_reader_with_key(rdr).map(|(t, _)| t)
+}
+
+pub fn from_reader_with_key<R: Read, T: DeserializeOwned>(mut rdr: R) -> Result<(T, OwnedKey)> {
+    let mut buffer = String::new();
+    rdr.read_to_string(&mut buffer)?;
+
+    from_str_with_key(&buffer).map(|(t, key)| (t, key.into_owned()))
+}
 
 /// Attempts to deserialize a string of VDF text to some type T
 pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
