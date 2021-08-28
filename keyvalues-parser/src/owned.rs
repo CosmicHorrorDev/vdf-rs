@@ -1,10 +1,15 @@
-use std::{collections::BTreeMap, fmt};
+// TODO: can all of this and the code under `lib.rs` be de-duplicated using templates?
+
+use std::{
+    collections::BTreeMap,
+    fmt,
+    iter::FromIterator,
+    ops::{Deref, DerefMut},
+};
 
 use crate::{error::Result, Value, Vdf};
 
 pub type OwnedKey = String;
-
-pub type OwnedObj = BTreeMap<OwnedKey, Vec<OwnedValue>>;
 
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -42,6 +47,48 @@ impl OwnedVdf {
     pub fn parse(s: &str) -> Result<Self> {
         let vdf = Vdf::parse(s)?;
         Ok(Self::from(&vdf))
+    }
+}
+
+type OwnedObjInner = BTreeMap<OwnedKey, Vec<OwnedValue>>;
+type OwnedObjInnerPair = (OwnedKey, Vec<OwnedValue>);
+
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct OwnedObj(OwnedObjInner);
+
+impl OwnedObj {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn into_inner(self) -> OwnedObjInner {
+        self.0
+    }
+}
+
+impl FromIterator<OwnedObjInnerPair> for OwnedObj {
+    fn from_iter<T: IntoIterator<Item = OwnedObjInnerPair>>(iter: T) -> Self {
+        let mut inner = BTreeMap::new();
+        for (key, values) in iter {
+            inner.insert(key, values);
+        }
+
+        Self(inner)
+    }
+}
+
+impl Deref for OwnedObj {
+    type Target = OwnedObjInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DerefMut for OwnedObj {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
     }
 }
 

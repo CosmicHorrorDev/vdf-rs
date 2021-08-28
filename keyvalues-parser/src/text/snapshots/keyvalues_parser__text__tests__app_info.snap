@@ -5,11 +5,11 @@ expression: vdf
 ---
 Vdf(
   key: "896660",
-  value: Obj({
+  value: Obj(Obj({
     "branches": [
-      Obj({
+      Obj(Obj({
         "experimental": [
-          Obj({
+          Obj(Obj({
             "buildid": [
               Str("6263839"),
             ],
@@ -22,20 +22,20 @@ Vdf(
             "timeupdated": [
               Str("1613728251"),
             ],
-          }),
+          })),
         ],
         "public": [
-          Obj({
+          Obj(Obj({
             "buildid": [
               Str("6246034"),
             ],
             "timeupdated": [
               Str("1613558776"),
             ],
-          }),
+          })),
         ],
         "unstable": [
-          Obj({
+          Obj(Obj({
             "buildid": [
               Str("6246034"),
             ],
@@ -48,17 +48,17 @@ Vdf(
             "timeupdated": [
               Str("1613469743"),
             ],
-          }),
+          })),
         ],
-      }),
+      })),
     ],
     "common": [
-      Obj({
+      Obj(Obj({
         "ReleaseState": [
           Str("released"),
         ],
         "associations": [
-          Obj({}),
+          Obj(Obj({})),
         ],
         "clienticon": [
           Str("c55a6b50b170ac6ed56cf90521273c30dccb5f12"),
@@ -93,23 +93,23 @@ Vdf(
         "type": [
           Str("Tool"),
         ],
-      }),
+      })),
     ],
     "config": [
-      Obj({
+      Obj(Obj({
         "installdir": [
           Str("Valheim dedicated server"),
         ],
         "launch": [
-          Obj({
+          Obj(Obj({
             "0": [
-              Obj({
+              Obj(Obj({
                 "config": [
-                  Obj({
+                  Obj(Obj({
                     "oslist": [
                       Str("linux"),
                     ],
-                  }),
+                  })),
                 ],
                 "executable": [
                   Str("start_server_xterm.sh"),
@@ -117,16 +117,16 @@ Vdf(
                 "type": [
                   Str("server"),
                 ],
-              }),
+              })),
             ],
             "1": [
-              Obj({
+              Obj(Obj({
                 "config": [
-                  Obj({
+                  Obj(Obj({
                     "oslist": [
                       Str("windows"),
                     ],
-                  }),
+                  })),
                 ],
                 "executable": [
                   Str("start_headless_server.bat"),
@@ -134,20 +134,20 @@ Vdf(
                 "type": [
                   Str("server"),
                 ],
-              }),
+              })),
             ],
-          }),
+          })),
         ],
-      }),
+      })),
     ],
     "depot": [
-      Obj({
+      Obj(Obj({
         "config": [
-          Obj({
+          Obj(Obj({
             "oslist": [
               Str("windows"),
             ],
-          }),
+          })),
         ],
         "depotfromapp": [
           Str("1007"),
@@ -156,11 +156,11 @@ Vdf(
           Str("1004"),
         ],
         "manifests": [
-          Obj({
+          Obj(Obj({
             "public": [
               Str("6473168357831043306"),
             ],
-          }),
+          })),
         ],
         "maxsize": [
           Str("39546856"),
@@ -168,14 +168,14 @@ Vdf(
         "name": [
           Str("Steamworks SDK Redist (WIN32)"),
         ],
-      }),
-      Obj({
+      })),
+      Obj(Obj({
         "config": [
-          Obj({
+          Obj(Obj({
             "oslist": [
               Str("macos"),
             ],
-          }),
+          })),
         ],
         "depotfromapp": [
           Str("1007"),
@@ -184,23 +184,23 @@ Vdf(
           Str("1005"),
         ],
         "manifests": [
-          Obj({
+          Obj(Obj({
             "public": [
               Str("2135359612286175146"),
             ],
-          }),
+          })),
         ],
         "name": [
           Str("Steamworks SDK Redist (OSX32)"),
         ],
-      }),
-      Obj({
+      })),
+      Obj(Obj({
         "config": [
-          Obj({
+          Obj(Obj({
             "oslist": [
               Str("linux"),
             ],
-          }),
+          })),
         ],
         "depotfromapp": [
           Str("1007"),
@@ -209,11 +209,11 @@ Vdf(
           Str("1006"),
         ],
         "manifests": [
-          Obj({
+          Obj(Obj({
             "public": [
               Str("6688153055340488873"),
             ],
-          }),
+          })),
         ],
         "maxsize": [
           Str("59862244"),
@@ -221,38 +221,38 @@ Vdf(
         "name": [
           Str("Steamworks SDK Redist (LINUX32)"),
         ],
-      }),
-      Obj({
+      })),
+      Obj(Obj({
         "config": [
-          Obj({
+          Obj(Obj({
             "oslist": [
               Str("linux"),
             ],
-          }),
+          })),
         ],
         "encryptedmanifests": [
-          Obj({
+          Obj(Obj({
             "experimental": [
-              Obj({
+              Obj(Obj({
                 "encrypted_gid_2": [
                   Str("BEDF872D73873D16C025EF87E27C2BDB"),
                 ],
                 "encrypted_size_2": [
                   Str("2559486959C6E5DCEA5C71ED32BA9080"),
                 ],
-              }),
+              })),
             ],
-          }),
+          })),
         ],
         "id": [
           Str("896661"),
         ],
         "manifests": [
-          Obj({
+          Obj(Obj({
             "public": [
               Str("521795651741005384"),
             ],
-          }),
+          })),
         ],
         "maxsize": [
           Str("985409357"),
@@ -260,38 +260,38 @@ Vdf(
         "name": [
           Str("Valheim dedicated server Linux"),
         ],
-      }),
-      Obj({
+      })),
+      Obj(Obj({
         "config": [
-          Obj({
+          Obj(Obj({
             "oslist": [
               Str("windows"),
             ],
-          }),
+          })),
         ],
         "encryptedmanifests": [
-          Obj({
+          Obj(Obj({
             "experimental": [
-              Obj({
+              Obj(Obj({
                 "encrypted_gid_2": [
                   Str("9FD2B7B42FACB1D1FC439DD83ED2BED9"),
                 ],
                 "encrypted_size_2": [
                   Str("B2D602E667364DEDCB7C3D6EE9AA7374"),
                 ],
-              }),
+              })),
             ],
-          }),
+          })),
         ],
         "id": [
           Str("896662"),
         ],
         "manifests": [
-          Obj({
+          Obj(Obj({
             "public": [
               Str("5449924312569304795"),
             ],
-          }),
+          })),
         ],
         "maxsize": [
           Str("963189471"),
@@ -299,7 +299,7 @@ Vdf(
         "name": [
           Str("Valheim dedicated server Windows"),
         ],
-      }),
+      })),
     ],
-  }),
+  })),
 )

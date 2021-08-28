@@ -5,10 +5,10 @@ expression: vdf
 ---
 Vdf(
   key: "Outer Key",
-  value: Obj({
+  value: Obj(Obj({
     "Seq Key": [
       Str("Str Val"),
-      Obj({}),
+      Obj(Obj({})),
     ],
-  }),
+  })),
 )

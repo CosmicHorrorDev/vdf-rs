@@ -116,7 +116,7 @@ impl<'a> From<Obj<'a>> for TokenStream<'a> {
     fn from(obj: Obj<'a>) -> Self {
         let mut inner = Vec::new();
 
-        for (key, values) in obj.into_iter() {
+        for (key, values) in obj.into_inner().into_iter() {
             inner.push(Token::Key(key));
 
             // For ease of use a sequence is only marked for keys that have

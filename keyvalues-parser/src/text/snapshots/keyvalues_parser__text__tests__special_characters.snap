@@ -5,7 +5,7 @@ expression: vdf
 ---
 Vdf(
   key: "Outer Key",
-  value: Obj({
+  value: Obj(Obj({
     "Escaped Characters": [
       Str("\n\r\t\"\\"),
     ],
@@ -18,5 +18,5 @@ Vdf(
     "Raw Tab": [
       Str("\t"),
     ],
-  }),
+  })),
 )

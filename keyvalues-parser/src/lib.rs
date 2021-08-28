@@ -75,25 +75,25 @@
 //! These just test timing and throughput for both parsing and rendering of a
 //! fairly typical VDF file
 
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{
+    borrow::Cow,
+    collections::{btree_map::IntoIter, BTreeMap},
+    iter::FromIterator,
+    ops::{Deref, DerefMut},
+};
 
 use crate::owned::{OwnedValue, OwnedVdf};
 
 pub mod error;
 pub mod owned;
+#[cfg(test)]
+mod tests;
 mod text;
 #[cfg(feature = "unstable")]
 pub mod tokens;
 
 /// A Key is simply an alias for `Cow<str>`
 pub type Key<'a> = Cow<'a, str>;
-
-/// An `Obj` is represented as a `BTreeMap` which maps keys to their corresponding values
-///
-/// The values in this case is a `Vec` since a single key can map to multiple values to form a
-/// sequence. This is represented as the same key being used within an object to map to different
-/// values.
-pub type Obj<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 
 /// A loosely typed representation of VDF text
 ///
@@ -177,6 +177,95 @@ impl<'a> Vdf<'a> {
     /// ```
     pub fn new(key: Key<'a>, value: Value<'a>) -> Self {
         Self { key, value }
+    }
+}
+
+type ObjInner<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
+type ObjInnerPair<'a> = (Key<'a>, Vec<Value<'a>>);
+
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[derive(Debug, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
+pub struct Obj<'a>(ObjInner<'a>);
+
+impl<'a> Obj<'a> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn into_inner(self) -> ObjInner<'a> {
+        self.0
+    }
+
+    pub fn into_vdfs(self) -> IntoVdfs<'a> {
+        IntoVdfs::new(self)
+    }
+}
+
+impl<'a> FromIterator<ObjInnerPair<'a>> for Obj<'a> {
+    fn from_iter<T: IntoIterator<Item = ObjInnerPair<'a>>>(iter: T) -> Self {
+        let mut inner = BTreeMap::new();
+        for (key, values) in iter {
+            inner.insert(key, values);
+        }
+
+        Self(inner)
+    }
+}
+
+impl<'a> Deref for Obj<'a> {
+    type Target = ObjInner<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl<'a> DerefMut for Obj<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+pub struct IntoVdfs<'a> {
+    current_entry: Option<ObjInnerPair<'a>>,
+    it: IntoIter<Key<'a>, Vec<Value<'a>>>,
+}
+
+impl<'a> IntoVdfs<'a> {
+    fn new(obj: Obj<'a>) -> Self {
+        Self {
+            current_entry: None,
+            it: obj.into_inner().into_iter(),
+        }
+    }
+}
+
+impl<'a> Iterator for IntoVdfs<'a> {
+    type Item = Vdf<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // Iteration will pop the first pair off `current_entry` if it's set and then falls back to
+        // reading in a new `current_entry` from `it`. If `it` is exhausted then we're done
+        loop {
+            match self.current_entry.take() {
+                // There is a pair to return
+                Some((key, mut values)) if !values.is_empty() => {
+                    let value = values.pop().expect("values isn't empty");
+                    self.current_entry = Some((key.clone(), values));
+                    return Some(Vdf::new(key, value));
+                }
+                _ => match self.it.next() {
+                    // Store the next entry. Flip the values so that `pop`ing returns correct order
+                    Some((key, values)) => {
+                        self.current_entry = Some((key, values.into_iter().rev().collect()));
+                    }
+                    // Fin
+                    None => {
+                        return None;
+                    }
+                },
+            }
+        }
     }
 }
 
@@ -276,10 +365,9 @@ impl<'a> Value<'a> {
     /// ```
     ///
     /// ```should_panic
-    /// use keyvalues_parser::Value;
-    /// use std::collections::BTreeMap;
+    /// use keyvalues_parser::{Value, Obj};
     ///
-    /// let value = Value::Obj(BTreeMap::new());
+    /// let value = Value::Obj(Obj::new());
     /// value.unwrap_str(); // <-- panics
     /// ```
     pub fn unwrap_str(self) -> Cow<'a, str> {
@@ -295,12 +383,10 @@ impl<'a> Value<'a> {
     /// # Examples
     ///
     /// ```
-    /// use keyvalues_parser::Value;
-    /// use std::collections::BTreeMap;
+    /// use keyvalues_parser::{Obj, Value};
     ///
-    /// let empty_map = BTreeMap::new();
-    /// let value = Value::Obj(empty_map.clone());
-    /// assert_eq!(value.unwrap_obj(), empty_map);
+    /// let value = Value::Obj(Obj::new());
+    /// assert_eq!(value.unwrap_obj(), Obj::new());
     /// ```
     ///
     /// ```should_panic
