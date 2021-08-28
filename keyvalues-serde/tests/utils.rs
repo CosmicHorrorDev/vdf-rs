@@ -10,6 +10,7 @@ pub struct Container<T> {
 }
 
 impl<T> Container<T> {
+    #[allow(dead_code)]
     pub fn new(inner: T) -> Self {
         Self { inner }
     }
@@ -22,6 +23,7 @@ pub fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     Ok(val)
 }
 
+#[allow(dead_code)]
 pub fn test_vdf_deserialization<'a, T>(vdf_text: &'a str, ideal_val: &T) -> BoxedResult<()>
 where
     T: fmt::Debug + PartialEq + Deserialize<'a>,

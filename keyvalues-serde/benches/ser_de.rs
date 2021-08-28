@@ -2,7 +2,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughpu
 use keyvalues_serde::{from_str, to_string};
 use serde::{Deserialize, Serialize};
 
-use std::{borrow::Cow, fs, path::Path};
+use std::{fs, path::Path};
 
 mod types;
 
@@ -34,10 +34,10 @@ pub fn de(c: &mut Criterion) {
     let mut group = c.benchmark_group("de");
     group.throughput(Throughput::Bytes(vdf_text.len() as u64));
     group.bench_function("all owned", |b| {
-        b.iter(|| from_str_helper::<types::AppInfo<String>>(&vdf_text))
+        b.iter(|| from_str_helper::<types::AppInfo>(&vdf_text))
     });
     group.bench_function("all borrowed", |b| {
-        b.iter(|| from_str_helper::<types::AppInfo<Cow<str>>>(&vdf_text))
+        b.iter(|| from_str_helper::<types::AppInfoBorrow>(&vdf_text))
     });
     group.bench_function("extract single", |b| {
         b.iter(|| from_str_helper::<types::AppInfoExtract>(&vdf_text))
@@ -48,13 +48,13 @@ pub fn de(c: &mut Criterion) {
 // It doesn't really make sense to reserialize just the extracted content
 pub fn ser(c: &mut Criterion) {
     let vdf_text = read_app_info().unwrap();
-    let app_info_all: types::AppInfo<String> = from_str_helper(&vdf_text);
-    let ser_len = to_string_helper::<types::AppInfo<String>>(&app_info_all).len();
+    let app_info_all: types::AppInfo = from_str_helper(&vdf_text);
+    let ser_len = to_string_helper::<types::AppInfo>(&app_info_all).len();
 
     let mut group = c.benchmark_group("ser");
     group.throughput(Throughput::Bytes(ser_len as u64));
     group.bench_function("all", |b| {
-        b.iter(|| to_string_helper::<types::AppInfo<String>>(&app_info_all))
+        b.iter(|| to_string_helper::<types::AppInfo>(&app_info_all))
     });
     group.finish();
 }
