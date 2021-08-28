@@ -4,7 +4,6 @@ mod map;
 mod seq;
 
 use keyvalues_parser::{
-    owned::OwnedKey,
     tokens::{Token, TokenStream},
     Key, Vdf,
 };
@@ -31,7 +30,7 @@ pub fn from_reader<R: Read, T: DeserializeOwned>(rdr: R) -> Result<T> {
     from_reader_with_key(rdr).map(|(t, _)| t)
 }
 
-pub fn from_reader_with_key<R: Read, T: DeserializeOwned>(mut rdr: R) -> Result<(T, OwnedKey)> {
+pub fn from_reader_with_key<R: Read, T: DeserializeOwned>(mut rdr: R) -> Result<(T, String)> {
     let mut buffer = String::new();
     rdr.read_to_string(&mut buffer)?;
 
