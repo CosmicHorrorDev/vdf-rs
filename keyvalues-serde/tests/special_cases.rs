@@ -1,10 +1,10 @@
-use serde::Deserialize;
 use insta::assert_snapshot;
 use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
     Error,
 };
 use pretty_assertions::assert_eq;
+use serde::Deserialize;
 use tempdir::TempDir;
 
 use std::{
