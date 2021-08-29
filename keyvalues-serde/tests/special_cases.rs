@@ -1,3 +1,4 @@
+use serde::Deserialize;
 use insta::assert_snapshot;
 use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
@@ -111,5 +112,20 @@ fn borrowed_escaped_string() -> BoxedResult<()> {
     let vdf: Container<Cow<str>> = from_str(&vdf_text)?;
 
     assert_eq!(vdf, Container::new(Cow::from("tab\tseparated")));
+    Ok(())
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct BorrowedString<'a> {
+    #[serde(borrow)]
+    inner: Cow<'a, str>,
+}
+
+#[test]
+fn borrowed_string_is_borrowed() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("string_container.vdf")?;
+    let vdf: BorrowedString = from_str(&vdf_text)?;
+
+    assert!(matches!(vdf.inner, Cow::Borrowed(_)));
     Ok(())
 }
