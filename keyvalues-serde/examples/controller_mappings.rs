@@ -10,6 +10,7 @@ fn read_asset_file(file_name: &str) -> std::io::Result<String> {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+#[serde(rename = "controller_mappings")]
 struct ControllerMappings {
     version: u64,
     game: String,
