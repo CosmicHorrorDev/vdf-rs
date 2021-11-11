@@ -41,5 +41,6 @@ parse_render_tests_from_files!(
     comments,
     unquoted_strings,
     special_characters,
-    app_info
+    app_info,
+    null_byte
 );

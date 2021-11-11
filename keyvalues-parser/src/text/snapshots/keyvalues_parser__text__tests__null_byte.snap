@@ -1,0 +1,9 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+Vdf(
+  key: "Key",
+  value: Obj(Obj({})),
+)

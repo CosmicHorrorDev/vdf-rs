@@ -1,7 +1,7 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{"//" ~ (!"\n" ~ ANY)* }
 
-vdf = _{ SOI ~ pair ~ EOI }
+vdf = _{ SOI ~ pair ~ "\u{00}"? ~ EOI }
 
 pairs = _{ pair* }
 
