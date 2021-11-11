@@ -256,26 +256,26 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         visitor.visit_newtype_struct(self)
     }
 
-    fn deserialize_seq<V: Visitor<'de>>(mut self, visitor: V) -> Result<V::Value> {
-        visitor.visit_seq(SeqBuilder::new(&mut self).try_build()?)
+    fn deserialize_seq<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
+        visitor.visit_seq(SeqBuilder::new(self).try_build()?)
     }
 
-    fn deserialize_tuple<V: Visitor<'de>>(mut self, len: usize, visitor: V) -> Result<V::Value> {
-        visitor.visit_seq(SeqBuilder::new(&mut self).length(len).try_build()?)
+    fn deserialize_tuple<V: Visitor<'de>>(self, len: usize, visitor: V) -> Result<V::Value> {
+        visitor.visit_seq(SeqBuilder::new(self).length(len).try_build()?)
     }
 
     fn deserialize_tuple_struct<V: Visitor<'de>>(
-        mut self,
+        self,
         _name: &'static str,
         len: usize,
         visitor: V,
     ) -> Result<V::Value> {
-        visitor.visit_seq(SeqBuilder::new(&mut self).length(len).try_build()?)
+        visitor.visit_seq(SeqBuilder::new(self).length(len).try_build()?)
     }
 
-    fn deserialize_map<V: Visitor<'de>>(mut self, visitor: V) -> Result<V::Value> {
+    fn deserialize_map<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         // A map is just an object containing a list of keyvalues
-        visitor.visit_map(ObjEater::try_new(&mut self)?)
+        visitor.visit_map(ObjEater::try_new(self)?)
     }
 
     fn deserialize_struct<V: Visitor<'de>>(
