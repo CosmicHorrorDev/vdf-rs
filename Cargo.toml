@@ -1,6 +1,9 @@
 [workspace]
 members = [
-    "parse-vdf-file",
     "keyvalues-serde",
     "keyvalues-parser",
+]
+
+exclude = [
+    "parse-vdf-file",
 ]
