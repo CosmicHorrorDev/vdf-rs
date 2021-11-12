@@ -1,0 +1,13 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+Vdf(
+  key: "Some\\text\\here",
+  value: Obj(Obj({
+    "more\\text\\here": [
+      Str("and\\here"),
+    ],
+  })),
+)

@@ -2,7 +2,7 @@ use insta::{assert_ron_snapshot, assert_snapshot};
 
 use std::{error::Error, fs, path::Path};
 
-use crate::Vdf;
+use crate::{text::parse::Opts, Vdf};
 
 type BoxedResult<T> = Result<T, Box<dyn Error>>;
 
@@ -44,3 +44,17 @@ parse_render_tests_from_files!(
     app_info,
     null_byte
 );
+
+#[test]
+fn read_raw_strings() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("raw_strings.vdf")?;
+    let vdf = Vdf::parse_with_opts(
+        &vdf_text,
+        Opts {
+            parse_escaped_characters: false,
+        },
+    )?;
+    assert_ron_snapshot!(vdf);
+
+    Ok(())
+}
