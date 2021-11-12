@@ -85,7 +85,7 @@ use std::{
 pub mod error;
 #[cfg(test)]
 mod tests;
-mod text;
+pub mod text;
 #[cfg(feature = "unstable")]
 pub mod tokens;
 
