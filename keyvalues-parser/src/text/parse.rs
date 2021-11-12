@@ -131,14 +131,30 @@ macro_rules! common_parsing {
 pub use escaped::{parse as escaped_parse, PestError as EscapedPestError};
 pub use raw::{parse as raw_parse, PestError as RawPestError};
 
+pub struct Opts {
+    pub parse_escaped_characters: bool,
+}
+
+impl Default for Opts {
+    fn default() -> Self {
+        // For now I'm gonna default this to true since I'm hoping that new VDF generally respects
+        // escaped characters
+        Self {
+            parse_escaped_characters: true,
+        }
+    }
+}
+
 impl<'a> Vdf<'a> {
     /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
     pub fn parse(s: &'a str) -> Result<Self> {
         escaped_parse(s)
     }
 
-    pub fn parse_with_opts(s: &'a str, parse_escaped: bool) -> Result<Self> {
-        if parse_escaped {
+    // FIXME: How should rendering be handled now? It's fallible depending on the characters
+    // included in strings if it's not escaped
+    pub fn parse_with_opts(s: &'a str, opts: Opts) -> Result<Self> {
+        if opts.parse_escaped_characters {
             escaped_parse(s)
         } else {
             raw_parse(s)
