@@ -13,7 +13,7 @@ use thiserror::Error as ThisError;
 
 use std::fmt;
 
-use crate::text::parse::PestError;
+use crate::text::parse::{EscapedPestError, RawPestError};
 
 /// Just a type alias for `Result` with a [`keyvalues::error::Error`][Error]
 pub type Result<T> = std::result::Result<T, Error>;
@@ -26,7 +26,9 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(ThisError, Clone, Debug, PartialEq)]
 pub enum Error {
     #[error("Failed parsing input Error: {0}")]
-    ParseError(#[from] PestError),
+    EscapedParseError(#[from] EscapedPestError),
+    #[error("Failed parsing input Error: {0}")]
+    RawParseError(#[from] RawPestError),
     #[error("Invalid token stream Context: {0}")]
     InvalidTokenStream(TokenContext),
 }
