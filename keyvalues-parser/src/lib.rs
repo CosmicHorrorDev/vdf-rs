@@ -151,6 +151,23 @@ pub struct Vdf<'a> {
     pub value: Value<'a>,
 }
 
+impl<'a> From<PartialVdf<'a>> for Vdf<'a> {
+    fn from(partial: PartialVdf<'a>) -> Self {
+        Self {
+            key: partial.key,
+            value: partial.value,
+        }
+    }
+}
+
+#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PartialVdf<'a> {
+    pub key: Key<'a>,
+    pub value: Value<'a>,
+    pub bases: Vec<Cow<'a, str>>,
+}
+
 impl<'a> Vdf<'a> {
     /// Creates a [`Vdf`][Vdf] using a provided key and value
     ///

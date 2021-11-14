@@ -1,0 +1,18 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+PartialVdf(
+  key: "Some\\non\\escaped\\text",
+  value: Obj(Obj({
+    "Unquoted\\non\\escaped\\text": [
+      Str("And\\some\\value"),
+    ],
+  })),
+  bases: [
+    "one_base.res",
+    "../another_base.vdf",
+    "other\\path\\sep.pop",
+  ],
+)

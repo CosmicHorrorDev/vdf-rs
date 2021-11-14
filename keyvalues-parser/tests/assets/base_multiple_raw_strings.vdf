@@ -1,0 +1,8 @@
+#base "one_base.res"
+#base ../another_base.vdf
+#base other\path\sep.pop
+
+"Some\non\escaped\text"
+{
+    Unquoted\non\escaped\text "And\some\value"
+}

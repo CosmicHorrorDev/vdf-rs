@@ -1,0 +1,7 @@
+#base "one_base.res"
+#base ../another_base.vdf
+#base other\path\sep.pop
+
+"Key"
+{
+}

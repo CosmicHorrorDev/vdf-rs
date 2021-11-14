@@ -1,0 +1,12 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: vdf
+
+---
+PartialVdf(
+  key: "Key",
+  value: Obj(Obj({})),
+  bases: [
+    "some/base.vdf",
+  ],
+)

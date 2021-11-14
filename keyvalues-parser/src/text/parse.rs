@@ -8,10 +8,41 @@ use pest_derive::Parser;
 
 use std::borrow::Cow;
 
-use crate::{error::Result, Obj, Value, Vdf};
+use crate::{error::Result, Obj, PartialVdf as Vdf, Value};
 
 macro_rules! common_parsing {
     ($parser:ty, $rule:ty, $parse_escaped:expr) => {
+        /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
+        pub fn parse<'a>(s: &'a str) -> Result<Vdf<'a>> {
+            let mut full_grammar = <$parser>::parse(<$rule>::vdf, s)?;
+
+            // There can be multiple base macros before the initial pair
+            let mut bases = Vec::new();
+            loop {
+                let pair = full_grammar.next().unwrap();
+                if let <$rule>::base_macro = pair.as_rule() {
+                    let base_path_string = pair.into_inner().next().unwrap();
+                    let base_path = match base_path_string.as_rule() {
+                        <$rule>::quoted_raw_string => base_path_string.into_inner().next().unwrap(),
+                        <$rule>::unquoted_string => base_path_string,
+                        _ => unreachable!("Prevented by grammar"),
+                    }
+                    .as_str();
+                    bases.push(Cow::from(base_path));
+                } else {
+                    let (key, value) = parse_pair(pair);
+                    return Ok(Vdf { key, value, bases });
+                }
+            }
+        }
+
+        // impl<'a> From<PestPair<'a, $rule>> for Vdf<'a> {
+        //     fn from(full_grammar: PestPair<'a, $rule>) -> Self {
+        //         let (key, value) = parse_pair(full_grammar);
+        //         Self::new(key, value)
+        //     }
+        // }
+
         fn parse_pair(grammar_pair: PestPair<'_, $rule>) -> (Cow<'_, str>, Value<'_>) {
             // Structure: pair
             //            \ key   <- Desired
@@ -88,19 +119,6 @@ macro_rules! common_parsing {
             }
         }
 
-        /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
-        pub fn parse<'a>(s: &'a str) -> Result<Vdf<'a>> {
-            let unparsed = <$parser>::parse(<$rule>::vdf, s)?.next().unwrap();
-            Ok(Vdf::from(unparsed))
-        }
-
-        impl<'a> From<PestPair<'a, $rule>> for Vdf<'a> {
-            fn from(grammar_pair: PestPair<'a, $rule>) -> Self {
-                let (key, value) = parse_pair(grammar_pair);
-                Self::new(key, value)
-            }
-        }
-
         impl<'a> From<PestPair<'a, $rule>> for Value<'a> {
             fn from(grammar_value: PestPair<'a, $rule>) -> Self {
                 // Structure: value is ( obj | quoted_string | unquoted_string )
@@ -159,6 +177,19 @@ impl<'a> Vdf<'a> {
         } else {
             raw_parse(s)
         }
+    }
+}
+
+impl<'a> crate::Vdf<'a> {
+    /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
+    pub fn parse(s: &'a str) -> Result<Self> {
+        Ok(crate::Vdf::from(Vdf::parse(s)?))
+    }
+
+    // FIXME: How should rendering be handled now? It's fallible depending on the characters
+    // included in strings if it's not escaped
+    pub fn parse_with_opts(s: &'a str, opts: Opts) -> Result<Self> {
+        Ok(crate::Vdf::from(Vdf::parse_with_opts(s, opts)?))
     }
 }
 

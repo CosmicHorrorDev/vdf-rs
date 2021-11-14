@@ -1,7 +1,11 @@
 WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{"//" ~ (!"\n" ~ ANY)* }
 
-vdf = _{ SOI ~ pair ~ "\u{00}"? ~ EOI }
+vdf = _{ SOI ~ base_macro* ~ pair ~ "\u{00}"? ~ EOI }
+
+base_macro = { "#base" ~ (quoted_raw_string | unquoted_string ) }
+
+quoted_raw_string = ${ "\"" ~ quoted_inner ~ "\"" }
 
 pairs = _{ pair* }
 

@@ -2,7 +2,7 @@ use insta::{assert_ron_snapshot, assert_snapshot};
 
 use std::{error::Error, fs, path::Path};
 
-use crate::{text::parse::Opts, Vdf};
+use crate::{text::parse::Opts, PartialVdf, Vdf};
 
 type BoxedResult<T> = Result<T, Box<dyn Error>>;
 
@@ -23,19 +23,63 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
+fn snapshot_test_parse(file_name: &str) -> BoxedResult<()> {
+    snapshot_test_parse_with_opts(file_name, Opts::default())
+}
+
+fn snapshot_test_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
+    snapshot_test_parse_with_opts(
+        file_name,
+        Opts {
+            parse_escaped_characters: false,
+        },
+    )
+}
+
+// Snapshots just parsing text from a file
+fn snapshot_test_parse_with_opts(file_name: &str, opts: Opts) -> BoxedResult<()> {
+    let vdf_text = read_asset_file(file_name)?;
+    let vdf = Vdf::parse_with_opts(&vdf_text, opts)?;
+    assert_ron_snapshot!(vdf);
+
+    Ok(())
+}
+
+fn snapshot_test_partial_parse(file_name: &str) -> BoxedResult<()> {
+    snapshot_test_partial_parse_with_opts(file_name, Opts::default())
+}
+
+fn snapshot_test_partial_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
+    snapshot_test_partial_parse_with_opts(
+        file_name,
+        Opts {
+            parse_escaped_characters: false,
+        },
+    )
+}
+
+fn snapshot_test_partial_parse_with_opts(file_name: &str, opts: Opts) -> BoxedResult<()> {
+    let vdf_text = read_asset_file(file_name)?;
+    let vdf = PartialVdf::parse_with_opts(&vdf_text, opts)?;
+    assert_ron_snapshot!(vdf);
+
+    Ok(())
+}
+
 // Generates tests where the `name`s indicate the unit test name and the file without an extension
-macro_rules! parse_render_tests_from_files {
-    ( $( $name:ident ),* ) => {
+macro_rules! parse_test_generator {
+    ( $test_type:ident, $( $name:ident ),* ) => {
         $(
             #[test]
             fn $name() -> BoxedResult<()> {
-                snapshot_test_parse_and_render(&format!("{}.vdf", stringify!($name)))
+                ($test_type)(&format!("{}.vdf", stringify!($name)))
             }
         )*
     }
 }
 
-parse_render_tests_from_files!(
+parse_test_generator!(
+    snapshot_test_parse_and_render,
     basic,
     app_manifest,
     comments,
@@ -45,16 +89,18 @@ parse_render_tests_from_files!(
     null_byte
 );
 
-#[test]
-fn read_raw_strings() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("raw_strings.vdf")?;
-    let vdf = Vdf::parse_with_opts(
-        &vdf_text,
-        Opts {
-            parse_escaped_characters: false,
-        },
-    )?;
-    assert_ron_snapshot!(vdf);
+parse_test_generator!(snapshot_test_parse_raw_strings, raw_strings);
 
-    Ok(())
-}
+parse_test_generator!(snapshot_test_parse,);
+
+parse_test_generator!(
+    snapshot_test_partial_parse,
+    base_multiple,
+    base_quoted,
+    base_unquoted
+);
+
+parse_test_generator!(
+    snapshot_test_partial_parse_raw_strings,
+    base_multiple_raw_strings
+);
