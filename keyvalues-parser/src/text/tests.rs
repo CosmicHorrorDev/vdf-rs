@@ -23,10 +23,6 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
-fn snapshot_test_parse(file_name: &str) -> BoxedResult<()> {
-    snapshot_test_parse_with_opts(file_name, Opts::default())
-}
-
 fn snapshot_test_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
     snapshot_test_parse_with_opts(
         file_name,
@@ -45,8 +41,16 @@ fn snapshot_test_parse_with_opts(file_name: &str, opts: Opts) -> BoxedResult<()>
     Ok(())
 }
 
-fn snapshot_test_partial_parse(file_name: &str) -> BoxedResult<()> {
-    snapshot_test_partial_parse_with_opts(file_name, Opts::default())
+// Snapshots both parsing and re-rendering the text from a file
+fn snapshot_test_partial_parse_and_render(file_name: &str) -> BoxedResult<()> {
+    let vdf_text = read_asset_file(file_name)?;
+    let vdf = PartialVdf::parse(&vdf_text)?;
+    assert_ron_snapshot!(vdf);
+
+    let rendered = vdf.to_string();
+    assert_snapshot!(rendered);
+
+    Ok(())
 }
 
 fn snapshot_test_partial_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
@@ -91,10 +95,8 @@ parse_test_generator!(
 
 parse_test_generator!(snapshot_test_parse_raw_strings, raw_strings);
 
-parse_test_generator!(snapshot_test_parse,);
-
 parse_test_generator!(
-    snapshot_test_partial_parse,
+    snapshot_test_partial_parse_and_render,
     base_multiple,
     base_quoted,
     base_unquoted

@@ -1,0 +1,11 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: rendered
+
+---
+#base "../some_file.pop"
+
+"Key"
+{
+}
+

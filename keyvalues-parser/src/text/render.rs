@@ -1,6 +1,6 @@
 use std::fmt::{self, Write};
 
-use crate::{Obj, Value, Vdf};
+use crate::{Obj, PartialVdf, Value, Vdf};
 
 fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
@@ -52,6 +52,20 @@ fn write_obj<'a>(f: &mut fmt::Formatter<'_>, num_indents: usize, obj: &Obj<'a>) 
     }
 
     Ok(())
+}
+
+impl<'a> fmt::Display for PartialVdf<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for base in &self.bases {
+            writeln!(f, "#base \"{}\"", base)?;
+        }
+
+        if !self.bases.is_empty() {
+            f.write_char('\n')?;
+        }
+
+        write_pair(f, 0, &self.key, &self.value)
+    }
 }
 
 impl<'a> fmt::Display for Vdf<'a> {

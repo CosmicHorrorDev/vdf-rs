@@ -1,0 +1,13 @@
+---
+source: keyvalues-parser/src/text/tests.rs
+expression: rendered
+
+---
+#base "one_base.res"
+#base "../another_base.vdf"
+#base "other\path\sep.pop"
+
+"Key"
+{
+}
+
