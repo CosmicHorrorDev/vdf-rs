@@ -1,9 +1,9 @@
-use keyvalues_parser::tokens::Token;
 use serde::de::{DeserializeSeed, MapAccess};
 
 use crate::{
     de::Deserializer,
     error::{Error, Result},
+    tokens::Token,
 };
 
 #[derive(Debug)]

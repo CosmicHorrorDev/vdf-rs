@@ -86,8 +86,6 @@ pub mod error;
 #[cfg(test)]
 mod tests;
 pub mod text;
-#[cfg(feature = "unstable")]
-pub mod tokens;
 
 /// A Key is simply an alias for `Cow<str>`
 pub type Key<'a> = Cow<'a, str>;

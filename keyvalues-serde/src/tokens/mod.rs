@@ -5,14 +5,14 @@ mod naive;
 #[cfg(test)]
 mod tests;
 
-pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
+use keyvalues_parser::{Obj, Value, Vdf};
 
 use std::{
     borrow::Cow,
     ops::{Deref, DerefMut},
 };
 
-use crate::{Obj, Value, Vdf};
+pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 
 // I've been struggling to get serde to play nice with using a more complex internal structure in a
 // `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into

@@ -1,11 +1,10 @@
+use keyvalues_parser::{Obj, Value, Vdf};
+
 use std::{borrow::Cow, convert::TryFrom};
 
-use crate::{
-    tokens::{
-        naive::{NaiveToken, NaiveTokenStream},
-        Token, TokenStream,
-    },
-    Obj, Value, Vdf,
+use crate::tokens::{
+    naive::{NaiveToken, NaiveTokenStream},
+    Token, TokenStream,
 };
 
 // "outer"
@@ -54,7 +53,11 @@ fn vdf_from_token_stream_basics() {
         }
     };
 
-    assert_eq!(Vdf::try_from(&naive_token_stream), Ok(ideal));
+    if let Ok(actual) = Vdf::try_from(&naive_token_stream) {
+        assert_eq!(actual, ideal);
+    } else {
+        unreachable!()
+    }
 }
 
 #[test]

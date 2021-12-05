@@ -5,10 +5,11 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use keyvalues_parser::{Key, Obj, Value, Vdf};
+
 use crate::{
     error::{Error, Result, TokenContext},
     tokens::{Token, TokenStream},
-    Key, Obj, Value, Vdf,
 };
 
 /// A stream of [`NaiveToken`][NaiveToken]s that do not encode what is a key vs a value
@@ -41,6 +42,8 @@ impl DerefMut for NaiveTokenStream {
     }
 }
 
+// WARNING: This is only an infallible operation when converting well-formed `NaiveTokenStream`s
+// which is why this **must** only be used internally
 // The conversion from `NaiveTokenStream` to `Vdf` leverages all the `process_*` functions which
 // pass off an owned iterator through all of them to deal with the borrow checker
 impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {

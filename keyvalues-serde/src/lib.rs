@@ -155,6 +155,7 @@
 pub mod de;
 pub mod error;
 pub mod ser;
+mod tokens;
 
 #[doc(inline)]
 pub use de::{from_str, from_str_with_key, Deserializer};

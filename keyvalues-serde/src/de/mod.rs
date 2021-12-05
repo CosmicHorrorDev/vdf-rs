@@ -3,10 +3,7 @@
 mod map;
 mod seq;
 
-use keyvalues_parser::{
-    tokens::{Token, TokenStream},
-    Key, Vdf,
-};
+use keyvalues_parser::{Key, Vdf};
 use paste::paste;
 use serde::{
     de::{self, DeserializeOwned, IntoDeserializer, Visitor},
@@ -24,6 +21,7 @@ use std::{
 use crate::{
     de::{map::ObjEater, seq::SeqBuilder},
     error::{Error, Result},
+    tokens::{Token, TokenStream},
 };
 
 pub fn from_reader<R: Read, T: DeserializeOwned>(rdr: R) -> Result<T> {

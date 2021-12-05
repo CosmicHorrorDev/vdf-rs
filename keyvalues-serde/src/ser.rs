@@ -1,13 +1,15 @@
 //! Serialize Rust types to VDF text
 
-use keyvalues_parser::tokens::{NaiveToken, NaiveTokenStream};
 use keyvalues_parser::Vdf;
 use paste::paste;
 use serde::{ser, Serialize};
 
 use std::{convert::TryFrom, io::Write};
 
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    tokens::{NaiveToken, NaiveTokenStream},
+};
 
 /// The struct for serializing Rust values into VDF text
 ///

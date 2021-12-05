@@ -22,10 +22,6 @@ once_cell = "1.7"
 pretty_assertions = "0.7.2"
 serde = { version = "1.0.126", features = ["derive"] }
 
-[features]
-# Enables changes that may break with a minor version update
-unstable = []
-
 [[bench]]
 name = "parser"
 harness = false
