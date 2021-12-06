@@ -1,5 +1,5 @@
 #![no_main]
-use keyvalues::serde::tokens::{NaiveTokenStream, TokenStream};
+use keyvalues_serde::tokens::{NaiveTokenStream, TokenStream};
 use keyvalues_parser::Vdf;
 use libfuzzer_sys::fuzz_target;
 
