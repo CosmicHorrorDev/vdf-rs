@@ -14,7 +14,6 @@ libfuzzer-sys = "0.4"
 
 [dependencies.keyvalues-parser]
 path = ".."
-features = ["unstable"]
 
 # Prevent this from interfering with workspaces
 [workspace]

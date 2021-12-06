@@ -16,6 +16,9 @@ serde = { version = "1.0.126", features = ["derive"] }
 [dependencies.keyvalues-serde]
 path = ".."
 
+[dependencies.keyvalues-parser]
+path = "../../keyvalues-parser"
+
 # Prevent this from interfering with workspaces
 [workspace]
 members = ["."]
