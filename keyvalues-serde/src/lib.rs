@@ -155,6 +155,11 @@
 pub mod de;
 pub mod error;
 pub mod ser;
+
+// The tokenstreams are fuzzed even though they are not exposed publicly normally
+#[cfg(fuzzing)]
+pub mod tokens;
+#[cfg(not(fuzzing))]
 mod tokens;
 
 #[doc(inline)]
