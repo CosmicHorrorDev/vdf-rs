@@ -1,8 +1,6 @@
 #![no_main]
-use keyvalues_parser::{
-    Vdf,
-    tokens::{NaiveTokenStream, TokenStream},
-};
+use keyvalues::serde::tokens::{NaiveTokenStream, TokenStream};
+use keyvalues_parser::Vdf;
 use libfuzzer_sys::fuzz_target;
 
 use std::convert::TryFrom;
