@@ -3,6 +3,7 @@ use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
     Error,
 };
+use maplit::hashmap;
 use pretty_assertions::assert_eq;
 use serde::Deserialize;
 use tempdir::TempDir;
@@ -42,10 +43,11 @@ fn snapshot_writing_to_file() -> BoxedResult<()> {
 
 #[test]
 fn hashmap_top_level() -> BoxedResult<()> {
-    let mut val = HashMap::new();
-    val.insert(0, "Foo".to_owned());
-    val.insert(1, "Bar".to_owned());
-    val.insert(2, "Baz".to_owned());
+    let val = hashmap! {
+        0 => "Foo",
+        1 => "Bar",
+        2 => "Baz",
+    };
     let vdf_text = read_asset_file("hashmap_top_level.vdf")?;
     test_vdf_deserialization(&vdf_text, &val)?;
 

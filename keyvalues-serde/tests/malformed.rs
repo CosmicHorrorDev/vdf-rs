@@ -46,9 +46,9 @@ fn incorrect_seq_length() -> BoxedResult<()> {
 }
 
 #[derive(Deserialize, Debug)]
-struct Pair {
-    first: String,
-    second: String,
+pub struct Pair {
+    pub first: String,
+    pub second: String,
 }
 
 #[test]

@@ -1,6 +1,5 @@
+use maplit::hashmap;
 use serde::{Deserialize, Serialize};
-
-use std::collections::HashMap;
 
 mod utils;
 
@@ -140,10 +139,11 @@ test_ser_de!(
 // the case then it would be important to track down a map type that preserves insertion order. It
 // looks like something like hashlink should work out
 test_ser_de_infer_file!(hashmap_nested, {
-    let mut inner = HashMap::new();
-    inner.insert(0, "Foo".to_owned());
-    inner.insert(1, "Bar".to_owned());
-    inner.insert(2, "Baz".to_owned());
+    let inner = hashmap! {
+        0 => "Foo",
+        1 => "Bar",
+        2 => "Baz",
+    };
     Container::new(inner)
 });
 
