@@ -150,10 +150,10 @@ impl<'a> Value<'a> {
 
     fn find_invalid_raw_char(&self) -> Option<char> {
         match self {
-            Self::Str(s) => find_invalid_raw_char(&s),
+            Self::Str(s) => find_invalid_raw_char(s),
             Self::Obj(obj) => {
                 for (key, values) in obj.iter() {
-                    let maybe_c = find_invalid_raw_char(&key).or_else(|| {
+                    let maybe_c = find_invalid_raw_char(key).or_else(|| {
                         values
                             .iter()
                             .find_map(|value| value.find_invalid_raw_char())
