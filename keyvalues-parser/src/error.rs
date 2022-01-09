@@ -25,4 +25,8 @@ pub enum Error {
     EscapedParseError(#[from] EscapedPestError),
     #[error("Failed parsing input Error: {0}")]
     RawParseError(#[from] RawPestError),
+    #[error("Failed rendering input Error: {0}")]
+    RenderError(#[from] std::fmt::Error),
+    #[error("Encountered invalid character in raw string: {invalid_char:?}")]
+    RawRenderError { invalid_char: char },
 }

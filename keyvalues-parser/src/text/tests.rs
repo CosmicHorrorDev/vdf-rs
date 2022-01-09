@@ -2,7 +2,7 @@ use insta::{assert_ron_snapshot, assert_snapshot};
 
 use std::{error::Error, fs, path::Path};
 
-use crate::{text::parse::Opts, PartialVdf, Vdf};
+use crate::{PartialVdf, Vdf};
 
 type BoxedResult<T> = Result<T, Box<dyn Error>>;
 
@@ -24,18 +24,8 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
 }
 
 fn snapshot_test_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
-    snapshot_test_parse_with_opts(
-        file_name,
-        Opts {
-            parse_escaped_characters: false,
-        },
-    )
-}
-
-// Snapshots just parsing text from a file
-fn snapshot_test_parse_with_opts(file_name: &str, opts: Opts) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
-    let vdf = Vdf::parse_with_opts(&vdf_text, opts)?;
+    let vdf = Vdf::parse_raw(&vdf_text)?;
     assert_ron_snapshot!(vdf);
 
     Ok(())
@@ -54,17 +44,8 @@ fn snapshot_test_partial_parse_and_render(file_name: &str) -> BoxedResult<()> {
 }
 
 fn snapshot_test_partial_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
-    snapshot_test_partial_parse_with_opts(
-        file_name,
-        Opts {
-            parse_escaped_characters: false,
-        },
-    )
-}
-
-fn snapshot_test_partial_parse_with_opts(file_name: &str, opts: Opts) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
-    let vdf = PartialVdf::parse_with_opts(&vdf_text, opts)?;
+    let vdf = PartialVdf::parse_raw(&vdf_text)?;
     assert_ron_snapshot!(vdf);
 
     Ok(())

@@ -11,7 +11,7 @@ homepage = "https://github.com/lovecraftianhorror/vdf-rs"
 repository = "https://github.com/lovecraftianhorror/vdf-rs"
 
 [dependencies]
-keyvalues-parser = { version = "0.1.0", path = "../keyvalues-parser" }
+keyvalues-parser = { path = "../keyvalues-parser" }
 paste = "1.0.5"
 serde = { version = "1.0.125", features = ["derive"] }
 thiserror = "1.0.24"
