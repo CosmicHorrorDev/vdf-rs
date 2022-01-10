@@ -23,10 +23,14 @@ fn snapshot_test_parse_and_render(file_name: &str) -> BoxedResult<()> {
     Ok(())
 }
 
-fn snapshot_test_parse_raw_strings(file_name: &str) -> BoxedResult<()> {
+fn snapshot_test_raw_parse_render(file_name: &str) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse_raw(&vdf_text)?;
     assert_ron_snapshot!(vdf);
+
+    let mut buf = String::new();
+    vdf.render_raw(&mut buf)?;
+    assert_snapshot!(buf);
 
     Ok(())
 }
@@ -74,7 +78,7 @@ parse_test_generator!(
     null_byte
 );
 
-parse_test_generator!(snapshot_test_parse_raw_strings, raw_strings);
+parse_test_generator!(snapshot_test_raw_parse_render, raw_strings);
 
 parse_test_generator!(
     snapshot_test_partial_parse_and_render,

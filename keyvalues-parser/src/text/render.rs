@@ -77,6 +77,7 @@ fn write_obj<'a>(
 
 impl<'a> fmt::Display for PartialVdf<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        // TODO: does this handle rendering bases correctly? Are there invalid characters in bases?
         for base in &self.bases {
             writeln!(f, "#base \"{}\"", base)?;
         }
