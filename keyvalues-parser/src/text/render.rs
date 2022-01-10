@@ -77,16 +77,37 @@ fn write_obj<'a>(
 
 impl<'a> fmt::Display for PartialVdf<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        // TODO: does this handle rendering bases correctly? Are there invalid characters in bases?
+        self._render(f, RenderType::Raw)
+    }
+}
+
+impl<'a> PartialVdf<'a> {
+    // TODO: do we really want to return a crate error here? It will always be a formatting error
+    pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+        self._render(writer, RenderType::Raw).map_err(Into::into)
+    }
+
+    pub fn render_raw(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+        match self.find_invalid_raw_char() {
+            Some(invalid_char) => Err(Error::RawRenderError { invalid_char }),
+            None => self._render(writer, RenderType::Raw).map_err(Into::into),
+        }
+    }
+
+    fn _render(&self, writer: &mut impl Write, render_type: RenderType) -> fmt::Result {
         for base in &self.bases {
-            writeln!(f, "#base \"{}\"", base)?;
+            writeln!(writer, "#base \"{}\"", base)?;
         }
 
         if !self.bases.is_empty() {
-            f.write_char('\n')?;
+            writer.write_char('\n')?;
         }
 
-        write_pair(f, 0, &self.key, &self.value, RenderType::Escaped)
+        write_pair(writer, 0, &self.key, &self.value, render_type)
+    }
+
+    fn find_invalid_raw_char(&self) -> Option<char> {
+        find_invalid_raw_char(&self.key).or_else(|| self.value.find_invalid_raw_char())
     }
 }
 
