@@ -60,7 +60,7 @@ where
 // -> Formatted
 // Which is a bit of a long-winded process just to serialize some text, but it comes with
 // validation (NaiveTokenStream -> Vdf) and reuses portions from the parser (Vdf -> Formatted)
-pub fn _to_writer<W, T>(writer: &mut W, value: &T, maybe_key: Option<&str>) -> Result<()>
+fn _to_writer<W, T>(writer: &mut W, value: &T, maybe_key: Option<&str>) -> Result<()>
 where
     W: Write,
     T: Serialize,
