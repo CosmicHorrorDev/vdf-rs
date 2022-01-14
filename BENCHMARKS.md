@@ -15,17 +15,20 @@ Linux. You can run all the bencmarks by running either `cargo bench` or
 
 | Name | Result | Description |
 | :---: | :---: | :--- |
-| `parse timing` | 24 μs | Times parsing the `app_info.vdf` file |
-| `parse throughput` | 103 MiB/s | Throughput of ^^ |
-| `render timing` | 14 μs | Times rendering the `Vdf` representation of `app_info.vdf` to a `String` |
-| `render throughput` | 177 MiB//s | Throughput of ^^ |
+| `parse timing` | 20.3 μs | Times parsing the `app_info.vdf` file |
+| `parse throughput` | 123.4 MiB/s | Throughput of ^^ |
+| `render timing` | 12.9 μs | Times rendering the `Vdf` representation of `app_info.vdf` to a `String` |
+| `render throughput` | 194.3 MiB/s | Throughput of ^^ |
 
 ## `keyvalues-serde`
 
 | Name | Result | Description |
 | :---: | :---: | :--- |
-| `de all timing` | 47 μs | Times deserializing the entirety of `app_info.vdf` to a struct |
-| `de all throughput` | 50 MiB/s | Throughput of ^^ |
-| `de extract timing` | 11 ms | Times extracting a single deeply nested value from `app_info.vdf` |
-| `ser all timing` | 49 μs | Times serializing the entirety of `app_info.vdf` from a struct |
-| `ser all throughput` | 50 MiB/s | Throughput of ^^ |
+| `de all owned timing` | 34.6 μs | Times deserializing the entirety of `app_info.vdf` to a struct |
+| `de all owned throughput` | 72.5 MiB/s | Throughput of ^^ |
+| `de all borrowed timing` | 35.9 μs | Times deserializing the entirety of `app_info.vdf` to a struct |
+| `de all borrowed throughput` | 70.0 MiB/s | Throughput of ^^ |
+| `de extract single timing` | 35.4 μs | Times extracting a single deeply nested value from `app_info.vdf` |
+| `de extract single throughput` | 70.9 MiB/s | Throughput of ^^ |
+| `ser all timing` | 43.6 μs | Times serializing the entirety of `app_info.vdf` from a struct |
+| `ser all throughput` | 56.2 MiB/s | Throughput of ^^ |
