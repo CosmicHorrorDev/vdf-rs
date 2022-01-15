@@ -151,7 +151,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 
     // All the types that just get converted to a string and forwarded to `self.serialize_str()`
-    serialize_types_as_str!(i8, i16, i32, i64, u8, u16, u32, u64, char);
+    serialize_types_as_str!(i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, char);
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         if v.is_finite() {
