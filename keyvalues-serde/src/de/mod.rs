@@ -37,13 +37,21 @@ pub fn from_reader_with_key<R: Read, T: DeserializeOwned>(mut rdr: R) -> Result<
 
 /// Attempts to deserialize a string of VDF text to some type T
 pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
-    let vals = from_str_with_key(s)?;
-    Ok(vals.0)
+    from_str_with_key(s).map(|(t, _)| t)
 }
 
 /// The same as [`from_str()`][from_str], but also returns the top level VDF key
 pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'a>)> {
-    let (mut deserializer, key) = Deserializer::new_with_key(s)?;
+    let vdf = Vdf::parse(s)?;
+    from_vdf_with_key(vdf)
+}
+
+pub fn from_vdf<'a, T: Deserialize<'a>>(vdf: Vdf<'a>) -> Result<T> {
+    from_vdf_with_key(vdf).map(|(t, _)| t)
+}
+
+pub fn from_vdf_with_key<'a, T: Deserialize<'a>>(vdf: Vdf<'a>) -> Result<(T, Key<'a>)> {
+    let (mut deserializer, key) = Deserializer::new_with_key(vdf)?;
     let t = T::deserialize(&mut deserializer)?;
 
     if deserializer.is_empty() {
@@ -64,8 +72,7 @@ pub struct Deserializer<'de> {
 
 impl<'de> Deserializer<'de> {
     /// Attempts to create a new VDF deserializer along with returning the top level VDF key
-    pub fn new_with_key(s: &'de str) -> Result<(Self, Key<'de>)> {
-        let vdf = Vdf::parse(s)?;
+    pub fn new_with_key(vdf: Vdf<'de>) -> Result<(Self, Key<'de>)> {
         let token_stream = TokenStream::from(vdf);
 
         let key = if let Some(Token::Key(key)) = token_stream.get(0) {
@@ -175,7 +182,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     }
 
     // All the types that just get deserialized with `.parse()`
-    deserialize_types_with_parse!(i8, i16, i32, i64, u8, u16, u32, u64);
+    deserialize_types_with_parse!(i8, i16, i32, i64, i128, u8, u16, u32, u64, u128);
 
     fn deserialize_f32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         let float = self.next_finite_float_else_eof()?;

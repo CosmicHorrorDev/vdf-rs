@@ -163,7 +163,10 @@ pub mod tokens;
 mod tokens;
 
 #[doc(inline)]
-pub use de::{from_str, from_str_with_key, Deserializer};
+pub use de::{
+    from_reader, from_reader_with_key, from_str, from_str_with_key, from_vdf, from_vdf_with_key,
+    Deserializer,
+};
 #[doc(inline)]
 pub use error::{Error, Result};
 #[doc(inline)]
