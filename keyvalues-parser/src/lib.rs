@@ -262,7 +262,7 @@ impl<'a> Iterator for IntoVdfs<'a> {
                     let (key, values) = self.it.next()?;
                     // Store the next entry. Flip the values so that `pop`ing returns correct order
                     self.current_entry = Some((key, values.into_iter().rev().collect()));
-                },
+                }
             }
         }
     }
