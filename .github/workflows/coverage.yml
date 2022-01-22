@@ -10,16 +10,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      # Nightly is required for `tarpaulin` to get coverage from doc tests
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly-2021-11-01
           override: true
 
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
           version: '0.19.1'
+          args: '--tests --doc'
 
       - name: Upload to codecov.io
         uses: codecov/codecov-action@v1.0.2
