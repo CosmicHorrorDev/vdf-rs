@@ -1,5 +1,6 @@
 // TODO: a lot of this can probably be slimmed down at this point
 // TODO: implement a validate function
+// TODO: make a note that this has invariants that must be upheld, so it is only exposed internally
 
 mod naive;
 #[cfg(test)]
