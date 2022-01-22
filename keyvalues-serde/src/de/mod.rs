@@ -198,14 +198,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     fn deserialize_char<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         let s = self.next_key_or_str_else_eof()?;
         let mut chars_iter = s.chars();
-        if let Some(c) = chars_iter.next() {
-            if chars_iter.next().is_none() {
-                visitor.visit_char(c)
-            } else {
-                Err(Error::InvalidChar)
-            }
-        } else {
-            Err(Error::EofWhileParsingValue)
+        match (chars_iter.next(), chars_iter.next()) {
+            (Some(c), None) => visitor.visit_char(c),
+            // Either there are no or multiple chars
+            _ => Err(Error::InvalidChar),
         }
     }
 
