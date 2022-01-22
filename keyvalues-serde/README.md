@@ -123,7 +123,7 @@ fn main() -> VdfResult<()> {
     - Represented as text matching the variant name
 - Newtype Struct
     - Considered just a wrapper over the contained data type
-- Homogenous Sequences (`Vec`-like types)
+- Homogeneous Sequences (`Vec`-like types)
     - Represented as several pairs with the same key
 - Heterogeneous Sequences (`tuple`-like types)
     - Represented as several pairs with the same key
@@ -145,9 +145,9 @@ fn main() -> VdfResult<()> {
 
 ## Potential Pitfalls
 
-- Any sequence types containing `Option`s may lead to unexpected ordering issues since a `None` is just ommitted
+- Any sequence types containing `Option`s may lead to unexpected ordering issues since a `None` is just omitted
     - For instance a tuple containing an `Option` in the middle will be very problematic
-- Empty `Vec`s and `Option`s with `None` are both ommitted when serializing.
+- Empty `Vec`s and `Option`s with `None` are both omitted when serializing.
 - Nested sequences are impossible to represent due to the limited nature of sequences in VDF (AFAIK)
 
 ## License

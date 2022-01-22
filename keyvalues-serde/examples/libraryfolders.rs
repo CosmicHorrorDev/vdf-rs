@@ -10,7 +10,6 @@ use keyvalues_serde::from_vdf;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-#[serde(rename = "libraryfolders")]
 #[allow(dead_code)] // We display the fields
 struct LibraryFolders {
     #[serde(rename = "contentstatsid")]

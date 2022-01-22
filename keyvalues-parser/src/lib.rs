@@ -230,6 +230,7 @@ impl<'a> DerefMut for Obj<'a> {
 }
 
 pub struct IntoVdfs<'a> {
+    // TODO: can this just store an iterator for the values instead of `.collect()`ing
     current_entry: Option<ObjInnerPair<'a>>,
     it: IntoIter<Key<'a>, Vec<Value<'a>>>,
 }
@@ -257,15 +258,10 @@ impl<'a> Iterator for IntoVdfs<'a> {
                     self.current_entry = Some((key.clone(), values));
                     return Some(Vdf::new(key, value));
                 }
-                _ => match self.it.next() {
+                _ => {
+                    let (key, values) = self.it.next()?;
                     // Store the next entry. Flip the values so that `pop`ing returns correct order
-                    Some((key, values)) => {
-                        self.current_entry = Some((key, values.into_iter().rev().collect()));
-                    }
-                    // Fin
-                    None => {
-                        return None;
-                    }
+                    self.current_entry = Some((key, values.into_iter().rev().collect()));
                 },
             }
         }

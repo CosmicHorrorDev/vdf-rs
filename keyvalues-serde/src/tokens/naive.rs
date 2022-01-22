@@ -23,7 +23,7 @@ use crate::{
 ///
 /// From there a `NaiveTokenStream` can be converted to a `Vdf` where the position of the keys is
 /// inferred from the general structure. This also performs validation that all keys have an
-/// associated value, all markers for mutli-token structures make sense, and that there can't be a
+/// associated value, all markers for multi-token structures make sense, and that there can't be a
 /// sequence as a value in another sequence.
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct NaiveTokenStream(pub Vec<NaiveToken>);

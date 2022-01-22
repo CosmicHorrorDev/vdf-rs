@@ -8,7 +8,7 @@ make (de)serializing sane (In practice you would do this modification to the
 `Vdf` representation before deserializing).
 
 All of the following results were from running on a Ryzen 7 3700 running Arch
-Linux. You can run all the bencmarks by running either `cargo bench` or
+Linux. You can run all the benchmarks by running either `cargo bench` or
 `cargo criterion` from the project directory.
 
 ## `keyvalues-parser`
