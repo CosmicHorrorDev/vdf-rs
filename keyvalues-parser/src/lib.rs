@@ -188,17 +188,90 @@ type ObjInnerPair<'a> = (Key<'a>, Vec<Value<'a>>);
 
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Obj<'a>(ObjInner<'a>);
+pub struct Obj<'a>(pub ObjInner<'a>);
 
 impl<'a> Obj<'a> {
+    /// Creates an empty object value
+    ///
+    /// Internally This is just a [`BTreeMap`] that maps [`Key`]s to a [`Vec`] of [`Value`]s
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Obj, Value};
+    /// # use std::borrow::Cow;
+    /// let mut obj = Obj::new();
+    /// obj.insert(
+    ///     Cow::from("key"),
+    ///     vec![]
+    /// );
+    /// obj.insert(
+    ///     Cow::from("earlier key"),
+    ///     vec![Value::Obj(Obj::default())]
+    /// );
+    ///
+    /// // It's a b-tree map so the entries are sorted by keys
+    /// assert_eq!(
+    ///     obj.keys().collect::<Vec<_>>(),
+    ///     ["earlier key", "key"]
+    /// );
+    /// ```
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Returns the inner [`BTreeMap`]
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Obj, Value};
+    /// # use std::{borrow::Cow, collections::BTreeMap};
+    /// let mut obj = Obj::new();
+    /// obj.insert(Cow::from("much key"), vec![]);
+    ///
+    /// let inner: BTreeMap<_, _> = obj.into_inner();
+    /// // Prints:
+    /// // {
+    /// //     "much key": [],
+    /// // }
+    /// println!("{:#?}", inner);
+    /// ```
     pub fn into_inner(self) -> ObjInner<'a> {
         self.0
     }
 
+    /// Creates an iterator that returns the [`Vdf`]s that compose the object
+    ///
+    /// This is notably different compared to just iterating over the `BTreeMap`s items because it
+    /// will emit a [`Vdf`] for each key-value pair while the actual items are key-values pairs.
+    /// This means that empty values will not emit a [`Vdf`] at all, and a pair that has multiple
+    /// entries in values will emit a [`Vdf`] for each pairing
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Obj, Value, Vdf};
+    /// # use std::borrow::Cow;
+    /// let mut obj = Obj::new();
+    /// obj.insert(
+    ///     Cow::from("no values"),
+    ///     vec![]
+    /// );
+    /// obj.insert(
+    ///     Cow::from("multiple values"),
+    ///     vec![Value::Str(Cow::from("first")), Value::Str(Cow::from("second"))]
+    /// );
+    ///
+    /// let vdfs: Vec<_> = obj.into_vdfs().collect();
+    /// assert_eq!(
+    ///     vdfs,
+    ///     [
+    ///         Vdf {
+    ///             key: Cow::from("multiple values"),
+    ///             value: Value::Str(Cow::from("first"))
+    ///         },
+    ///         Vdf {
+    ///             key: Cow::from("multiple values"),
+    ///             value: Value::Str(Cow::from("second"))
+    ///         },
+    ///     ]
+    /// );
+    /// ```
     pub fn into_vdfs(self) -> IntoVdfs<'a> {
         IntoVdfs::new(self)
     }
@@ -229,6 +302,9 @@ impl<'a> DerefMut for Obj<'a> {
     }
 }
 
+/// An iterator over an [`Obj`]'s [`Vdf`] pairs
+///
+/// Typically created by calling [`Obj::into_vdfs`] on an existing object
 pub struct IntoVdfs<'a> {
     // TODO: can this just store an iterator for the values instead of `.collect()`ing
     current_entry: Option<ObjInnerPair<'a>>,
@@ -273,6 +349,13 @@ impl<'a> Iterator for IntoVdfs<'a> {
 /// VDF is composed of [`Key`s][Key] and their respective [`Value`s][Value] where this represents
 /// the latter. A value is either going to be a `Str(Cow<str>)`, or an `Obj(Obj)` that contains a
 /// list of keys and values.
+///
+/// ```
+/// # use keyvalues_parser::{Obj, Value};
+/// # use std::borrow::Cow;
+/// let value_str = Value::Str(Cow::from("some text"));
+/// let value_obj = Value::Obj(Obj::new());
+/// ```
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
@@ -282,16 +365,41 @@ pub enum Value<'a> {
 
 impl<'a> Value<'a> {
     /// Returns if the current value is the `Str` variant
+    ///
+    /// ```
+    /// use std::borrow::Cow;
+    /// use keyvalues_parser::{Obj, Value};
+    ///
+    /// let value_str = Value::Str(Cow::default());
+    /// assert!(value_str.is_str());
+    /// ```
     pub fn is_str(&self) -> bool {
         self.get_str().is_some()
     }
 
     /// Returns if the current value is the `Obj` variant
+    ///
+    /// ```
+    /// use keyvalues_parser::{Obj, Value};
+    ///
+    /// let value_obj = Value::Obj(Obj::default());
+    /// assert!(value_obj.is_obj());
+    /// ```
     pub fn is_obj(&self) -> bool {
         self.get_obj().is_some()
     }
 
     /// Gets the inner `&str` if this is a `Value::Str`
+    ///
+    /// ```
+    /// # use keyvalues_parser::Value;
+    /// # use std::borrow::Cow;
+    /// let value = Value::Str(Cow::from("some text"));
+    ///
+    /// if let Some(s) = value.get_str() {
+    ///     println!("value str: {}", s);
+    /// }
+    /// ```
     pub fn get_str(&self) -> Option<&str> {
         if let Self::Str(s) = self {
             Some(s)
@@ -301,6 +409,15 @@ impl<'a> Value<'a> {
     }
 
     /// Gets the inner `&Obj` if this value is a `Value::Obj`
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Obj, Value};
+    /// let value = Value::Obj(Obj::new());
+    ///
+    /// if let Some(obj) = value.get_obj() {
+    ///     println!("value obj: {:?}", obj);
+    /// }
+    /// ```
     pub fn get_obj(&self) -> Option<&Obj> {
         if let Self::Obj(obj) = self {
             Some(obj)
@@ -310,6 +427,19 @@ impl<'a> Value<'a> {
     }
 
     /// Gets the inner `&mut str` if this is a `Value::Str`
+    ///
+    /// ```
+    /// # use keyvalues_parser::Value;
+    /// # use std::borrow::Cow;
+    /// let mut value = Value::Str(Cow::from("some text"));
+    /// let mut inner_str = value.get_mut_str().unwrap();
+    /// inner_str.to_mut().make_ascii_uppercase();
+    ///
+    /// assert_eq!(
+    ///     value,
+    ///     Value::Str(Cow::from("SOME TEXT"))
+    /// );
+    /// ```
     pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
         if let Self::Str(s) = self {
             Some(s)
@@ -319,6 +449,20 @@ impl<'a> Value<'a> {
     }
 
     /// Gets the inner `&mut Obj` if this is a `Value::Obj`
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Obj, Value};
+    /// # use std::borrow::Cow;
+    /// let mut value = Value::Obj(Obj::new());
+    /// let mut inner_obj = value.get_mut_obj().unwrap();
+    /// inner_obj.insert(Cow::from("new key"), vec![]);
+    ///
+    /// // Prints:
+    /// // Value::Obj({
+    /// //    "new key": [],
+    /// // })
+    /// println!("{:?}", value);
+    /// ```
     pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
         if let Self::Obj(obj) = self {
             Some(obj)
