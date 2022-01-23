@@ -18,6 +18,7 @@ impl<T> Container<T> {
 
 pub type BoxedResult<T> = Result<T, Box<dyn std::error::Error>>;
 
+#[allow(dead_code)]
 pub fn read_asset_file(file_name: &str) -> BoxedResult<String> {
     let val = fs::read_to_string(Path::new("tests").join("assets").join(file_name))?;
     Ok(val)

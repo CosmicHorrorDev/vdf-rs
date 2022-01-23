@@ -7,10 +7,7 @@ use std::{
 
 use keyvalues_parser::{Key, Obj, Value, Vdf};
 
-use crate::{
-    error::{Error, Result, TokenContext},
-    tokens::{Token, TokenStream},
-};
+use crate::error::{Error, Result, TokenContext};
 
 /// A stream of [`NaiveToken`][NaiveToken]s that do not encode what is a key vs a value
 ///
@@ -25,7 +22,7 @@ use crate::{
 /// inferred from the general structure. This also performs validation that all keys have an
 /// associated value, all markers for multi-token structures make sense, and that there can't be a
 /// sequence as a value in another sequence.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug, Default)]
 pub struct NaiveTokenStream(pub Vec<NaiveToken>);
 
 impl Deref for NaiveTokenStream {
@@ -174,13 +171,6 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
     }
 }
 
-impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
-    fn from(token_stream: TokenStream<'a>) -> Self {
-        let inner = token_stream.0.into_iter().map(NaiveToken::from).collect();
-        Self(inner)
-    }
-}
-
 /// A naive version of a [`Token`][crate::tokens::Token]
 ///
 /// It is identical to [`Token`][crate::tokens::Token] except that
@@ -188,7 +178,7 @@ impl<'a> From<TokenStream<'a>> for NaiveTokenStream {
 /// - It is owned instead of tied to a lifetime
 /// - There is no `Key` where instead a key _should_ be a `Str`
 /// - There is a `Null` variant that is needed to retain ordering to know what is a key or value
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Debug)]
 pub enum NaiveToken {
     Str(String),
     ObjBegin,
@@ -201,17 +191,5 @@ pub enum NaiveToken {
 impl NaiveToken {
     pub fn str<S: ToString>(s: S) -> Self {
         Self::Str(s.to_string())
-    }
-}
-
-impl<'a> From<Token<'a>> for NaiveToken {
-    fn from(token: Token<'a>) -> Self {
-        match token {
-            Token::Key(s) | Token::Str(s) => Self::Str(s.into_owned()),
-            Token::ObjBegin => Self::ObjBegin,
-            Token::ObjEnd => Self::ObjEnd,
-            Token::SeqBegin => Self::SeqBegin,
-            Token::SeqEnd => Self::SeqEnd,
-        }
     }
 }
