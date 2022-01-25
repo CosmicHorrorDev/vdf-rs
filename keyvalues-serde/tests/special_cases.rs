@@ -1,11 +1,11 @@
-use insta::assert_snapshot;
+use insta::{assert_ron_snapshot, assert_snapshot};
 use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
     Error,
 };
 use maplit::hashmap;
 use pretty_assertions::assert_eq;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tempdir::TempDir;
 
 use std::{
@@ -105,6 +105,34 @@ fn extract_only_some_members() -> BoxedResult<()> {
     let vdf: Container<String> = from_str(&vdf_text)?;
 
     assert_eq!(vdf, Container::new(String::from("Value")));
+    Ok(())
+}
+
+// Flatten infers values by the structure so this tests the use of all the `.deserialize_any()`
+// variants
+#[derive(Deserialize, Serialize, Debug)]
+struct AnyHolder {
+    #[serde(flatten)]
+    foo: StructureDefinedType,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+struct StructureDefinedType {
+    inner: String,
+    #[serde(rename = "str key")]
+    str_key: String,
+    #[serde(rename = "obj key")]
+    obj_key: HashMap<String, String>,
+    #[serde(rename = "seq key")]
+    seq_key: Vec<String>,
+}
+
+#[test]
+fn deserialize_any_values() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("multiple_members.vdf")?;
+    let any_holder: AnyHolder = from_str(&vdf_text)?;
+
+    assert_ron_snapshot!(any_holder);
     Ok(())
 }
 

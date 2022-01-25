@@ -1,0 +1,17 @@
+---
+source: keyvalues-serde/tests/special_cases.rs
+assertion_line: 134
+expression: any_holder
+
+---
+{
+  "inner": "Value",
+  "str key": "String",
+  "obj key": {
+    "key": "value",
+  },
+  "seq key": [
+    "first",
+    "second",
+  ],
+}

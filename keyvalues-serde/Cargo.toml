@@ -18,7 +18,7 @@ thiserror = "1.0.24"
 
 [dev-dependencies]
 criterion = "0.3.4"
-insta = "1.7.1"
+insta = { version = "1.7.1", features = ["ron"] }
 maplit = "1.0.2"
 pretty_assertions = "0.7.2"
 tempdir = "0.3.7"
