@@ -1,9 +1,11 @@
 "Container"
 {
     "inner" "Value"
-    "ignored str" "String"
-    "ignored obj"
+    "str key" "String"
+    "obj key"
     {
         "key" "value"
     }
+    "seq key" "first"
+    "seq key" "second"
 }
