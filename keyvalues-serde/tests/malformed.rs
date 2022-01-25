@@ -58,3 +58,38 @@ fn wants_too_many_members() -> BoxedResult<()> {
     assert!(result.is_err());
     Ok(())
 }
+
+const INVALID_BOOL_TEXT: &str = r#"
+"Container"
+{
+    "inner" "2"
+}
+"#;
+
+#[test]
+fn invalid_bool() {
+    let result: Result<Container<bool>> = from_str(INVALID_BOOL_TEXT);
+    assert!(result.is_err());
+}
+
+const ZERO_LEN_CHAR_TEXT: &str = r#"
+"Container"
+{
+    "inner" ""
+}
+"#;
+
+const TWO_LEN_CHAR_TEXT: &str = r#"
+"Container"
+{
+    "inner" "ab"
+}
+"#;
+
+#[test]
+fn invalid_chars() {
+    let zero_len_char_result: Result<Container<char>> = from_str(ZERO_LEN_CHAR_TEXT);
+    assert!(zero_len_char_result.is_err());
+    let two_len_char_result: Result<Container<char>> = from_str(TWO_LEN_CHAR_TEXT);
+    assert!(two_len_char_result.is_err());
+}

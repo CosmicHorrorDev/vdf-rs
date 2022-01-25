@@ -210,6 +210,8 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match val {
             // The borrowed content can be tied to the original text's lifetime
             Cow::Borrowed(borrowed) => visitor.visit_borrowed_str(borrowed),
+            // TODO: Owned strings down't actually make it to here. Find out where the owned data
+            // becomes borrowed
             Cow::Owned(s) => visitor.visit_string(s),
         }
     }
