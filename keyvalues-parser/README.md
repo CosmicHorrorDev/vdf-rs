@@ -1,5 +1,10 @@
 # _keyvalues-parser_
 
+[![codecov](https://codecov.io/gh/LovecraftianHorror/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/LovecraftianHorror/vdf-rs)
+[![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
+[![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
+[![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
+
 `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
 [VDF text v1 and v2](https://developer.valvesoftware.com/wiki/KeyValues)
 files to an untyped Rust structure to ease manipulation and navigation. The
