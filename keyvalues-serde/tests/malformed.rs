@@ -1,47 +1,56 @@
+use insta::assert_snapshot;
 use keyvalues_serde::{error::Result, from_str};
 use serde::Deserialize;
 
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 mod utils;
 
 use crate::utils::{read_asset_file, BoxedResult, Container};
 
-#[test]
-fn str_when_wanting_obj() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("string_container.vdf")?;
-    let result: Result<Container<HashMap<String, String>>> = from_str(&vdf_text);
-    assert!(result.is_err());
-    Ok(())
+// Helper macro that generates the boilerplate for snapshotting a deserialization error backed by a
+// file
+macro_rules! test_snapshot_de {
+    ($func_name:ident, $de_ty:ty, $file_name:expr $(,)?) => {
+        #[test]
+        fn $func_name() -> BoxedResult<()> {
+            let vdf_text = read_asset_file($file_name)?;
+            snapshot_de_err::<$de_ty>(&vdf_text);
+
+            Ok(())
+        }
+    };
 }
 
-#[test]
-fn str_when_wanting_top_level_obj() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("top_level_string.vdf")?;
-    let result: Result<Container<String>> = from_str(&vdf_text);
-    assert!(result.is_err());
-    Ok(())
+fn snapshot_de_err<'a, T: Deserialize<'a> + fmt::Debug>(vdf_text: &'a str) {
+    let result: Result<T> = from_str(vdf_text);
+    let err = result.unwrap_err();
+    assert_snapshot!(err.to_string());
 }
 
-#[test]
-fn obj_when_wanting_str() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("obj_container.vdf")?;
-    let result: Result<Container<String>> = from_str(&vdf_text);
-    assert!(result.is_err());
-    Ok(())
-}
+test_snapshot_de!(
+    str_when_wanting_obj,
+    Container<HashMap<String, String>>,
+    "string_container.vdf",
+);
+
+test_snapshot_de!(
+    str_when_wanting_top_level_obj,
+    Container<String>,
+    "top_level_string.vdf",
+);
+
+test_snapshot_de!(obj_when_wanting_str, Container<String>, "obj_container.vdf");
 
 #[test]
 fn incorrect_seq_length() -> BoxedResult<()> {
     let vdf_len_one = read_asset_file("string_container.vdf")?;
-    let len_two: Result<Container<(String, String)>> = from_str(&vdf_len_one);
-    assert!(len_two.is_err());
+    snapshot_de_err::<Container<(String, String)>>(&vdf_len_one);
 
     let vdf_len_two = read_asset_file("sequence_string_double.vdf")?;
-    let len_one: Result<Container<(String,)>> = from_str(&vdf_len_two);
-    assert!(len_one.is_err());
-    let len_three: Result<Container<(String, String, String)>> = from_str(&vdf_len_two);
-    assert!(len_three.is_err());
+    snapshot_de_err::<Container<(String,)>>(&vdf_len_two);
+    snapshot_de_err::<Container<(String, String, String)>>(&vdf_len_two);
+
     Ok(())
 }
 
@@ -51,13 +60,7 @@ pub struct Pair {
     pub second: String,
 }
 
-#[test]
-fn wants_too_many_members() -> BoxedResult<()> {
-    let vdf_text = read_asset_file("string_container.vdf")?;
-    let result: Result<Pair> = from_str(&vdf_text);
-    assert!(result.is_err());
-    Ok(())
-}
+test_snapshot_de!(wants_too_many_members, Pair, "string_container.vdf",);
 
 const INVALID_BOOL_TEXT: &str = r#"
 "Container"
@@ -68,8 +71,7 @@ const INVALID_BOOL_TEXT: &str = r#"
 
 #[test]
 fn invalid_bool() {
-    let result: Result<Container<bool>> = from_str(INVALID_BOOL_TEXT);
-    assert!(result.is_err());
+    snapshot_de_err::<Container<bool>>(INVALID_BOOL_TEXT);
 }
 
 const ZERO_LEN_CHAR_TEXT: &str = r#"
@@ -88,8 +90,6 @@ const TWO_LEN_CHAR_TEXT: &str = r#"
 
 #[test]
 fn invalid_chars() {
-    let zero_len_char_result: Result<Container<char>> = from_str(ZERO_LEN_CHAR_TEXT);
-    assert!(zero_len_char_result.is_err());
-    let two_len_char_result: Result<Container<char>> = from_str(TWO_LEN_CHAR_TEXT);
-    assert!(two_len_char_result.is_err());
+    snapshot_de_err::<Container<char>>(ZERO_LEN_CHAR_TEXT);
+    snapshot_de_err::<Container<char>>(TWO_LEN_CHAR_TEXT);
 }

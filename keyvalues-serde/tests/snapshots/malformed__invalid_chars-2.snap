@@ -1,0 +1,7 @@
+---
+source: keyvalues-serde/tests/malformed.rs
+assertion_line: 28
+expression: err.to_string()
+
+---
+Tried parsing an invalid char
