@@ -1,9 +1,10 @@
 ---
 source: keyvalues-serde/tests/special_cases.rs
+assertion_line: 35
 expression: vdf_text
 
 ---
-"Custom"
+"Container"
 {
 	"inner"	"123"
 }

@@ -1,12 +1,13 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 23
 expression: rendered
 
 ---
-"Outer Key"
+"OuterKey"
 {
-	"Seq Key"	"Str Val"
-	"Seq Key"
+	"SequenceKey"	"SequenceVal"
+	"SequenceKey"
 	{
 	}
 }

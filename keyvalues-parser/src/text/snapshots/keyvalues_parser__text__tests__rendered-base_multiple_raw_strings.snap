@@ -1,5 +1,6 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 65
 expression: rendered
 
 ---
@@ -7,7 +8,8 @@ expression: rendered
 #base "../another_base.vdf"
 #base "other\path\sep.pop"
 
-"Key"
+"Some\non\escaped\text"
 {
+	"Unquoted\non\escaped\text"	"And\some\value"
 }
 

@@ -1,6 +1,6 @@
 ---
 source: keyvalues-serde/tests/special_cases.rs
-assertion_line: 134
+assertion_line: 137
 expression: any_holder
 
 ---

@@ -1,13 +1,11 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 35
 expression: rendered
 
 ---
-"OuterKey"
+"Some\text\here"
 {
-	"SequenceKey"	"SequenceVal"
-	"SequenceKey"
-	{
-	}
+	"more\text\here"	"and\here"
 }
 

@@ -1,9 +1,13 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 47
 expression: vdf
 
 ---
-Vdf(
+PartialVdf(
   key: "Key",
   value: Obj(Obj({})),
+  bases: [
+    "some/base.vdf",
+  ],
 )

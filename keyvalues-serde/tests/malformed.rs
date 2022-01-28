@@ -15,17 +15,17 @@ macro_rules! test_snapshot_de {
         #[test]
         fn $func_name() -> BoxedResult<()> {
             let vdf_text = read_asset_file($file_name)?;
-            snapshot_de_err::<$de_ty>(&vdf_text);
+            snapshot_de_err::<$de_ty>(stringify!($func_name), &vdf_text);
 
             Ok(())
         }
     };
 }
 
-fn snapshot_de_err<'a, T: Deserialize<'a> + fmt::Debug>(vdf_text: &'a str) {
+fn snapshot_de_err<'a, T: Deserialize<'a> + fmt::Debug>(snapshot_name: &str, vdf_text: &'a str) {
     let result: Result<T> = from_str(vdf_text);
     let err = result.unwrap_err();
-    assert_snapshot!(err.to_string());
+    assert_snapshot!(snapshot_name, err.to_string());
 }
 
 test_snapshot_de!(
@@ -44,12 +44,16 @@ test_snapshot_de!(obj_when_wanting_str, Container<String>, "obj_container.vdf");
 
 #[test]
 fn incorrect_seq_length() -> BoxedResult<()> {
+    let name_base = "incorrect_seq_length";
     let vdf_len_one = read_asset_file("string_container.vdf")?;
-    snapshot_de_err::<Container<(String, String)>>(&vdf_len_one);
+    let name = format!("{}-one_expecting_two", name_base);
+    snapshot_de_err::<Container<(String, String)>>(&name, &vdf_len_one);
 
     let vdf_len_two = read_asset_file("sequence_string_double.vdf")?;
-    snapshot_de_err::<Container<(String,)>>(&vdf_len_two);
-    snapshot_de_err::<Container<(String, String, String)>>(&vdf_len_two);
+    let name = format!("{}-two_expecting_one", name_base);
+    snapshot_de_err::<Container<(String,)>>(&name, &vdf_len_two);
+    let name = format!("{}-two_expecting_three", name_base);
+    snapshot_de_err::<Container<(String, String, String)>>(&name, &vdf_len_two);
 
     Ok(())
 }
@@ -71,7 +75,7 @@ const INVALID_BOOL_TEXT: &str = r#"
 
 #[test]
 fn invalid_bool() {
-    snapshot_de_err::<Container<bool>>(INVALID_BOOL_TEXT);
+    snapshot_de_err::<Container<bool>>("invalid_bool", INVALID_BOOL_TEXT);
 }
 
 const ZERO_LEN_CHAR_TEXT: &str = r#"
@@ -90,6 +94,7 @@ const TWO_LEN_CHAR_TEXT: &str = r#"
 
 #[test]
 fn invalid_chars() {
-    snapshot_de_err::<Container<char>>(ZERO_LEN_CHAR_TEXT);
-    snapshot_de_err::<Container<char>>(TWO_LEN_CHAR_TEXT);
+    let name_base = "invalid_chars";
+    snapshot_de_err::<Container<char>>(&format!("{}-zero_len", name_base), ZERO_LEN_CHAR_TEXT);
+    snapshot_de_err::<Container<char>>(&format!("{}-two_len", name_base), TWO_LEN_CHAR_TEXT);
 }

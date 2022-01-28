@@ -1,13 +1,14 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 20
 expression: vdf
 
 ---
 Vdf(
-  key: "OuterKey",
+  key: "Outer Key",
   value: Obj(Obj({
-    "SequenceKey": [
-      Str("SequenceVal"),
+    "Seq Key": [
+      Str("Str Val"),
       Obj(Obj({})),
     ],
   })),

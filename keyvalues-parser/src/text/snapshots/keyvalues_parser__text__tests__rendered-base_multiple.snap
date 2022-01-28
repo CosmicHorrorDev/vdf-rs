@@ -1,15 +1,14 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
-assertion_line: 57
-expression: buf
+assertion_line: 50
+expression: rendered
 
 ---
 #base "one_base.res"
 #base "../another_base.vdf"
 #base "other\path\sep.pop"
 
-"Some\non\escaped\text"
+"Key"
 {
-	"Unquoted\non\escaped\text"	"And\some\value"
 }
 

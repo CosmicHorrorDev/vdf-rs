@@ -1,12 +1,10 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 20
 expression: vdf
 
 ---
-PartialVdf(
+Vdf(
   key: "Key",
   value: Obj(Obj({})),
-  bases: [
-    "../some_file.pop",
-  ],
 )

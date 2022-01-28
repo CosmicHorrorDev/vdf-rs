@@ -22,6 +22,8 @@ use utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Container};
 
 #[test]
 fn snapshot_writing_to_file() -> BoxedResult<()> {
+    let name_base = "snapshot_writing_to_file";
+
     let vdf_struct = Container::new(123);
     let dir = TempDir::new("keyvalues-serde")?;
     let file_path = dir.path().join("sample.vdf");
@@ -30,13 +32,13 @@ fn snapshot_writing_to_file() -> BoxedResult<()> {
     let mut file = File::create(&file_path)?;
     to_writer(&mut file, &vdf_struct)?;
     let vdf_text = fs::read_to_string(&file_path)?;
-    assert_snapshot!(vdf_text);
+    assert_snapshot!(format!("{}-to_writer", name_base), vdf_text);
 
     // And the same with a custom key
     let mut file = File::create(&file_path)?;
     to_writer_with_key(&mut file, &vdf_struct, "Custom")?;
     let vdf_text = fs::read_to_string(&file_path)?;
-    assert_snapshot!(vdf_text);
+    assert_snapshot!(format!("{}-to_writer_with_key", name_base), vdf_text);
 
     Ok(())
 }
@@ -74,7 +76,7 @@ fn non_finite_float_serialization_failure() {
     if let Err(Error::NonFiniteFloat(f)) = to_string(&vdf) {
         assert!(f.is_nan());
     } else {
-        panic!("Serialization should fail with NaN float");
+        unreachable!("Serialization should fail with NaN float");
     }
 }
 
@@ -84,7 +86,7 @@ fn non_finite_float_deserialization_failure() -> BoxedResult<()> {
     if let Err(Error::NonFiniteFloat(f)) = from_str::<Container<f32>>(&vdf_text) {
         assert!(f.is_infinite());
     } else {
-        panic!("Deserialization should fail with inf float");
+        unreachable!("Deserialization should fail with inf float");
     }
 
     Ok(())
@@ -132,7 +134,7 @@ fn deserialize_any_values() -> BoxedResult<()> {
     let vdf_text = read_asset_file("multiple_members.vdf")?;
     let any_holder: AnyHolder = from_str(&vdf_text)?;
 
-    assert_ron_snapshot!(any_holder);
+    assert_ron_snapshot!("deserialize_any_values", any_holder);
     Ok(())
 }
 

@@ -1,5 +1,6 @@
 ---
 source: keyvalues-parser/src/text/tests.rs
+assertion_line: 20
 expression: vdf
 
 ---
