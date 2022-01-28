@@ -4,7 +4,7 @@ use keyvalues_parser::Vdf;
 use paste::paste;
 use serde::{ser, Serialize};
 
-use std::{convert::TryFrom, io::Write};
+use std::io::Write;
 
 use crate::{
     error::{Error, Result},
@@ -82,7 +82,7 @@ where
         }
     }
 
-    let vdf = Vdf::try_from(&serializer.tokens)?;
+    let vdf = Vdf::from(&serializer.tokens);
     write!(writer, "{}", vdf)?;
 
     Ok(())

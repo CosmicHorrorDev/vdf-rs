@@ -1,13 +1,16 @@
+//! Internal conversion from the [`NaiveTokenStream`] to [`Vdf`]s
+//!
+//! WARN: This logic relies on the representation of [`NaiveTokenStream`]s infallibly matching the
+//! layout of a [`Vdf`]. The implementation here must remain internal and the `Serializer` must
+//! output to match this format.
+
 use std::{
     borrow::Cow,
-    convert::TryFrom,
     iter::Peekable,
     ops::{Deref, DerefMut},
 };
 
 use keyvalues_parser::{Key, Obj, Value, Vdf};
-
-use crate::error::{Error, Result, TokenContext};
 
 /// A stream of [`NaiveToken`][NaiveToken]s that do not encode what is a key vs a value
 ///
@@ -39,18 +42,14 @@ impl DerefMut for NaiveTokenStream {
     }
 }
 
-// WARNING: This is only an infallible operation when converting well-formed `NaiveTokenStream`s
-// which is why this **must** only be used internally
 // The conversion from `NaiveTokenStream` to `Vdf` leverages all the `process_*` functions which
 // pass off an owned iterator through all of them to deal with the borrow checker
-impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
-    type Error = Error;
-
-    fn try_from(naive_token_stream: &'a NaiveTokenStream) -> Result<Self> {
+impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
+    fn from(naive_token_stream: &'a NaiveTokenStream) -> Self {
         // Just some helper functions for munching through tokens
         fn process_key_values<'a, I>(
             mut tokens: Peekable<I>,
-        ) -> Result<(Peekable<I>, Key<'a>, Vec<Value<'a>>)>
+        ) -> (Peekable<I>, Key<'a>, Vec<Value<'a>>)
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
@@ -58,18 +57,17 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                 Some(NaiveToken::Str(s)) => {
                     let key = Cow::from(s);
 
-                    let res = process_values(tokens)?;
+                    let res = process_values(tokens);
                     tokens = res.0;
                     let values = res.1;
 
-                    Ok((tokens, key, values))
+                    (tokens, key, values)
                 }
-                Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
-                None => Err(Error::from(TokenContext::EofWhileParsingKey)),
+                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
             }
         }
 
-        fn process_values<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Vec<Value<'a>>)>
+        fn process_values<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Vec<Value<'a>>)
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
@@ -77,11 +75,11 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                 // A `Str` is a single value
                 Some(NaiveToken::Str(s)) => {
                     let values = vec![Value::Str(Cow::from(s.clone()))];
-                    Ok((tokens, values))
+                    (tokens, values)
                 }
                 Some(NaiveToken::ObjBegin) => {
-                    let res = process_obj(tokens)?;
-                    Ok((res.0, vec![res.1]))
+                    let res = process_obj(tokens);
+                    (res.0, vec![res.1])
                 }
                 // Sequences are a series of values that can't contain a sequence (vdf limitation)
                 Some(NaiveToken::SeqBegin) => {
@@ -92,7 +90,7 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                             tokens.next();
                             break;
                         } else {
-                            let res = process_non_seq_value(tokens)?;
+                            let res = process_non_seq_value(tokens);
                             tokens = res.0;
                             if let Some(val) = res.1 {
                                 values.push(val);
@@ -100,35 +98,31 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                         }
                     }
 
-                    Ok((tokens, values))
+                    (tokens, values)
                 }
                 // VDF represents `Null` as omitting the value
-                Some(NaiveToken::Null) => Ok((tokens, Vec::new())),
-                Some(_) => Err(Error::from(TokenContext::ExpectedSomeVal)),
-                None => Err(Error::from(TokenContext::EofWhileParsingVal)),
+                Some(NaiveToken::Null) => (tokens, Vec::new()),
+                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
             }
         }
 
-        fn process_non_seq_value<'a, I>(
-            mut tokens: Peekable<I>,
-        ) -> Result<(Peekable<I>, Option<Value<'a>>)>
+        fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Option<Value<'a>>)
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
             match tokens.next() {
-                Some(NaiveToken::Str(s)) => Ok((tokens, Some(Value::Str(Cow::from(s))))),
+                Some(NaiveToken::Str(s)) => (tokens, Some(Value::Str(Cow::from(s)))),
                 Some(NaiveToken::ObjBegin) => {
-                    let res = process_obj(tokens)?;
-                    Ok((res.0, Some(res.1)))
+                    let res = process_obj(tokens);
+                    (res.0, Some(res.1))
                 }
                 // VDF represents `Null` as omitting the value
-                Some(NaiveToken::Null) => Ok((tokens, None)),
-                Some(_) => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
-                None => Err(Error::from(TokenContext::EofWhileParsingSeq)),
+                Some(NaiveToken::Null) => (tokens, None),
+                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
             }
         }
 
-        fn process_obj<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
+        fn process_obj<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Value<'a>)
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
@@ -141,32 +135,29 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
                     }
                     // An object is a series of key-value pairs
                     Some(_) => {
-                        let res = process_key_values(tokens)?;
+                        let res = process_key_values(tokens);
                         tokens = res.0;
                         let key = res.1;
                         let values = res.2;
                         obj.insert(key, values);
                     }
-                    None => {
-                        return Err(Error::from(TokenContext::EofWhileParsingObj));
-                    }
+                    _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
                 }
             }
 
-            Ok((tokens, Value::Obj(obj)))
+            (tokens, Value::Obj(obj))
         }
 
         let tokens = naive_token_stream.iter().peekable();
-        let (mut tokens, key, mut values) = process_key_values(tokens)?;
+        let (mut tokens, key, mut values) = process_key_values(tokens);
 
         if tokens.next().is_none() {
-            match values.len() {
-                0 => Err(Error::from(TokenContext::ExpectedNonSeqVal)),
-                1 => Ok(Self::new(key, values.pop().expect("Length was checked"))),
-                _two_or_more => Err(Error::from(TokenContext::TrailingTokens)),
+            match values.pop() {
+                Some(value) => Self::new(key, value),
+                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
             }
         } else {
-            Err(Error::from(TokenContext::TrailingTokens))
+            unreachable!("`Serializer` outputs valid `Vdf` structure");
         }
     }
 }
