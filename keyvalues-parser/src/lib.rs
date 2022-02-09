@@ -83,8 +83,6 @@ use std::{
 };
 
 pub mod error;
-#[cfg(test)]
-mod tests;
 pub mod text;
 
 /// A Key is simply an alias for `Cow<str>`
