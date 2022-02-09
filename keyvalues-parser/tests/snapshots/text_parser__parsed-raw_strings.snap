@@ -1,0 +1,14 @@
+---
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 102
+expression: "VdfDef::from(vdf.clone())"
+
+---
+VdfDef(
+  key: "Some\\text\\here",
+  value: Obj(ObjDef({
+    "more\\text\\here": [
+      Str("and\\here"),
+    ],
+  })),
+)

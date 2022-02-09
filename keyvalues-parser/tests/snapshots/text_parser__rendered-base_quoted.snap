@@ -1,0 +1,12 @@
+---
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 127
+expression: rendered
+
+---
+#base "some/base.vdf"
+
+"Key"
+{
+}
+

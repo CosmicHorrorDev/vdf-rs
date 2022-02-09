@@ -1,6 +1,6 @@
 ---
-source: keyvalues-parser/src/text/tests.rs
-assertion_line: 35
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 109
 expression: rendered
 
 ---

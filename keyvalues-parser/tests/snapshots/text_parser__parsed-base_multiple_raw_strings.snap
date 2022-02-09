@@ -1,12 +1,12 @@
 ---
-source: keyvalues-parser/src/text/tests.rs
-assertion_line: 61
-expression: vdf
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 138
+expression: "PartialVdfDef::from(vdf.clone())"
 
 ---
-PartialVdf(
+PartialVdfDef(
   key: "Some\\non\\escaped\\text",
-  value: Obj(Obj({
+  value: Obj(ObjDef({
     "Unquoted\\non\\escaped\\text": [
       Str("And\\some\\value"),
     ],

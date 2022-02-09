@@ -1,12 +1,12 @@
 ---
-source: keyvalues-parser/src/text/tests.rs
-assertion_line: 20
-expression: vdf
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 88
+expression: "VdfDef::from(vdf.clone())"
 
 ---
-Vdf(
+VdfDef(
   key: "Outer Key",
-  value: Obj(Obj({
+  value: Obj(ObjDef({
     "Escaped Characters": [
       Str("\n\r\t\"\\"),
     ],

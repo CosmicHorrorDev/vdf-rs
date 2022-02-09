@@ -1,0 +1,10 @@
+---
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 88
+expression: "VdfDef::from(vdf.clone())"
+
+---
+VdfDef(
+  key: "Key",
+  value: Obj(ObjDef({})),
+)

@@ -158,6 +158,8 @@ impl<'a> From<PartialVdf<'a>> for Vdf<'a> {
     }
 }
 
+// TODO: Just store a `Vdf` internally?
+// TODO: don't expose these publicly?
 #[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PartialVdf<'a> {

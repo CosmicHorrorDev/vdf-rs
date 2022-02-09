@@ -1,16 +1,16 @@
 ---
-source: keyvalues-parser/src/text/tests.rs
-assertion_line: 20
-expression: vdf
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 88
+expression: "VdfDef::from(vdf.clone())"
 
 ---
-Vdf(
+VdfDef(
   key: "896660",
-  value: Obj(Obj({
+  value: Obj(ObjDef({
     "branches": [
-      Obj(Obj({
+      Obj(ObjDef({
         "experimental": [
-          Obj(Obj({
+          Obj(ObjDef({
             "buildid": [
               Str("6263839"),
             ],
@@ -26,7 +26,7 @@ Vdf(
           })),
         ],
         "public": [
-          Obj(Obj({
+          Obj(ObjDef({
             "buildid": [
               Str("6246034"),
             ],
@@ -36,7 +36,7 @@ Vdf(
           })),
         ],
         "unstable": [
-          Obj(Obj({
+          Obj(ObjDef({
             "buildid": [
               Str("6246034"),
             ],
@@ -54,12 +54,12 @@ Vdf(
       })),
     ],
     "common": [
-      Obj(Obj({
+      Obj(ObjDef({
         "ReleaseState": [
           Str("released"),
         ],
         "associations": [
-          Obj(Obj({})),
+          Obj(ObjDef({})),
         ],
         "clienticon": [
           Str("c55a6b50b170ac6ed56cf90521273c30dccb5f12"),
@@ -97,16 +97,16 @@ Vdf(
       })),
     ],
     "config": [
-      Obj(Obj({
+      Obj(ObjDef({
         "installdir": [
           Str("Valheim dedicated server"),
         ],
         "launch": [
-          Obj(Obj({
+          Obj(ObjDef({
             "0": [
-              Obj(Obj({
+              Obj(ObjDef({
                 "config": [
-                  Obj(Obj({
+                  Obj(ObjDef({
                     "oslist": [
                       Str("linux"),
                     ],
@@ -121,9 +121,9 @@ Vdf(
               })),
             ],
             "1": [
-              Obj(Obj({
+              Obj(ObjDef({
                 "config": [
-                  Obj(Obj({
+                  Obj(ObjDef({
                     "oslist": [
                       Str("windows"),
                     ],
@@ -142,9 +142,9 @@ Vdf(
       })),
     ],
     "depot": [
-      Obj(Obj({
+      Obj(ObjDef({
         "config": [
-          Obj(Obj({
+          Obj(ObjDef({
             "oslist": [
               Str("windows"),
             ],
@@ -157,7 +157,7 @@ Vdf(
           Str("1004"),
         ],
         "manifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "public": [
               Str("6473168357831043306"),
             ],
@@ -170,9 +170,9 @@ Vdf(
           Str("Steamworks SDK Redist (WIN32)"),
         ],
       })),
-      Obj(Obj({
+      Obj(ObjDef({
         "config": [
-          Obj(Obj({
+          Obj(ObjDef({
             "oslist": [
               Str("macos"),
             ],
@@ -185,7 +185,7 @@ Vdf(
           Str("1005"),
         ],
         "manifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "public": [
               Str("2135359612286175146"),
             ],
@@ -195,9 +195,9 @@ Vdf(
           Str("Steamworks SDK Redist (OSX32)"),
         ],
       })),
-      Obj(Obj({
+      Obj(ObjDef({
         "config": [
-          Obj(Obj({
+          Obj(ObjDef({
             "oslist": [
               Str("linux"),
             ],
@@ -210,7 +210,7 @@ Vdf(
           Str("1006"),
         ],
         "manifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "public": [
               Str("6688153055340488873"),
             ],
@@ -223,18 +223,18 @@ Vdf(
           Str("Steamworks SDK Redist (LINUX32)"),
         ],
       })),
-      Obj(Obj({
+      Obj(ObjDef({
         "config": [
-          Obj(Obj({
+          Obj(ObjDef({
             "oslist": [
               Str("linux"),
             ],
           })),
         ],
         "encryptedmanifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "experimental": [
-              Obj(Obj({
+              Obj(ObjDef({
                 "encrypted_gid_2": [
                   Str("BEDF872D73873D16C025EF87E27C2BDB"),
                 ],
@@ -249,7 +249,7 @@ Vdf(
           Str("896661"),
         ],
         "manifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "public": [
               Str("521795651741005384"),
             ],
@@ -262,18 +262,18 @@ Vdf(
           Str("Valheim dedicated server Linux"),
         ],
       })),
-      Obj(Obj({
+      Obj(ObjDef({
         "config": [
-          Obj(Obj({
+          Obj(ObjDef({
             "oslist": [
               Str("windows"),
             ],
           })),
         ],
         "encryptedmanifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "experimental": [
-              Obj(Obj({
+              Obj(ObjDef({
                 "encrypted_gid_2": [
                   Str("9FD2B7B42FACB1D1FC439DD83ED2BED9"),
                 ],
@@ -288,7 +288,7 @@ Vdf(
           Str("896662"),
         ],
         "manifests": [
-          Obj(Obj({
+          Obj(ObjDef({
             "public": [
               Str("5449924312569304795"),
             ],

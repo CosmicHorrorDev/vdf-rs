@@ -1,12 +1,12 @@
 ---
-source: keyvalues-parser/src/text/tests.rs
-assertion_line: 20
-expression: vdf
+source: keyvalues-parser/tests/text_parser.rs
+assertion_line: 88
+expression: "VdfDef::from(vdf.clone())"
 
 ---
-Vdf(
+VdfDef(
   key: "AppState",
-  value: Obj(Obj({
+  value: Obj(ObjDef({
     "AllowOtherDownloadsWhileRunning": [
       Str("0"),
     ],
@@ -26,9 +26,9 @@ Vdf(
       Str("1045271601"),
     ],
     "InstalledDepots": [
-      Obj(Obj({
+      Obj(ObjDef({
         "1006": [
-          Obj(Obj({
+          Obj(ObjDef({
             "manifest": [
               Str("6688153055340488873"),
             ],
@@ -38,7 +38,7 @@ Vdf(
           })),
         ],
         "896661": [
-          Obj(Obj({
+          Obj(ObjDef({
             "manifest": [
               Str("521795651741005384"),
             ],
@@ -71,7 +71,7 @@ Vdf(
       Str("0"),
     ],
     "UserConfig": [
-      Obj(Obj({})),
+      Obj(ObjDef({})),
     ],
     "appid": [
       Str("896660"),
