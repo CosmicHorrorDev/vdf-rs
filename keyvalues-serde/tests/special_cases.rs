@@ -6,7 +6,7 @@ use keyvalues_serde::{
 use maplit::hashmap;
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
-use tempdir::TempDir;
+use tempfile::Builder;
 
 use std::{
     borrow::Cow,
@@ -25,7 +25,7 @@ fn snapshot_writing_to_file() -> BoxedResult<()> {
     let name_base = "snapshot_writing_to_file";
 
     let vdf_struct = Container::new(123);
-    let dir = TempDir::new("keyvalues-serde")?;
+    let dir = Builder::new().prefix("keyvalues-serde").tempdir()?;
     let file_path = dir.path().join("sample.vdf");
 
     // Write a vdf to a file then verify it's correct
