@@ -156,11 +156,13 @@ pub mod de;
 pub mod error;
 pub mod ser;
 
-// The tokenstreams are fuzzed even though they are not exposed publicly normally
+// The tokenstreams are fuzzed even though they are not exposed publicly
 #[cfg(fuzzing)]
 pub mod tokens;
 #[cfg(not(fuzzing))]
 mod tokens;
+
+pub use keyvalues_parser as parser;
 
 #[doc(inline)]
 pub use de::{
