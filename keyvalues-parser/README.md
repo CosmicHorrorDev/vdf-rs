@@ -12,8 +12,8 @@ parser provides an untyped `Vdf` representation as well as a linear
 
 The library is primarily used in conjunction with
 [`keyvalues-serde`](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde)
-which provides a more ergonommic (yet more limiting) means of dealing with VDF
-text
+which provides a more ergonomic (yet more limiting) means of dealing with VDF
+text.
 
 ## Installation
 
