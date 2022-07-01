@@ -31,6 +31,7 @@ impl<'a, 'de> SeqBuilder<'a, 'de> {
             (Some(1), Some(Token::SeqBegin)) => Err(Error::TrailingTokens),
             (Some(len), Some(Token::SeqBegin)) => Ok(SeqEater::new_set_length(self.de, len)),
             (None, Some(Token::SeqBegin)) => Ok(SeqEater::new_variable_length(self.de)),
+            // NOTE: These tokens **MUST** match what `SingleValueEater` expects
             (_, Some(Token::ObjBegin | Token::Str(_))) => Ok(SeqEater::new_single_value(self.de)),
             (_, Some(_)) => Err(Error::ExpectedSomeValue),
             (_, None) => Err(Error::EofWhileParsingSequence),
@@ -106,8 +107,9 @@ impl<'de, 'a> SingleValueEater<'a, 'de> {
             self.finished = true;
             match self.de.peek() {
                 Some(Token::ObjBegin | Token::Str(_)) => seed.deserialize(&mut *self.de).map(Some),
-                Some(_) => Err(Error::ExpectedSomeValue),
-                None => Err(Error::EofWhileParsingSequence),
+                _ => unreachable!(
+                    "Either `ObjBegin` or `Str` was peeked when `Self` was constructed"
+                ),
             }
         }
     }
@@ -124,8 +126,8 @@ impl<'de, 'a> SetLengthEater<'a, 'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        match self.de.peek() {
-            Some(Token::ObjBegin | Token::Str(_)) => {
+        match self.de.peek().expect("Can't have EOF before `SeqEnd`") {
+            Token::ObjBegin | Token::Str(_) => {
                 self.remaining -= 1;
                 let val = seed.deserialize(&mut *self.de).map(Some)?;
 
@@ -140,9 +142,12 @@ impl<'de, 'a> SetLengthEater<'a, 'de> {
 
                 Ok(val)
             }
-            Some(Token::SeqEnd) => Err(Error::UnexpectedEndOfSequence),
-            Some(_) => Err(Error::ExpectedSomeValue),
-            None => Err(Error::EofWhileParsingSequence),
+            Token::SeqEnd => Err(Error::UnexpectedEndOfSequence),
+            // The only tokens possible here would be `ObjEnd`, `SeqBegin`, or `Key`
+            // - `ObjEnd` is always consumed with the `ObjBegin`
+            // - `SeqBegin` can't be a value in the sequence because there's no nested seqs
+            // - `Key` can't be a value since seqs only allow strings and objs
+            _ => unreachable!("`Vdf` structure prevents reaching here"),
         }
     }
 }
@@ -157,15 +162,18 @@ impl<'de, 'a> VariableLengthEater<'a, 'de> {
     where
         T: DeserializeSeed<'de>,
     {
-        match self.de.peek() {
-            Some(Token::ObjBegin | Token::Str(_)) => seed.deserialize(&mut *self.de).map(Some),
-            Some(Token::SeqEnd) => {
+        match self.de.peek().expect("Can't have EOF before `SeqEnd`") {
+            Token::ObjBegin | Token::Str(_) => seed.deserialize(&mut *self.de).map(Some),
+            Token::SeqEnd => {
                 // Pop off the marker
                 self.de.next().expect("`SeqEnd` was peeked");
                 Ok(None)
             }
-            Some(_) => Err(Error::ExpectedSomeValue),
-            None => Err(Error::EofWhileParsingSequence),
+            // The only tokens possible here would be `ObjEnd`, `SeqBegin`, or `Key`
+            // - `ObjEnd` is always consumed with the `ObjBegin`
+            // - `SeqBegin` can't be a value in the sequence because there's no nested seqs
+            // - `Key` can't be a value since seqs only allow strings and objs
+            _ => unreachable!("`Vdf` structure prevents reaching here"),
         }
     }
 }

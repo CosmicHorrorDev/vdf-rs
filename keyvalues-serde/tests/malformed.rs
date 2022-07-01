@@ -58,6 +58,12 @@ fn incorrect_seq_length() -> BoxedResult<()> {
     Ok(())
 }
 
+#[test]
+fn parsing_obj_as_sequence() {
+    let text = r#""Blah" {}"#;
+    assert!(from_str::<Vec<String>>(text).is_err());
+}
+
 #[derive(Deserialize, Debug)]
 pub struct Pair {
     pub first: String,
