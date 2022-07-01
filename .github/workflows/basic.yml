@@ -147,3 +147,16 @@ jobs:
             keyvalues-parser/fuzz/target
             keyvalues-serde/fuzz/target
           key: nightly_only-cargo-build-${{ steps.get-version.outputs.version }}-1
+
+      # Actually check the fuzzers so that they don't break silently
+      - name: Check parser fuzzers
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
+
+      - name: Check ser de fuzzers
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+          args: --manifest-path keyvalues-serde/fuzz/Cargo.toml
