@@ -66,7 +66,7 @@ pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 ///
 /// So in this way it's a linear sequence of keys and values where the value is either a str or an
 /// object.
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct TokenStream<'a>(pub Vec<Token<'a>>);
 
 impl<'a> Deref for TokenStream<'a> {
@@ -138,7 +138,7 @@ impl<'a> From<Obj<'a>> for TokenStream<'a> {
 }
 
 /// A single VDF token
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Token<'a> {
     Key(Cow<'a, str>),
     Str(Cow<'a, str>),

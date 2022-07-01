@@ -1,5 +1,6 @@
 //! All error information for parsing and rendering
 
+// TODO: is this still true?
 // This library supports an MSRV of 1.42.0 which is before the addition of
 // clippy::nonstandard_macro_braces. This lint is used within `thiserror` which in turn gets
 // expanded out here causing clippy to throw out an unknown lint warning which fails CI. Until this
@@ -19,7 +20,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// All possible errors when parsing or rendering VDF text
 ///
 /// Currently the two variants are parse errors which currently only occurs when `pest` encounters
-#[derive(ThisError, Clone, Debug, PartialEq)]
+#[derive(ThisError, Clone, Debug, PartialEq, Eq)]
 pub enum Error {
     #[error("Failed parsing input Error: {0}")]
     EscapedParseError(#[from] EscapedPestError),
