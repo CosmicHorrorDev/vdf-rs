@@ -19,7 +19,7 @@ use std::{
     num::{ParseFloatError, ParseIntError},
 };
 
-/// Alias for the result with [`Error`][Error] as the error type
+/// Alias for the result with [`Error`] as the error type
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// All the possible errors that can be encountered when (de)serializing VDF text

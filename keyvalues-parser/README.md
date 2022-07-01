@@ -2,7 +2,6 @@
 
 [![codecov](https://codecov.io/gh/LovecraftianHorror/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/LovecraftianHorror/vdf-rs)
 [![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
-[![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
 
 `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
@@ -18,8 +17,6 @@ text
 
 ## Installation
 
-**Note: this requires at least Rust `1.42.0`**
-
 Just add the library to your `Cargo.toml`
 
 ```toml
@@ -27,19 +24,10 @@ Just add the library to your `Cargo.toml`
 keyvalues-parser = "0.1.0"
 ```
 
-## Usage
+## Quickstart
 
-<!-- TODO: just use a badge for this. The link can very easily fall out of date -->
-There is documentation available
-[here](https://docs.rs/keyvalues-parser/0.1.0/keyvalues_parser/) and there are
-examples available in the
-[examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/examples)
-
-### Quickstart
-
-`loginusers.vdf`
-
-```vdf
+```rust
+const LOGIN_USERS_VDF: &str = r#"
 "users"
 {
     "12345678901234567"
@@ -51,23 +39,24 @@ examples available in the
         "Timestamp"        "1234567890"
     }
 }
-```
+"#;
 
-`main.rs`
-
-```rust
 use keyvalues_parser::Vdf;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let vdf_text = std::fs::read_to_string("loginusers.vdf")?;
-    let vdf = Vdf::parse(&vdf_text)?;
-    assert_eq!(Some("12345678901234567"), vdf.value.keys().next());
+    let vdf = Vdf::parse(LOGIN_USERS_VDF)?;
+    assert_eq!(
+        "12345678901234567",
+	vdf.value.unwrap_obj().keys().next().unwrap(),
+    );
 
     Ok(())
 }
 ```
 
 ## Limitations
+
+<!-- TODO: This could use a lot of cleanup -->
 
 VDF text is drastically underspecified. This leads to the following liberties
 being taken
@@ -87,8 +76,10 @@ fairly typical VDF file
 
 Licensed under either of
 
- - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- - MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+<!-- TODO: symlink these licenses and include in each crate -->
+
+ - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+ - MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 

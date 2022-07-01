@@ -2,7 +2,6 @@
 
 [![codecov](https://codecov.io/gh/LovecraftianHorror/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/LovecraftianHorror/vdf-rs)
 [![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
-[![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 [![Documentation](https://img.shields.io/docsrs/keyvalues-serde/latest)](https://docs.rs/keyvalues-serde/latest/keyvalues_serde/)
 
 `keyvalues-serde` is a (de)serialization library for
@@ -13,23 +12,7 @@ makes it easy to deal with VDF text files using strongly typed Rust structures.
 
 ## Installation
 
-_Note: this requires at least Rust `1.42.0`_
-
 Just add the following to your `Cargo.toml`
-
-```toml
-[dependencies]
-keyvalues-serde = "0.1.0"
-```
-
-## Usage
-
-There is documentation available
-[here](https://docs.rs/keyvalues-serde/0.2.0/keyvalues_serde/) and there are
-examples available in the
-[examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde/examples)
-
-### Quickstart
 
 ```toml
 [dependencies]
@@ -37,8 +20,9 @@ keyvalues-serde = "0.1.0"
 serde = { version = "1.0.0", features = ["derive"] }
 ```
 
+## Quickstart
+
 ```rust
-use keyvalues_serde::{from_str, Result as VdfResult};
 use serde::Deserialize;
 
 // Contents take from my ~/.data/Steam/steam/games/PlatformMenu.vdf
@@ -103,8 +87,8 @@ struct MenuModule {
     steam_app: Option<bool>,
 }
 
-fn main() -> VdfResult<()> {
-    let platform: Platform = from_str(VDF_TEXT)?;
+fn main() -> keyvalues_serde::Result<()> {
+    let platform: Platform = keyvalues_serde::from_str(VDF_TEXT)?;
     println!("{:#?}", platform);
 
     Ok(())
@@ -159,8 +143,9 @@ fn main() -> VdfResult<()> {
 
 Licensed under either of
 
- - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or http://www.apache.org/licenses/LICENSE-2.0)
- - MIT license ([LICENSE-MIT](LICENSE-MIT) or http://opensource.org/licenses/MIT)
+<!-- TODO: symlink the license files and publish them in the crate -->
+ - Apache License, Version 2.0, ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
+ - MIT license ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
 
 at your option.
 

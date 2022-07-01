@@ -12,7 +12,10 @@ use std::{
 
 use keyvalues_parser::{Key, Obj, Value, Vdf};
 
-/// A stream of [`NaiveToken`][NaiveToken]s that do not encode what is a key vs a value
+#[cfg(doc)]
+use crate::tokens::Token;
+
+/// A stream of [`NaiveToken`]s that do not encode what is a key vs a value
 ///
 /// This is primarily provided to simplify serialization so that a serializer can emit a naive
 /// token stream that can later be used to create a VDF. This is due to the following reasons
@@ -53,17 +56,16 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            match tokens.next() {
-                Some(NaiveToken::Str(s)) => {
-                    let key = Cow::from(s);
+            if let Some(NaiveToken::Str(s)) = tokens.next() {
+                let key = Cow::from(s);
 
-                    let res = process_values(tokens);
-                    tokens = res.0;
-                    let values = res.1;
+                let res = process_values(tokens);
+                tokens = res.0;
+                let values = res.1;
 
-                    (tokens, key, values)
-                }
-                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
+                (tokens, key, values)
+            } else {
+                unreachable!("`Serializer` outputs valid `Vdf` structure");
             }
         }
 
@@ -73,13 +75,10 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
         {
             match tokens.next() {
                 // A `Str` is a single value
-                Some(NaiveToken::Str(s)) => {
-                    let values = vec![Value::Str(Cow::from(s.clone()))];
-                    (tokens, values)
-                }
+                Some(NaiveToken::Str(s)) => (tokens, vec![Value::Str(Cow::from(s.clone()))]),
                 Some(NaiveToken::ObjBegin) => {
-                    let res = process_obj(tokens);
-                    (res.0, vec![res.1])
+                    let (tokens, value) = process_obj(tokens);
+                    (tokens, vec![value])
                 }
                 // Sequences are a series of values that can't contain a sequence (vdf limitation)
                 Some(NaiveToken::SeqBegin) => {
@@ -113,8 +112,8 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
             match tokens.next() {
                 Some(NaiveToken::Str(s)) => (tokens, Some(Value::Str(Cow::from(s)))),
                 Some(NaiveToken::ObjBegin) => {
-                    let res = process_obj(tokens);
-                    (res.0, Some(res.1))
+                    let (tokens, value) = process_obj(tokens);
+                    (tokens, Some(value))
                 }
                 // VDF represents `Null` as omitting the value
                 Some(NaiveToken::Null) => (tokens, None),
@@ -151,20 +150,20 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
         let tokens = naive_token_stream.iter().peekable();
         let (mut tokens, key, mut values) = process_key_values(tokens);
 
-        if tokens.next().is_none() {
-            match values.pop() {
-                Some(value) => Self::new(key, value),
-                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
-            }
-        } else {
-            unreachable!("`Serializer` outputs valid `Vdf` structure");
-        }
+        assert!(
+            tokens.next().is_none(),
+            "`Serializer` outputs valid `Vdf` structure"
+        );
+        let value = values
+            .pop()
+            .expect("`Serializer` outputs valid `Vdf` structure");
+        Self::new(key, value)
     }
 }
 
-/// A naive version of a [`Token`][crate::tokens::Token]
+/// A naive version of a [`Token`]
 ///
-/// It is identical to [`Token`][crate::tokens::Token] except that
+/// It is identical to [`Token`] except that
 ///
 /// - It is owned instead of tied to a lifetime
 /// - There is no `Key` where instead a key _should_ be a `Str`

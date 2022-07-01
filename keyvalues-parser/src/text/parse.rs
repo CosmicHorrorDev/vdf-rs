@@ -12,7 +12,7 @@ use crate::{error::Result, Obj, PartialVdf as Vdf, Value};
 
 macro_rules! common_parsing {
     ($parser:ty, $rule:ty, $parse_escaped:expr) => {
-        /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
+        /// Attempts to parse VDF text to a [`Vdf`]
         pub fn parse<'a>(s: &'a str) -> Result<Vdf<'a>> {
             let mut full_grammar = <$parser>::parse(<$rule>::vdf, s)?;
 
@@ -150,7 +150,7 @@ pub use escaped::{parse as escaped_parse, PestError as EscapedPestError};
 pub use raw::{parse as raw_parse, PestError as RawPestError};
 
 impl<'a> Vdf<'a> {
-    /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
+    /// Attempts to parse VDF text to a [`Vdf`]
     pub fn parse(s: &'a str) -> Result<Self> {
         escaped_parse(s)
     }
@@ -161,7 +161,7 @@ impl<'a> Vdf<'a> {
 }
 
 impl<'a> crate::Vdf<'a> {
-    /// Attempts to parse VDF text to a [`Vdf`][crate::Vdf]
+    /// Attempts to parse VDF text to a [`Vdf`]
     pub fn parse(s: &'a str) -> Result<Self> {
         Ok(crate::Vdf::from(Vdf::parse(s)?))
     }

@@ -13,8 +13,8 @@ use crate::{
 
 /// The struct for serializing Rust values into VDF text
 ///
-/// This typically doesn't need to be invoked directly when [`to_writer()`][to_writer] and
-/// [`to_writer_with_key()`][to_writer_with_key] can be used instead
+/// This typically doesn't need to be invoked directly when [`to_writer()`] and
+/// [`to_writer_with_key()`] can be used instead
 #[derive(Default)]
 pub struct Serializer {
     tokens: NaiveTokenStream,
@@ -75,9 +75,7 @@ where
                 serializer.tokens[0] = NaiveToken::Str(key.to_owned());
             }
             // Push on the key
-            Some(_) => {
-                serializer.tokens.insert(0, NaiveToken::Str(key.to_owned()));
-            }
+            Some(_) => serializer.tokens.insert(0, NaiveToken::Str(key.to_owned())),
             None => {}
         }
     }

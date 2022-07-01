@@ -164,7 +164,6 @@ impl<'a> Value<'a> {
             Value::Obj(obj) => {
                 writeln!(writer, "{}{{", multiple_char('\t', num_indents))?;
                 write_obj(writer, num_indents + 1, obj, render_type)?;
-                // obj.write_indented(f, num_indents + 1)?;
                 write!(writer, "{}}}", multiple_char('\t', num_indents))
             }
         }
@@ -173,21 +172,10 @@ impl<'a> Value<'a> {
     fn find_invalid_raw_char(&self) -> Option<char> {
         match self {
             Self::Str(s) => find_invalid_raw_char(s),
-            Self::Obj(obj) => {
-                for (key, values) in obj.iter() {
-                    let maybe_c = find_invalid_raw_char(key).or_else(|| {
-                        values
-                            .iter()
-                            .find_map(|value| value.find_invalid_raw_char())
-                    });
-
-                    if maybe_c.is_some() {
-                        return maybe_c;
-                    }
-                }
-
-                None
-            }
+            Self::Obj(obj) => obj.iter().find_map(|(key, values)| {
+                find_invalid_raw_char(key)
+                    .or_else(|| values.iter().find_map(Value::find_invalid_raw_char))
+            }),
         }
     }
 }

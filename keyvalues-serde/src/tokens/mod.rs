@@ -20,11 +20,11 @@ pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 // a stream of tokens that serde can consume. In this way the Deserializer can just work on
 // munching through all the tokens instead of trying to mutate a more complex nested structure
 // containing different types
-/// A stream of [`Token`][Token]s representing a [`Vdf`][crate::Vdf]
+/// A stream of [`Token`]s representing a [`Vdf`]
 ///
 /// I think an example is the easiest way to understand the structure so something like
 ///
-/// ```no_test
+/// ```vdf
 /// "Outer Key"
 /// {
 ///     "Inner Key" "Inner Value"
@@ -36,7 +36,7 @@ pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 ///
 /// will be transformed into
 ///
-/// ```no_test
+/// ```ron
 /// Vdf(
 ///     key: "Outer Key",
 ///     value: Obj({
@@ -50,7 +50,7 @@ pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
 ///
 /// which has the following token stream
 ///
-/// ```no_test
+/// ```ron
 /// TokenStream([
 ///     Key("Outer Key"),
 ///     ObjBegin,
@@ -99,9 +99,7 @@ impl<'a> From<Value<'a>> for TokenStream<'a> {
         let mut inner = Vec::new();
 
         match value {
-            Value::Str(s) => {
-                inner.push(Token::Str(s));
-            }
+            Value::Str(s) => inner.push(Token::Str(s)),
             Value::Obj(obj) => {
                 inner.push(Token::ObjBegin);
                 inner.extend(Self::from(obj).0);
@@ -120,8 +118,7 @@ impl<'a> From<Obj<'a>> for TokenStream<'a> {
         for (key, values) in obj.into_inner().into_iter() {
             inner.push(Token::Key(key));
 
-            // For ease of use a sequence is only marked for keys that have
-            // more than one values (zero shouldn't be allowed)
+            // For ease of use a sequence is only marked when len != 1
             let num_values = values.len();
             if num_values != 1 {
                 inner.push(Token::SeqBegin);

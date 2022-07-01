@@ -27,15 +27,11 @@ impl<'a, 'de> SeqBuilder<'a, 'de> {
 
     pub fn try_build(self) -> Result<SeqEater<'a, 'de>> {
         match (self.maybe_len, self.de.peek()) {
-            (Some(len), Some(Token::SeqBegin)) if len != 1 => {
-                Ok(SeqEater::new_set_length(self.de, len))
-            }
-            // `len` says single element, but `SeqBegin` indicates otherwise
-            (Some(_), Some(Token::SeqBegin)) => Err(Error::TrailingTokens),
+            // `len` says single element, but `SeqBegin` is **only** used for len != 1
+            (Some(1), Some(Token::SeqBegin)) => Err(Error::TrailingTokens),
+            (Some(len), Some(Token::SeqBegin)) => Ok(SeqEater::new_set_length(self.de, len)),
             (None, Some(Token::SeqBegin)) => Ok(SeqEater::new_variable_length(self.de)),
-            // TODO: these can be condensed once 1.53 lands
-            (_, Some(Token::ObjBegin)) => Ok(SeqEater::new_single_value(self.de)),
-            (_, Some(Token::Str(_))) => Ok(SeqEater::new_single_value(self.de)),
+            (_, Some(Token::ObjBegin | Token::Str(_))) => Ok(SeqEater::new_single_value(self.de)),
             (_, Some(_)) => Err(Error::ExpectedSomeValue),
             (_, None) => Err(Error::EofWhileParsingSequence),
         }
@@ -91,6 +87,8 @@ impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
     }
 }
 
+// This is defined separate from `SetLengthEater` with a length of one, because a single value
+// sequence isn't surrounded by `SeqBegin` and `SeqEnd`
 #[derive(Debug)]
 pub struct SingleValueEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
@@ -107,9 +105,7 @@ impl<'de, 'a> SingleValueEater<'a, 'de> {
         } else {
             self.finished = true;
             match self.de.peek() {
-                Some(Token::ObjBegin) | Some(Token::Str(_)) => {
-                    seed.deserialize(&mut *self.de).map(Some)
-                }
+                Some(Token::ObjBegin | Token::Str(_)) => seed.deserialize(&mut *self.de).map(Some),
                 Some(_) => Err(Error::ExpectedSomeValue),
                 None => Err(Error::EofWhileParsingSequence),
             }
@@ -129,7 +125,7 @@ impl<'de, 'a> SetLengthEater<'a, 'de> {
         T: DeserializeSeed<'de>,
     {
         match self.de.peek() {
-            Some(Token::ObjBegin) | Some(Token::Str(_)) => {
+            Some(Token::ObjBegin | Token::Str(_)) => {
                 self.remaining -= 1;
                 let val = seed.deserialize(&mut *self.de).map(Some)?;
 
@@ -162,16 +158,11 @@ impl<'de, 'a> VariableLengthEater<'a, 'de> {
         T: DeserializeSeed<'de>,
     {
         match self.de.peek() {
-            Some(Token::ObjBegin) | Some(Token::Str(_)) => {
-                seed.deserialize(&mut *self.de).map(Some)
-            }
+            Some(Token::ObjBegin | Token::Str(_)) => seed.deserialize(&mut *self.de).map(Some),
             Some(Token::SeqEnd) => {
                 // Pop off the marker
-                if let Some(Token::SeqEnd) = self.de.next() {
-                    Ok(None)
-                } else {
-                    unreachable!("SeqEnd was peeked");
-                }
+                self.de.next().expect("`SeqEnd` was peeked");
+                Ok(None)
             }
             Some(_) => Err(Error::ExpectedSomeValue),
             None => Err(Error::EofWhileParsingSequence),

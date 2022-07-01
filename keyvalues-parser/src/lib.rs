@@ -1,84 +1,8 @@
-//! `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
-//! [VDF text v1 and v2](https://developer.valvesoftware.com/wiki/KeyValues)
-//! files to an untyped Rust structure to ease manipulation and navigation. The
-//! parser provides an untyped `Vdf` representation as well as a linear
-//! `TokenStream`
-//!
-//! The library is primarily used in conjunction with
-//! [`keyvalues-serde`](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde)
-//! which provides a more ergonommic (yet more limiting) means of dealing with VDF
-//! text
-//!
-//! # Installation
-//!
-//! **Note: this requires at least Rust `1.42.0`**
-//!
-//! Just add the library to your `Cargo.toml`
-//!
-//! ```toml
-//! [dependencies]
-//! keyvalues-parser = "0.1.0"
-//! ```
-//!
-//! # Usage
-//!
-//! There is documentation available
-//! [here](https://docs.rs/keyvalues-parser/0.1.0/keyvalues_parser/) and there are
-//! examples available in the
-//! [examples directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/examples)
-//!
-//! ## Quickstart
-//!
-//! `loginusers.vdf`
-//!
-//! ```vdf
-//! "users"
-//! {
-//!     "12345678901234567"
-//!     {
-//!         "AccountName"        "ACCOUNT_NAME"
-//!         "PersonaName"        "PERSONA_NAME"
-//!         "RememberPassword"    "1"
-//!         "MostRecent"        "1"
-//!         "Timestamp"        "1234567890"
-//!     }
-//! }
-//! ```
-//!
-//! `main.rs`
-//!
-//! ```no_run
-//! use keyvalues_parser::Vdf;
-//!
-//! let vdf_text = std::fs::read_to_string("loginusers.vdf")?;
-//! let vdf = Vdf::parse(&vdf_text)?;
-//! assert_eq!(
-//!     "12345678901234567",
-//!     vdf.value.unwrap_obj().keys().next().unwrap()
-//! );
-//! # Ok::<(), Box<dyn std::error::Error>>(())
-//! ```
-//!
-//! # Limitations
-//!
-//! VDF text is drastically underspecified. This leads to the following liberties
-//! being taken
-//!
-//! - Not respecting the ordering of key-value pairs, where the pairs are stored in a `BTreeMap` that sorts the values based on the key
-//! - Because of limitations in representing sequences, an empty `Vec` of values will be rendered as a missing keyvalue pair
-//!
-//! # Benchmarks
-//!
-//! A set of basic benchmarks can be found in the
-//! [benches directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/benches)
-//!
-//! These just test timing and throughput for both parsing and rendering of a
-//! fairly typical VDF file
+#![doc = include_str!("../README.md")]
 
 use std::{
     borrow::Cow,
     collections::{btree_map::IntoIter, BTreeMap},
-    iter::FromIterator,
     ops::{Deref, DerefMut},
 };
 
@@ -90,12 +14,12 @@ pub type Key<'a> = Cow<'a, str>;
 
 /// A loosely typed representation of VDF text
 ///
-/// `Vdf` is represented as a single [`Key`][Key] mapped to a single [`Value`][Value]
+/// `Vdf` is represented as a single [`Key`] mapped to a single [`Value`]
 ///
 /// ## Parse
 ///
-/// `Vdf`s will generally be created through the use of [`Vdf::parse()`][Vdf::parse] which takes a
-/// string representing VDF text and attempts to parse it to a `Vdf` representation.
+/// `Vdf`s will generally be created through the use of [`Vdf::parse()`] which takes a string
+/// representing VDF text and attempts to parse it to a `Vdf` representation.
 ///
 /// ## Mutate
 ///
@@ -167,7 +91,7 @@ pub struct PartialVdf<'a> {
 }
 
 impl<'a> Vdf<'a> {
-    /// Creates a [`Vdf`][Vdf] using a provided key and value
+    /// Creates a [`Vdf`] using a provided key and value
     ///
     /// ```
     /// use keyvalues_parser::{Vdf, Value};
@@ -346,9 +270,9 @@ impl<'a> Iterator for IntoVdfs<'a> {
 
 /// Enum representing all valid VDF values
 ///
-/// VDF is composed of [`Key`s][Key] and their respective [`Value`s][Value] where this represents
-/// the latter. A value is either going to be a `Str(Cow<str>)`, or an `Obj(Obj)` that contains a
-/// list of keys and values.
+/// VDF is composed of [`Key`]s and their respective [`Value`]s where this represents the latter. A
+/// value is either going to be a `Str(Cow<str>)`, or an `Obj(Obj)` that contains a list of keys
+/// and values.
 ///
 /// ```
 /// # use keyvalues_parser::{Obj, Value};
@@ -497,7 +421,7 @@ impl<'a> Value<'a> {
         self.expect_str("Called `unwrap_str` on a `Value::Obj` variant")
     }
 
-    /// Unwraps the [`Obj`][Obj] from the `Value::Obj`
+    /// Unwraps the [`Obj`] from the `Value::Obj`
     ///
     /// # Panics
     ///

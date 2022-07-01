@@ -40,7 +40,7 @@ pub fn from_str<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
     from_str_with_key(s).map(|(t, _)| t)
 }
 
-/// The same as [`from_str()`][from_str], but also returns the top level VDF key
+/// The same as [`from_str()`], but also returns the top level VDF key
 pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'a>)> {
     let vdf = Vdf::parse(s)?;
     from_vdf_with_key(vdf)
@@ -63,8 +63,8 @@ pub fn from_vdf_with_key<'a, T: Deserialize<'a>>(vdf: Vdf<'a>) -> Result<(T, Key
 
 /// The struct that handles deserializing VDF into Rust structs
 ///
-/// This typically doesn't need to be invoked directly when [`from_str()`][from_str] and
-/// [`from_str_with_key()`][from_str_with_key] can be used instead
+/// This typically doesn't need to be invoked directly when [`from_str()`] and
+/// [`from_str_with_key()`] can be used instead
 #[derive(Debug)]
 pub struct Deserializer<'de> {
     tokens: Peekable<IntoIter<Token<'de>>>,
@@ -94,15 +94,15 @@ impl<'de> Deserializer<'de> {
     pub fn peek_is_value(&mut self) -> bool {
         matches!(
             self.peek(),
-            Some(Token::ObjBegin) | Some(Token::SeqBegin) | Some(Token::Str(_))
+            Some(Token::ObjBegin | Token::SeqBegin | Token::Str(_))
         )
     }
 
     /// Returns the next key or str if available
     pub fn next_key_or_str(&mut self) -> Option<Cow<'de, str>> {
         match self.peek() {
-            Some(Token::Key(_)) | Some(Token::Str(_)) => match self.next() {
-                Some(Token::Key(s)) | Some(Token::Str(s)) => Some(s),
+            Some(Token::Key(_) | Token::Str(_)) => match self.next() {
+                Some(Token::Key(s) | Token::Str(s)) => Some(s),
                 _ => unreachable!("Token was peeked"),
             },
             _ => None,
@@ -172,12 +172,10 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
 
     fn deserialize_bool<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         let val = self.next_key_or_str_else_eof()?;
-        if val == "0" {
-            visitor.visit_bool(false)
-        } else if val == "1" {
-            visitor.visit_bool(true)
-        } else {
-            Err(Error::InvalidBoolean)
+        match val.as_ref() {
+            "0" => visitor.visit_bool(false),
+            "1" => visitor.visit_bool(true),
+            _ => Err(Error::InvalidBoolean),
         }
     }
 
@@ -210,7 +208,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         match val {
             // The borrowed content can be tied to the original text's lifetime
             Cow::Borrowed(borrowed) => visitor.visit_borrowed_str(borrowed),
-            // TODO: Owned strings down't actually make it to here. Find out where the owned data
+            // TODO: Owned strings don't actually make it to here. Find out where the owned data
             // becomes borrowed
             Cow::Owned(s) => visitor.visit_string(s),
         }

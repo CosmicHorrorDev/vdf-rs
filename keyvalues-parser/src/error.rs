@@ -13,7 +13,7 @@ use thiserror::Error as ThisError;
 
 use crate::text::parse::{EscapedPestError, RawPestError};
 
-/// Just a type alias for `Result` with a [`keyvalues::error::Error`][Error]
+/// Just a type alias for `Result` with a [`Error`]
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// All possible errors when parsing or rendering VDF text
