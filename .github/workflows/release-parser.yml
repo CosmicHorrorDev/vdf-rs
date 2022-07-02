@@ -8,9 +8,6 @@ on:
     tags:
       - 'parser-v*'
 
-# Job run style is as follows:
-# test -> all fuzzers -> release
-#      \>    ...      /
 jobs:
   test:
     name: Run test suite
@@ -30,58 +27,8 @@ jobs:
           command: test
           args: --all-features --manifest-path keyvalues-parser/Cargo.toml
 
-  fuzz_parse:
-    needs: test
-
-    name: "Run parse fuzzer (30 minutes)"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          # Nightly is required by `cargo-fuzz`
-          toolchain: nightly
-          override: true
-
-      - name: Install cargo fuzz
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-fuzz
-
-      - name: Run fuzzer
-        run: cargo fuzz run parse -- -max_total_time=1800 -verbosity=0
-        working-directory: keyvalues-parser
-
-  fuzz_tokenstream:
-    needs: test
-
-    name: "Run tokenstream fuzzer (30 minutes)"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          # Nightly is required by `cargo-fuzz`
-          toolchain: nightly
-          override: true
-
-      - name: Install cargo fuzz
-        uses: actions-rs/cargo@v1
-        with:
-          command: install
-          args: cargo-fuzz
-
-      - name: Run fuzzer
-        run: cargo fuzz run token_stream -- -max_total_time=1800 -verbosity=0
-        working-directory: keyvalues-parser
-
   release:
-    needs: [fuzz_parse, fuzz_tokenstream]
+    needs: test
 
     name: Upload Release
     runs-on: ubuntu-latest
