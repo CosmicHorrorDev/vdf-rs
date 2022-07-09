@@ -6,13 +6,8 @@ use keyvalues_serde::{
 use maplit::hashmap;
 use pretty_assertions::assert_eq;
 use serde::{Deserialize, Serialize};
-use tempfile::Builder;
 
-use std::{
-    borrow::Cow,
-    collections::HashMap,
-    fs::{self, File},
-};
+use std::{borrow::Cow, collections::HashMap};
 
 mod utils;
 
@@ -21,24 +16,26 @@ use utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Container};
 // TODO: what happens if you try to serialize a hashmap without providing a key?
 
 #[test]
-fn snapshot_writing_to_file() -> BoxedResult<()> {
-    let name_base = "snapshot_writing_to_file";
+fn snapshot_writing() -> BoxedResult<()> {
+    let name_base = "snapshot_writing";
 
     let vdf_struct = Container::new(123);
-    let dir = Builder::new().prefix("keyvalues-serde").tempdir()?;
-    let file_path = dir.path().join("sample.vdf");
+    let mut buf = Vec::new();
 
-    // Write a vdf to a file then verify it's correct
-    let mut file = File::create(&file_path)?;
-    to_writer(&mut file, &vdf_struct)?;
-    let vdf_text = fs::read_to_string(&file_path)?;
-    assert_snapshot!(format!("{}-to_writer", name_base), vdf_text);
+    // Write a vdf then verify it's correct
+    to_writer(&mut buf, &vdf_struct)?;
+    assert_snapshot!(
+        format!("{}-to_writer", name_base),
+        std::str::from_utf8(&buf)?
+    );
 
     // And the same with a custom key
-    let mut file = File::create(&file_path)?;
-    to_writer_with_key(&mut file, &vdf_struct, "Custom")?;
-    let vdf_text = fs::read_to_string(&file_path)?;
-    assert_snapshot!(format!("{}-to_writer_with_key", name_base), vdf_text);
+    buf.clear();
+    to_writer_with_key(&mut buf, &vdf_struct, "Custom")?;
+    assert_snapshot!(
+        format!("{}-to_writer_with_key", name_base),
+        std::str::from_utf8(&buf)?
+    );
 
     Ok(())
 }

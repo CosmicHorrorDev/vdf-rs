@@ -13,8 +13,7 @@ repository = "https://github.com/lovecraftianhorror/vdf-rs"
 
 [dependencies]
 keyvalues-parser = { path = "../keyvalues-parser" }
-paste = "1.0.5"
-serde = { version = "1.0.125", features = ["derive"] }
+serde = { version = "1.0.125" }
 thiserror = "1.0.24"
 
 [dev-dependencies]
@@ -22,7 +21,6 @@ criterion = "0.3.4"
 insta = { version = "1.7.1", features = ["ron"] }
 maplit = "1.0.2"
 pretty_assertions = "1.2.1"
-tempfile = "3.3.0"
 
 [[bench]]
 name = "ser_de"

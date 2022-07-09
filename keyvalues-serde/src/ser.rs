@@ -1,7 +1,6 @@
 //! Serialize Rust types to VDF text
 
 use keyvalues_parser::Vdf;
-use paste::paste;
 use serde::{ser, Serialize};
 
 use std::io::Write;
@@ -118,19 +117,6 @@ where
     Ok(s)
 }
 
-// Expands out a list of types to a list of `serialize_<type>` methods
-macro_rules! serialize_types_as_str {
-    ( $( $types:ty ),* ) => {
-        paste! {
-            $(
-                fn [<serialize_ $types >](self, v: $types) -> Result<()> {
-                    self.serialize_str(&v.to_string())
-                }
-            )*
-        }
-    };
-}
-
 impl<'a> ser::Serializer for &'a mut Serializer {
     type Ok = ();
 
@@ -148,8 +134,49 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.serialize_str(if v { "1" } else { "0" })
     }
 
-    // All the types that just get converted to a string and forwarded to `self.serialize_str()`
-    serialize_types_as_str!(i8, i16, i32, i64, i128, u8, u16, u32, u64, u128, char);
+    fn serialize_i8(self, v: i8) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_i16(self, v: i16) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_i32(self, v: i32) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_i64(self, v: i64) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_i128(self, v: i128) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_u8(self, v: u8) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_u16(self, v: u16) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_u32(self, v: u32) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_u64(self, v: u64) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_u128(self, v: u128) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
+
+    fn serialize_char(self, v: char) -> Result<()> {
+        self.serialize_str(&v.to_string())
+    }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
         if v.is_finite() {
