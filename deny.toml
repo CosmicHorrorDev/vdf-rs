@@ -1,0 +1,12 @@
+[licenses]
+allow = [
+    # We're dual licensed
+    "MIT",
+    "Apache-2.0",
+]
+
+exceptions = [
+    # This library doesn't distribute the data used to generate the unicode
+    # tables
+    { allow = ["Unicode-DFS-2016"], name = "unicode-ident" },
+]
