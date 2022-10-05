@@ -75,7 +75,7 @@ impl<'de> Deserializer<'de> {
         let token_stream = TokenStream::from(vdf);
 
         let key = if let Some(Token::Key(key)) = token_stream.get(0) {
-            key.to_owned()
+            key.clone()
         } else {
             unreachable!("Tokenstream must start with key");
         };

@@ -1,4 +1,6 @@
 #![doc = include_str!("../README.md")]
+#![allow(clippy::result_large_err)]
+// TODO: resolve this ^^
 
 pub mod de;
 pub mod error;
