@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+#![allow(unknown_lints)]
 #![allow(clippy::result_large_err)]
 // TODO: resolve this ^^
 
