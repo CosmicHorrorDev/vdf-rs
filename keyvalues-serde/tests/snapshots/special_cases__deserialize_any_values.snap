@@ -1,17 +1,17 @@
 ---
 source: keyvalues-serde/tests/special_cases.rs
-assertion_line: 137
 expression: any_holder
-
 ---
-{
-  "inner": "Value",
-  "str key": "String",
-  "obj key": {
-    "key": "value",
-  },
-  "seq key": [
-    "first",
-    "second",
-  ],
+AnyHolder {
+    foo: StructureDefinedType {
+        inner: "Value",
+        str_key: "String",
+        obj_key: {
+            "key": "value",
+        },
+        seq_key: [
+            "first",
+            "second",
+        ],
+    },
 }

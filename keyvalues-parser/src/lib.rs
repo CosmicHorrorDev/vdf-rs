@@ -67,7 +67,6 @@ pub type Key<'a> = Cow<'a, str>;
 /// println!("{}", parsed);
 /// # Ok::<(), keyvalues_parser::error::Error>(())
 /// ```
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Vdf<'a> {
     pub key: Key<'a>,
@@ -85,7 +84,6 @@ impl<'a> From<PartialVdf<'a>> for Vdf<'a> {
 
 // TODO: Just store a `Vdf` internally?
 // TODO: don't expose these publicly?
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PartialVdf<'a> {
     pub key: Key<'a>,
@@ -113,7 +111,6 @@ impl<'a> Vdf<'a> {
 type ObjInner<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
 type ObjInnerPair<'a> = (Key<'a>, Vec<Value<'a>>);
 
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Debug, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Obj<'a>(pub ObjInner<'a>);
 
@@ -283,7 +280,6 @@ impl<'a> Iterator for IntoVdfs<'a> {
 /// let value_str = Value::Str(Cow::from("some text"));
 /// let value_obj = Value::Obj(Obj::new());
 /// ```
-#[cfg_attr(test, derive(serde::Deserialize, serde::Serialize))]
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum Value<'a> {
     Str(Cow<'a, str>),

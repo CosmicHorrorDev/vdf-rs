@@ -1,23 +1,33 @@
 ---
 source: keyvalues-parser/tests/text_parser.rs
-assertion_line: 88
 expression: "VdfDef::from(vdf.clone())"
-
 ---
-VdfDef(
-  key: "Outer Key",
-  value: Obj(ObjDef({
-    "Escaped Characters": [
-      Str("\n\r\t\"\\"),
-    ],
-    "Mixed": [
-      Str("\n\t\n\t\n\t\\\""),
-    ],
-    "Raw Newline": [
-      Str("\n"),
-    ],
-    "Raw Tab": [
-      Str("\t"),
-    ],
-  })),
-)
+VdfDef {
+    key: "Outer Key",
+    value: Obj(
+        ObjDef(
+            {
+                "Escaped Characters": [
+                    Str(
+                        "\n\r\t\"\\",
+                    ),
+                ],
+                "Mixed": [
+                    Str(
+                        "\n\t\n\t\n\t\\\"",
+                    ),
+                ],
+                "Raw Newline": [
+                    Str(
+                        "\n",
+                    ),
+                ],
+                "Raw Tab": [
+                    Str(
+                        "\t",
+                    ),
+                ],
+            },
+        ),
+    ),
+}

@@ -1,7 +1,6 @@
 // TODO: a lot of these should be moved to integration tests
 
-use insta::{assert_ron_snapshot, assert_snapshot};
-use serde::Serialize;
+use insta::{assert_debug_snapshot, assert_snapshot};
 
 use std::{borrow::Cow, collections::BTreeMap, error::Error, fs, path::Path};
 
@@ -15,7 +14,8 @@ fn read_asset_file(file_name: &str) -> BoxedResult<String> {
 }
 
 // Just mirror the internal types to allow for deriving `Serialize`
-#[derive(Serialize)]
+#[derive(Debug)]
+#[allow(dead_code)]
 struct PartialVdfDef<'a> {
     key: Cow<'a, str>,
     value: ValueDef<'a>,
@@ -33,7 +33,8 @@ impl<'a> From<PartialVdf<'a>> for PartialVdfDef<'a> {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug)]
+#[allow(dead_code)]
 struct VdfDef<'a> {
     key: Cow<'a, str>,
     value: ValueDef<'a>,
@@ -49,7 +50,8 @@ impl<'a> From<Vdf<'a>> for VdfDef<'a> {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug)]
+#[allow(dead_code)]
 enum ValueDef<'a> {
     Str(Cow<'a, str>),
     Obj(ObjDef<'a>),
@@ -64,7 +66,8 @@ impl<'a> From<Value<'a>> for ValueDef<'a> {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Debug)]
+#[allow(dead_code)]
 struct ObjDef<'a>(BTreeMap<Cow<'a, str>, Vec<ValueDef<'a>>>);
 
 impl<'a> From<Obj<'a>> for ObjDef<'a> {
@@ -85,7 +88,7 @@ impl<'a> From<Obj<'a>> for ObjDef<'a> {
 fn snapshot_test_parse_and_render(snapshot_name_base: &str, file_name: &str) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse(&vdf_text)?;
-    assert_ron_snapshot!(
+    assert_debug_snapshot!(
         format!("parsed-{}", snapshot_name_base),
         VdfDef::from(vdf.clone())
     );
@@ -99,7 +102,7 @@ fn snapshot_test_parse_and_render(snapshot_name_base: &str, file_name: &str) -> 
 fn snapshot_test_raw_parse_render(snapshot_name_base: &str, file_name: &str) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = Vdf::parse_raw(&vdf_text)?;
-    assert_ron_snapshot!(
+    assert_debug_snapshot!(
         format!("parsed-{}", snapshot_name_base),
         VdfDef::from(vdf.clone())
     );
@@ -118,7 +121,7 @@ fn snapshot_test_partial_parse_and_render(
 ) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = PartialVdf::parse(&vdf_text)?;
-    assert_ron_snapshot!(
+    assert_debug_snapshot!(
         format!("parsed-{}", snapshot_name_base),
         PartialVdfDef::from(vdf.clone())
     );
@@ -135,7 +138,7 @@ fn snapshot_test_partial_raw_parse_render(
 ) -> BoxedResult<()> {
     let vdf_text = read_asset_file(file_name)?;
     let vdf = PartialVdf::parse_raw(&vdf_text)?;
-    assert_ron_snapshot!(
+    assert_debug_snapshot!(
         format!("parsed-{}", snapshot_name_base),
         PartialVdfDef::from(vdf.clone())
     );
@@ -163,11 +166,9 @@ macro_rules! parse_test_generator {
 parse_test_generator!(
     snapshot_test_parse_and_render,
     basic,
-    app_manifest,
     comments,
     unquoted_strings,
     special_characters,
-    app_info,
     null_byte
 );
 
