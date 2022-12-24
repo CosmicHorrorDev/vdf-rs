@@ -38,11 +38,11 @@ fn write_str(writer: &mut impl Write, s: &str, render_type: RenderType) -> fmt::
     writer.write_char('"')
 }
 
-fn write_pair<'a>(
+fn write_pair(
     writer: &mut impl Write,
     num_indents: usize,
     key: &str,
-    value: &Value<'a>,
+    value: &Value<'_>,
     render_type: RenderType,
 ) -> fmt::Result {
     // Write the indented key
@@ -60,10 +60,10 @@ fn write_pair<'a>(
     writer.write_char('\n')
 }
 
-fn write_obj<'a>(
+fn write_obj(
     writer: &mut impl Write,
     num_indents: usize,
-    obj: &Obj<'a>,
+    obj: &Obj<'_>,
     render_type: RenderType,
 ) -> fmt::Result {
     for (key, values) in obj.iter() {
