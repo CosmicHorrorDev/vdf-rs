@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
 
 `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
-[VDF text v1 and v2](https://developer.valvesoftware.com/wiki/KeyValues)
+[VDF text v1](https://developer.valvesoftware.com/wiki/KeyValues)
 files to an untyped Rust structure to ease manipulation and navigation. The
 parser provides an untyped `Vdf` representation as well as a linear
 `TokenStream`

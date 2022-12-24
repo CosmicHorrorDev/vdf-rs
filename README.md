@@ -5,7 +5,7 @@
 [![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 
 The `vdf-rs` project is focused on providing sane methods of dealing with
-Valve's Data Format v1 and v2 (VDF) also known as
+Valve's Data Format v1 (VDF) also known as
 [KeyValues](https://developer.valvesoftware.com/wiki/KeyValues).
 
 Currently the project is composed of

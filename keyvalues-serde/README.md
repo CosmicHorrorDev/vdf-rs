@@ -5,7 +5,7 @@
 [![Documentation](https://img.shields.io/docsrs/keyvalues-serde/latest)](https://docs.rs/keyvalues-serde/latest/keyvalues_serde/)
 
 `keyvalues-serde` is a (de)serialization library for
-[VDF text v1 and v2](https://developer.valvesoftware.com/wiki/KeyValues)
+[VDF text v1](https://developer.valvesoftware.com/wiki/KeyValues)
 built on the [`serde`](https://lib.rs/crates/serde) framework. This library
 leverages `keyvalues-parser` for parsing and rendering the keyvalues text. This
 makes it easy to deal with VDF text files using strongly typed Rust structures.
