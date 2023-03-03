@@ -1,4 +1,9 @@
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    # Run weekly to keep Rust toolchain changes fresh
+    - cron: '0 0 * * 1'
 
 name: "Build, Test, Format, and Lint"
 
