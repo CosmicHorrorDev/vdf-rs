@@ -18,7 +18,7 @@ fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a str> {
         .get_str()
 }
 
-fn update_version<'text>(controller_mappings: &mut Vdf<'text>, new_version: String) -> Option<()> {
+fn update_version(controller_mappings: &mut Vdf, new_version: String) -> Option<()> {
     let version = controller_mappings
         .value
         .get_mut_obj()?

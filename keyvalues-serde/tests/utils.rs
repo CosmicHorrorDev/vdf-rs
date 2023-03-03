@@ -29,7 +29,7 @@ pub fn test_vdf_deserialization<'a, T>(vdf_text: &'a str, ideal_val: &T) -> Boxe
 where
     T: fmt::Debug + PartialEq + Deserialize<'a>,
 {
-    let deserialized_val: T = from_str(&vdf_text)?;
+    let deserialized_val: T = from_str(vdf_text)?;
     assert_eq!(&deserialized_val, ideal_val, "Failed deserializing");
     Ok(())
 }
