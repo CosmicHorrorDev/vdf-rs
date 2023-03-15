@@ -13,7 +13,7 @@ use crate::{error::Result, Obj, PartialVdf as Vdf, Value};
 macro_rules! common_parsing {
     ($parser:ty, $rule:ty, $parse_escaped:expr) => {
         /// Attempts to parse VDF text to a [`Vdf`]
-        pub fn parse<'a>(s: &'a str) -> Result<Vdf<'a>> {
+        pub fn parse(s: &str) -> Result<Vdf<'_>> {
             let mut full_grammar = <$parser>::parse(<$rule>::vdf, s)?;
 
             // There can be multiple base macros before the initial pair
