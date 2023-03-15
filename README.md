@@ -1,7 +1,7 @@
 # _vdf-rs_
 
-[![codecov](https://codecov.io/gh/LovecraftianHorror/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/LovecraftianHorror/vdf-rs)
-[![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
+[![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CoscmicHorrorDev/vdf-rs)
+[![build status](https://img.shields.io/github/actions/workflow/status/cosmichorrordev/vdf-rs/basic.yml?branch=main)](https://github.com/LovecraftianHorror/vdf-rs/actions)
 [![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 
 The `vdf-rs` project is focused on providing sane methods of dealing with
