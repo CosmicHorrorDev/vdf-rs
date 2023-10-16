@@ -1,6 +1,6 @@
 # _vdf-rs_
 
-[![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CoscmicHorrorDev/vdf-rs)
+[![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
 [![build status](https://img.shields.io/github/actions/workflow/status/cosmichorrordev/vdf-rs/basic.yml?branch=main)](https://github.com/LovecraftianHorror/vdf-rs/actions)
 [![MSRV 1.42](https://img.shields.io/badge/MSRV-1.42-blue.svg)](https://blog.rust-lang.org/2020/03/12/Rust-1.42.html)
 

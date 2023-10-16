@@ -28,10 +28,11 @@ jobs:
           override: true
           components: rustfmt, clippy
 
+      # TODO: just switch over to https://github.com/Swatinem/rust-cache
       - name: Get rustc version
         id: get-version
         run: |
-          echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
+          echo "version=$(rustc -V | sed 's/ /_/g') >> $GITHUB_OUTPUT"
 
       - name: Cargo registry cache
         uses: actions/cache@v2

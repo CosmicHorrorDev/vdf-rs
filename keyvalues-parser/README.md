@@ -1,6 +1,6 @@
 # _keyvalues-parser_
 
-[![codecov](https://codecov.io/gh/LovecraftianHorror/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/LovecraftianHorror/vdf-rs)
+[![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
 [![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
 [![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
 

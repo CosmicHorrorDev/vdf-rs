@@ -17,6 +17,11 @@ use crate::text::parse::{EscapedPestError, RawPestError};
 /// Just a type alias for `Result` with a [`Error`]
 pub type Result<T> = std::result::Result<T, Error>;
 
+// TODO: Swap out the `EscapedParseError` and `RawParseError` for an opaque `Error::Parse` variant
+// that handles displaying the error
+// TODO: should this whole thing be overhauled
+// TODO: Sort out new MSRV
+
 /// All possible errors when parsing or rendering VDF text
 ///
 /// Currently the two variants are parse errors which currently only occurs when `pest` encounters

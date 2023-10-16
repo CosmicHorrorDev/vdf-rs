@@ -139,6 +139,16 @@ impl<'de> DerefMut for Deserializer<'de> {
     }
 }
 
+macro_rules! forward_string_to_parse {
+    ( $( ( $deserializer_name:ident, $visitor_name:ident ) ),* $(,)? ) => {
+        $(
+            fn $deserializer_name<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
+                visitor.$visitor_name(self.next_key_or_str_else_eof()?.parse()?)
+            }
+        )*
+    }
+}
+
 impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
     type Error = Error;
 
@@ -165,45 +175,18 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    fn deserialize_i8<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i8(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i16<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i16(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i32(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i64(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_i128<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_i128(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u8<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u8(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u16<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u16(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u32(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u64<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u64(self.next_key_or_str_else_eof()?.parse()?)
-    }
-
-    fn deserialize_u128<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
-        visitor.visit_u128(self.next_key_or_str_else_eof()?.parse()?)
-    }
+    forward_string_to_parse!(
+        (deserialize_i8, visit_i8),
+        (deserialize_i16, visit_i16),
+        (deserialize_i32, visit_i32),
+        (deserialize_i64, visit_i64),
+        (deserialize_i128, visit_i128),
+        (deserialize_u8, visit_u8),
+        (deserialize_u16, visit_u16),
+        (deserialize_u32, visit_u32),
+        (deserialize_u64, visit_u64),
+        (deserialize_u128, visit_u128),
+    );
 
     fn deserialize_f32<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {
         let float = self.next_finite_float_else_eof()?;
