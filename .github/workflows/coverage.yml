@@ -14,7 +14,7 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2021-11-01
+          toolchain: nightly-2023-10-01
           override: true
 
       - name: Run cargo-tarpaulin
