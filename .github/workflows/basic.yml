@@ -35,13 +35,13 @@ jobs:
           echo "version=$(rustc -V | sed 's/ /_/g') >> $GITHUB_OUTPUT"
 
       - name: Cargo registry cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           key: multiple_toolchains-cargo-registry-${{ steps.get-version.outputs.version }}
 
       - name: Cargo build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: target
           key: multiple_toolchains-cargo-build-${{ steps.get-version.outputs.version }}
@@ -95,13 +95,13 @@ jobs:
           echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
 
       - name: Cargo registry cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           key: msrv_only-cargo-registry-${{ steps.get-version.outputs.version }}
 
       - name: Cargo build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: target
           key: msrv_only-cargo-build-${{ steps.get-version.outputs.version }}
@@ -141,13 +141,13 @@ jobs:
           echo "::set-output name=version::$(rustc -V | sed 's/ /_/g')"
 
       - name: Cargo registry cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           key: nightly_only-cargo-registry-${{ steps.get-version.outputs.version }}
 
       - name: Cargo build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             keyvalues-parser/fuzz/target
