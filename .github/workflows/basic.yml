@@ -18,7 +18,7 @@ jobs:
           - beta
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install ${{ matrix.rust }} toolchain
         uses: actions-rs/toolchain@v1
@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Install MSRV toolchain
         uses: actions-rs/toolchain@v1
@@ -123,7 +123,7 @@ jobs:
     name: Nightly only tasks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       # Pin to a specific nightly version since we only want it for being able
       # to use unstable features, not because we _need_ the newest version.
