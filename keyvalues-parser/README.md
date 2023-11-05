@@ -1,7 +1,7 @@
 # _keyvalues-parser_
 
 [![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
-[![build status](https://img.shields.io/github/workflow/status/lovecraftianhorror/vdf-rs/Build,%20Test,%20Format,%20and%20Lint)](https://github.com/LovecraftianHorror/vdf-rs/actions)
+[![build status](https://img.shields.io/github/actions/workflow/status/CosmicHorrorDev/vdf-rs/basic.yml?branch=main)](https://github.com/CosmicHorrorDev/vdf-rs/actions)
 [![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
 
 `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
@@ -11,7 +11,7 @@ parser provides an untyped `Vdf` representation as well as a linear
 `TokenStream`
 
 The library is primarily used in conjunction with
-[`keyvalues-serde`](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-serde)
+[`keyvalues-serde`](https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-serde)
 which provides a more ergonomic (yet more limiting) means of dealing with VDF
 text.
 
@@ -67,7 +67,7 @@ being taken
 ## Benchmarks
 
 A set of basic benchmarks can be found in the 
-[benches directory](https://github.com/LovecraftianHorror/vdf-rs/tree/main/keyvalues-parser/benches)
+[benches directory](https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-parser/benches)
 
 These just test timing and throughput for both parsing and rendering of a
 fairly typical VDF file
