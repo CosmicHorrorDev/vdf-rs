@@ -1,7 +1,7 @@
 # _vdf-rs_
 
 [![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
-[![build status](https://img.shields.io/github/actions/workflow/status/cosmichorrordev/vdf-rs/basic.yml?branch=main)](https://github.com/LovecraftianHorror/vdf-rs/actions)
+[![build status](https://img.shields.io/github/actions/workflow/status/CosmicHorrorDev/vdf-rs/basic.yml?branch=main)](https://github.com/CosmicHorrorDev/vdf-rs/actions)
 
 The `vdf-rs` project is focused on providing sane methods of dealing with
 Valve's Data Format v1 (VDF) also known as
