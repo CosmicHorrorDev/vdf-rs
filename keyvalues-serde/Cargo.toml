@@ -3,26 +3,26 @@ name = "keyvalues-serde"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.56"
+rust-version = "1.61"
 
-authors = ["Lovecraftian Horror <LovecraftianHorror@pm.me>"]
+authors = ["Cosmic <CosmicHorrorDev@pm.me>"]
 keywords = ["keyvalues", "vdf", "steam", "serde"]
 description = "(De)serialize VDF text with serde"
-homepage = "https://github.com/lovecraftianhorror/vdf-rs"
-repository = "https://github.com/lovecraftianhorror/vdf-rs"
+homepage = "https://github.com/CosmicHorrorDev/vdf-rs"
+repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
 keyvalues-parser = { path = "../keyvalues-parser" }
-serde = "1.0.125"
+serde = "1.0.190"
 # TODO: drop this
-thiserror = "1.0.24"
+thiserror = "1.0.50"
 
 [dev-dependencies]
-criterion = { version = "0.4.0", default-features = false }
-insta = "1.21.0"
+criterion = { version = "0.5.1", default-features = false }
+insta = "1.34.0"
 maplit = "1.0.2"
-pretty_assertions = "1.2.1"
-serde = { version = "1.0.125", features = ["derive"] }
+pretty_assertions = "1.4.0"
+serde = { version = "1.0.190", features = ["derive"] }
 
 [[bench]]
 name = "ser_de"
