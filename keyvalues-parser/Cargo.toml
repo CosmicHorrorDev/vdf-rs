@@ -13,15 +13,15 @@ repository = "https://github.com/lovecraftianhorror/vdf-rs"
 
 [dependencies]
 # TODO: switch parsing to `nom`
-pest = "2.1"
-pest_derive = "2.1"
+pest = "2.5"
+pest_derive = "2.5"
 # TODO: drop this
-thiserror = "1.0.24"
+thiserror = "1.0.50"
 
 [dev-dependencies]
 criterion = { version = "0.4.0", default-features = false }
-insta = "1.21.0"
-pretty_assertions = "1.2.1"
+insta = "1.34.0"
+pretty_assertions = "1.4.0"
 
 [[bench]]
 name = "parser"
