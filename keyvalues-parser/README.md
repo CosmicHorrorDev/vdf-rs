@@ -47,7 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vdf = Vdf::parse(LOGIN_USERS_VDF)?;
     assert_eq!(
         "12345678901234567",
-	vdf.value.unwrap_obj().keys().next().unwrap(),
+        vdf.value.unwrap_obj().keys().next().unwrap(),
     );
 
     Ok(())
