@@ -15,17 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
-      - name: cargo test --all-features
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features --manifest-path keyvalues-serde/Cargo.toml
+      - name: Sanity check test run
+        run: |
+          cargo test --all-features --manifest-path keyvalues-serde/Cargo.toml
 
   release:
     needs: test
@@ -35,14 +27,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-
       - name: Publish serde library
-        uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --manifest-path keyvalues-serde/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}
+        run: |
+          cargo publish --manifest-path keyvalues-serde/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}

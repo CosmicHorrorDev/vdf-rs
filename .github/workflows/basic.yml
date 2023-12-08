@@ -7,6 +7,9 @@ on:
 
 name: "Build, Test, Format, and Lint"
 
+env:
+  RUSTFLAGS: "--deny warnings"
+
 jobs:
   multiple_toolchains:
     name: Multiple toolchain tasks
@@ -21,12 +24,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install ${{ matrix.rust }} toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: ${{ matrix.rust }}
-          override: true
-          components: rustfmt, clippy
+          components: clippy, rustfmt
 
       - name: Cache
         uses: Swatinem/rust-cache@v2
@@ -34,28 +35,17 @@ jobs:
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile
       - name: Build all targets
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all-targets --all-features
-
+        run: |
+          cargo build --all-targets --all-features
       - name: Run the test suite
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --all-features
-
+        run: |
+          cargo test --all-features
       - name: Check formatting
-        uses: actions-rs/cargo@v1
-        with:
-          command: fmt
-          args: --all -- --check
-
+        run: |
+          cargo fmt --all -- --check
       - name: Check clippy lints
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: |
+          cargo clippy
 
   # Only check building and clippy on MSRV since the other tasks are prone to
   # problems from dev dependencies having higher MSRVs
@@ -67,11 +57,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install MSRV toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: 1.61.0
-          override: true
           components: clippy
 
       - name: Cache
@@ -79,16 +67,11 @@ jobs:
 
       # All targets isn't used here due to MSRV issues with `clap`
       - name: Build all targets
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --all-features
-
+        run: |
+          cargo build --all-features
       - name: Check clippy lints
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: |
+          cargo clippy
 
   nightly_only:
     name: Nightly only tasks
@@ -100,24 +83,18 @@ jobs:
       # to use unstable features, not because we _need_ the newest version.
       # This makes caching actually viable for more than just a day
       - name: Install nightly toolchain
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
-          profile: minimal
           toolchain: nightly-2023-10-01
-          override: true
       
       - name: Cache
         uses: Swatinem/rust-cache@v2
 
       # Actually check the fuzzers so that they don't break silently
       - name: Check parser fuzzers
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --manifest-path keyvalues-parser/fuzz/Cargo.toml
+        run: |
+          cargo check --manifest-path keyvalues-parser/fuzz/Cargo.toml
 
       - name: Check ser de fuzzers
-        uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --manifest-path keyvalues-serde/fuzz/Cargo.toml
+        run: |
+          cargo check --manifest-path keyvalues-serde/fuzz/Cargo.toml
