@@ -68,7 +68,7 @@ where
     value.serialize(&mut serializer)?;
 
     if let Some(key) = maybe_key {
-        match serializer.tokens.get(0) {
+        match serializer.tokens.first() {
             // Replace the old key
             Some(NaiveToken::Str(_old_key)) => {
                 serializer.tokens[0] = NaiveToken::Str(key.to_owned());
