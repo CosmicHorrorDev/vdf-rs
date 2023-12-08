@@ -74,7 +74,7 @@ impl<'de> Deserializer<'de> {
     pub fn new_with_key(vdf: Vdf<'de>) -> Result<(Self, Key<'de>)> {
         let token_stream = TokenStream::from(vdf);
 
-        let key = if let Some(Token::Key(key)) = token_stream.get(0) {
+        let key = if let Some(Token::Key(key)) = token_stream.first() {
             key.clone()
         } else {
             unreachable!("Tokenstream must start with key");
