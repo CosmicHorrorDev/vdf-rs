@@ -1,11 +1,14 @@
-use keyvalues_parser::{Obj, Value, Vdf};
-
 use std::borrow::Cow;
 
-use crate::tokens::{
-    naive::{NaiveToken, NaiveTokenStream},
-    Token, TokenStream,
+use crate::{
+    tokens::{
+        naive::{NaiveToken, NaiveTokenStream},
+        Token, TokenStream,
+    },
+    Error,
 };
+
+use keyvalues_parser::{Obj, Value, Vdf};
 
 // "outer"
 // {
@@ -53,12 +56,11 @@ fn vdf_from_token_stream_basics() {
         }
     };
 
-    let actual = Vdf::from(&naive_token_stream);
+    let actual = Vdf::try_from(&naive_token_stream).unwrap();
     assert_eq!(actual, ideal);
 }
 
 #[test]
-#[should_panic]
 fn invalid_vdf_nested_seq() {
     let naive_token_stream = NaiveTokenStream(vec![
         NaiveToken::str("outer"),
@@ -72,11 +74,11 @@ fn invalid_vdf_nested_seq() {
         NaiveToken::ObjEnd,
     ]);
 
-    let _ = Vdf::from(&naive_token_stream);
+    let err = Vdf::try_from(&naive_token_stream).unwrap_err();
+    assert!(matches!(err, Error::ExpectedSomeNonSeqValue), "{err:?}");
 }
 
 #[test]
-#[should_panic]
 fn invalid_vdf_obj_key() {
     let naive_token_stream = NaiveTokenStream(vec![
         NaiveToken::str("outer"),
@@ -86,11 +88,11 @@ fn invalid_vdf_obj_key() {
         NaiveToken::ObjEnd,
     ]);
 
-    let _ = Vdf::from(&naive_token_stream);
+    // TODO: clean up error type, so we can compare
+    let _err = Vdf::try_from(&naive_token_stream).unwrap_err();
 }
 
 #[test]
-#[should_panic]
 fn invalid_vdf_seq_key() {
     let naive_token_stream = NaiveTokenStream(vec![
         NaiveToken::str("outer"),
@@ -100,7 +102,8 @@ fn invalid_vdf_seq_key() {
         NaiveToken::ObjEnd,
     ]);
 
-    let _ = Vdf::from(&naive_token_stream);
+    // TODO: clean up error type, so we can compare
+    let _err = Vdf::try_from(&naive_token_stream).unwrap_err();
 }
 
 #[test]

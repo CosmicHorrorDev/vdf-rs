@@ -1,4 +1,6 @@
-use keyvalues_serde::{from_str, Error, Result};
+use std::collections::BTreeMap;
+
+use keyvalues_serde::{from_str, to_string, Error, Result};
 use serde::Deserialize;
 
 mod utils;
@@ -37,4 +39,10 @@ fn invalid_types() {
 
     let unit_struct: Result<Container<Unit>> = from_str(DUMMY_TEXT);
     check!(unit_struct, "Unit Struct");
+}
+
+#[test]
+fn missing_top_level_key() {
+    // TODO: clean up error type, so we can compare
+    let _err = to_string(&BTreeMap::<(), ()>::new()).unwrap_err();
 }

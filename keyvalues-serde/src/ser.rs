@@ -79,7 +79,7 @@ where
         }
     }
 
-    let vdf = Vdf::from(&serializer.tokens);
+    let vdf = Vdf::try_from(&serializer.tokens)?;
     write!(writer, "{}", vdf)?;
 
     Ok(())
