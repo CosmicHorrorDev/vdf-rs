@@ -10,10 +10,12 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use keyvalues_parser::{Key, Obj, Value, Vdf};
-
 #[cfg(doc)]
 use crate::tokens::Token;
+use crate::{Error, Result};
+
+use keyvalues_parser::{Key, Obj, Value, Vdf};
+use serde::ser::Error as _;
 
 /// A stream of [`NaiveToken`]s that do not encode what is a key vs a value
 ///
@@ -47,37 +49,45 @@ impl DerefMut for NaiveTokenStream {
 
 // The conversion from `NaiveTokenStream` to `Vdf` leverages all the `process_*` functions which
 // pass off an owned iterator through all of them to deal with the borrow checker
-impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
-    fn from(naive_token_stream: &'a NaiveTokenStream) -> Self {
+impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
+    type Error = Error;
+
+    fn try_from(naive_token_stream: &'a NaiveTokenStream) -> Result<Self> {
         // Just some helper functions for munching through tokens
         fn process_key_values<'a, I>(
             mut tokens: Peekable<I>,
-        ) -> (Peekable<I>, Key<'a>, Vec<Value<'a>>)
+        ) -> Result<(Peekable<I>, Key<'a>, Vec<Value<'a>>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            if let Some(NaiveToken::Str(s)) = tokens.next() {
+            let maybe_token = tokens.next();
+            if let Some(NaiveToken::Str(s)) = maybe_token {
                 let key = Cow::from(s);
 
-                let res = process_values(tokens);
+                let res = process_values(tokens)?;
                 tokens = res.0;
                 let values = res.1;
 
-                (tokens, key, values)
+                Ok((tokens, key, values))
             } else {
-                unreachable!("`Serializer` outputs valid `Vdf` structure");
+                // TODO: this shouldn't really be a custom error, but we need a better base error
+                // type
+                Err(Error::custom(format!(
+                    "Expected key, found: {:?}",
+                    maybe_token
+                )))
             }
         }
 
-        fn process_values<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Vec<Value<'a>>)
+        fn process_values<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Vec<Value<'a>>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            match tokens.next() {
+            let pair = match tokens.next() {
                 // A `Str` is a single value
                 Some(NaiveToken::Str(s)) => (tokens, vec![Value::Str(Cow::from(s.clone()))]),
                 Some(NaiveToken::ObjBegin) => {
-                    let (tokens, value) = process_obj(tokens);
+                    let (tokens, value) = process_obj(tokens)?;
                     (tokens, vec![value])
                 }
                 // Sequences are a series of values that can't contain a sequence (vdf limitation)
@@ -89,7 +99,7 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
                             tokens.next();
                             break;
                         } else {
-                            let res = process_non_seq_value(tokens);
+                            let res = process_non_seq_value(tokens)?;
                             tokens = res.0;
                             if let Some(val) = res.1 {
                                 values.push(val);
@@ -101,27 +111,33 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
                 }
                 // VDF represents `Null` as omitting the value
                 Some(NaiveToken::Null) => (tokens, Vec::new()),
-                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
-            }
+                _ => return Err(Error::ExpectedSomeValue),
+            };
+
+            Ok(pair)
         }
 
-        fn process_non_seq_value<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Option<Value<'a>>)
+        fn process_non_seq_value<'a, I>(
+            mut tokens: Peekable<I>,
+        ) -> Result<(Peekable<I>, Option<Value<'a>>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            match tokens.next() {
+            let pair = match tokens.next() {
                 Some(NaiveToken::Str(s)) => (tokens, Some(Value::Str(Cow::from(s)))),
                 Some(NaiveToken::ObjBegin) => {
-                    let (tokens, value) = process_obj(tokens);
+                    let (tokens, value) = process_obj(tokens)?;
                     (tokens, Some(value))
                 }
                 // VDF represents `Null` as omitting the value
                 Some(NaiveToken::Null) => (tokens, None),
-                _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
-            }
+                _ => return Err(Error::ExpectedSomeNonSeqValue),
+            };
+
+            Ok(pair)
         }
 
-        fn process_obj<'a, I>(mut tokens: Peekable<I>) -> (Peekable<I>, Value<'a>)
+        fn process_obj<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Value<'a>)>
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
@@ -134,30 +150,29 @@ impl<'a> From<&'a NaiveTokenStream> for Vdf<'a> {
                     }
                     // An object is a series of key-value pairs
                     Some(_) => {
-                        let res = process_key_values(tokens);
+                        let res = process_key_values(tokens)?;
                         tokens = res.0;
                         let key = res.1;
                         let values = res.2;
                         obj.insert(key, values);
                     }
-                    _ => unreachable!("`Serializer` outputs valid `Vdf` structure"),
+                    _ => return Err(Error::ExpectedObjectStart),
                 }
             }
 
-            (tokens, Value::Obj(obj))
+            Ok((tokens, Value::Obj(obj)))
         }
 
         let tokens = naive_token_stream.iter().peekable();
-        let (mut tokens, key, mut values) = process_key_values(tokens);
+        let (mut tokens, key, mut values) = process_key_values(tokens)?;
 
-        assert!(
-            tokens.next().is_none(),
-            "`Serializer` outputs valid `Vdf` structure"
-        );
-        let value = values
-            .pop()
-            .expect("`Serializer` outputs valid `Vdf` structure");
-        Self::new(key, value)
+        if tokens.next().is_some() {
+            return Err(Error::TrailingTokens);
+        }
+        let value = values.pop().ok_or_else(|| {
+            Error::custom("Syntax error: Serialized multiple values when there should only be one")
+        })?;
+        Ok(Self::new(key, value))
     }
 }
 
