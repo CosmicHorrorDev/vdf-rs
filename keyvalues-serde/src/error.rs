@@ -8,6 +8,7 @@
 // https://github.com/dtolnay/thiserror/issues/141
 #![allow(renamed_and_removed_lints)]
 #![allow(clippy::unknown_clippy_lints)]
+#![allow(clippy::large_enum_variant)]
 
 use keyvalues_parser::error::Error as ParserError;
 use serde::{de, ser};
