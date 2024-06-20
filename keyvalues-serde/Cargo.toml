@@ -27,3 +27,7 @@ serde = { version = "1.0.190", features = ["derive"] }
 [[bench]]
 name = "ser_de"
 harness = false
+
+[lints.rust.unexpected_cfgs]
+level = "warn"
+check-cfg = ["cfg(fuzzing)"]
