@@ -24,5 +24,10 @@ publishing at the very least the following checklist should be covered
     - [ ] Bump the version in `Cargo.toml`
     - [ ] Bump the version in the crate's `README.md`
     - [ ] Run the benchmarks and update the results in `BENCHMARKS.md`
+    - [ ] Update the MSRV `$ cargo msrv --min 1.60.0 -- cargo check`
+    - [ ] Consult with `cargo-semver-checks`
+    - [ ] Consult with `cargo-deny`
+    - [ ] Write relevant release notes in corresponding `CHANGELOG.md`
 2. Push the appropriate tag as noted above
-3. Write up the release notes and post them to GitHub
+3. Write up release notes from the `CHANGELOG.md` and publish them to the GH
+   release
