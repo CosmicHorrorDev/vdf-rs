@@ -1,16 +1,6 @@
 //! All error information for parsing and rendering
 
-// TODO: is this still true?
-// This library supports an MSRV of 1.42.0 which is before the addition of
-// clippy::nonstandard_macro_braces. This lint is used within `thiserror` which in turn gets
-// expanded out here causing clippy to throw out an unknown lint warning which fails CI. Until this
-// gets resolved upstream I'm going to allow `unknown_clippy_lints` as a stopgap. Relevant:
-// https://github.com/dtolnay/thiserror/issues/140
-// https://github.com/dtolnay/thiserror/issues/141
-#![allow(renamed_and_removed_lints)]
-#![allow(clippy::unknown_clippy_lints)]
-
-use thiserror::Error as ThisError;
+use std::fmt;
 
 use crate::text::parse::{EscapedPestError, RawPestError};
 
@@ -19,20 +9,51 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 // TODO: Swap out the `EscapedParseError` and `RawParseError` for an opaque `Error::Parse` variant
 // that handles displaying the error
-// TODO: should this whole thing be overhauled
+// TODO: should this whole thing be overhauled (future me here: yes)
 // TODO: Sort out new MSRV
+// TODO: split the `Error` into a separate parse and render error
 
 /// All possible errors when parsing or rendering VDF text
 ///
 /// Currently the two variants are parse errors which currently only occurs when `pest` encounters
-#[derive(ThisError, Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
-    #[error("Failed parsing input Error: {0}")]
-    EscapedParseError(#[from] EscapedPestError),
-    #[error("Failed parsing input Error: {0}")]
-    RawParseError(#[from] RawPestError),
-    #[error("Failed rendering input Error: {0}")]
-    RenderError(#[from] std::fmt::Error),
-    #[error("Encountered invalid character in raw string: {invalid_char:?}")]
+    EscapedParseError(EscapedPestError),
+    RawParseError(RawPestError),
+    RenderError(fmt::Error),
     RawRenderError { invalid_char: char },
 }
+
+impl From<EscapedPestError> for Error {
+    fn from(e: EscapedPestError) -> Self {
+        Self::EscapedParseError(e)
+    }
+}
+
+impl From<RawPestError> for Error {
+    fn from(e: RawPestError) -> Self {
+        Self::RawParseError(e)
+    }
+}
+
+impl From<std::fmt::Error> for Error {
+    fn from(e: std::fmt::Error) -> Self {
+        Self::RenderError(e)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::EscapedParseError(e) => write!(f, "Failed parsing input Error: {e}"),
+            Self::RawParseError(e) => write!(f, "Failed parsing input Error: {e}"),
+            Self::RenderError(e) => write!(f, "Failed rendering input Error: {e}"),
+            Self::RawRenderError { invalid_char } => write!(
+                f,
+                "Encountered invalid character in raw string: {invalid_char:?}"
+            ),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
