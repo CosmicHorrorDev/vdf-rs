@@ -3,7 +3,7 @@ name = "keyvalues-parser"
 version = "0.2.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.61"
+rust-version = "1.70"
 
 authors = ["Cosmic <CosmicHorrorDev@pm.me>"]
 keywords = ["keyvalues", "vdf", "steam", "parser"]
