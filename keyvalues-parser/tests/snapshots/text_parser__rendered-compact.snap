@@ -1,0 +1,11 @@
+---
+source: keyvalues-parser/tests/text_parser.rs
+expression: rendered
+---
+"foo"
+{
+	""
+	{
+	}
+	"bar"	"baz"
+}

@@ -69,6 +69,7 @@ pub struct Deserializer<'de> {
     tokens: Peekable<IntoIter<Token<'de>>>,
 }
 
+// TODO: almost none of these should be `pub`
 impl<'de> Deserializer<'de> {
     /// Attempts to create a new VDF deserializer along with returning the top level VDF key
     pub fn new_with_key(vdf: Vdf<'de>) -> Result<(Self, Key<'de>)> {
@@ -125,6 +126,7 @@ impl<'de> Deserializer<'de> {
     }
 }
 
+// TODO: almost none of these should be `pub`
 impl<'de> Deref for Deserializer<'de> {
     type Target = Peekable<IntoIter<Token<'de>>>;
 
@@ -133,6 +135,7 @@ impl<'de> Deref for Deserializer<'de> {
     }
 }
 
+// TODO: almost none of these should be `pub`
 impl<'de> DerefMut for Deserializer<'de> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.tokens
