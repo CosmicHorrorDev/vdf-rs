@@ -13,8 +13,8 @@ repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
 # TODO: switch parsing to `nom`
-pest = "2.5"
-pest_derive = "2.5"
+pest = "2.7"
+pest_derive = "2.7"
 
 [dev-dependencies]
 criterion.workspace = true
