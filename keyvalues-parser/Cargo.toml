@@ -15,8 +15,6 @@ repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 # TODO: switch parsing to `nom`
 pest = "2.5"
 pest_derive = "2.5"
-# TODO: drop this
-thiserror = "1.0.50"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", default-features = false }

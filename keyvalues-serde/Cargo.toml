@@ -14,8 +14,6 @@ repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 [dependencies]
 keyvalues-parser = { path = "../keyvalues-parser", version = "0.2.0" }
 serde = "1.0.190"
-# TODO: drop this
-thiserror = "1.0.50"
 
 [dev-dependencies]
 criterion = { version = "0.5.1", default-features = false }
