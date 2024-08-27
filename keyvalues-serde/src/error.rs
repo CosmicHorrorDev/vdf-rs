@@ -1,22 +1,13 @@
 //! Contains error information for `keyvalues-serde`
 
-// This library supports an MSRV of 1.42.0 which is before the addition of
-// clippy::nonstandard_macro_braces. This lint is used within `thiserror` which in turn gets
-// expanded out here causing clippy to throw out an unknown lint warning which fails CI. Until this
-// gets resolved upstream I'm going to allow `unknown_clippy_lints` as a stopgap. Relevant:
-// https://github.com/dtolnay/thiserror/issues/140
-// https://github.com/dtolnay/thiserror/issues/141
-#![allow(renamed_and_removed_lints)]
-#![allow(clippy::unknown_clippy_lints)]
+// TODO: figure this out before the next breaking release
 #![allow(clippy::large_enum_variant)]
 
 use keyvalues_parser::error::Error as ParserError;
 use serde::{de, ser};
-use thiserror::Error as ThisError;
 
 use std::{
-    fmt::Display,
-    io,
+    fmt, io,
     num::{ParseFloatError, ParseIntError},
 };
 
@@ -24,69 +15,39 @@ use std::{
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// All the possible errors that can be encountered when (de)serializing VDF text
-#[derive(ThisError, Debug)]
+#[derive(Debug)]
 pub enum Error {
-    #[error("{0}")]
     Message(String),
-
-    #[error("Failed parsing VDF text")]
-    Parse(#[from] ParserError),
-
-    #[error("Encountered I/O Error: {0}")]
-    Io(#[from] io::Error),
-
-    #[error("Only finite f32 values are allowed. Instead got: {0}")]
+    Parse(ParserError),
+    Io(io::Error),
     NonFiniteFloat(f32),
-
-    #[error("EOF while parsing unknown type")]
     EofWhileParsingAny,
-    #[error("EOF while parsing key")]
     EofWhileParsingKey,
-    #[error("EOF while parsing a value")]
     EofWhileParsingValue,
-    #[error("EOF while parsing key or value")]
     EofWhileParsingKeyOrValue,
-    #[error("EOF while parsing an object")]
     EofWhileParsingObject,
-    #[error("EOF while parsing a sequence")]
     EofWhileParsingSequence,
-
-    #[error("Expected a valid token for object start")]
     ExpectedObjectStart,
-    #[error("Expected some valid value")]
     ExpectedSomeValue,
-    #[error("Expected a non-sequence value")]
     ExpectedSomeNonSeqValue,
-    #[error("Expected some valid ident")]
     ExpectedSomeIdent,
-
-    #[error("Tried parsing an invalid boolean")]
     InvalidBoolean,
-    #[error("Tried parsing an invalid char")]
     InvalidChar,
-    #[error("Tried parsing an invalid number")]
     InvalidNumber,
-
-    #[error("Tokens remain after deserializing")]
     TrailingTokens,
-
-    #[error("Unexpected end of object")]
     UnexpectedEndOfObject,
-    #[error("Unexpected end of sequence")]
     UnexpectedEndOfSequence,
-
-    #[error("Tried using unsupported type: {0}")]
     Unsupported(&'static str),
 }
 
 impl de::Error for Error {
-    fn custom<T: Display>(msg: T) -> Self {
+    fn custom<T: fmt::Display>(msg: T) -> Self {
         Self::Message(msg.to_string())
     }
 }
 
 impl ser::Error for Error {
-    fn custom<T: Display>(msg: T) -> Self {
+    fn custom<T: fmt::Display>(msg: T) -> Self {
         Self::Message(msg.to_string())
     }
 }
@@ -102,3 +63,50 @@ impl From<ParseFloatError> for Error {
         Self::InvalidNumber
     }
 }
+
+impl From<ParserError> for Error {
+    fn from(e: ParserError) -> Self {
+        Self::Parse(e)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Self {
+        Self::Io(e)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Message(msg) => f.write_str(msg),
+            Self::Parse(_) => f.write_str("Failed parsing VDF text"),
+            Self::Io(e) => write!(f, "Encountered I/O Error: {e}"),
+            Self::NonFiniteFloat(non_finite) => {
+                write!(
+                    f,
+                    "Only finite f32 values are allowed. Instead got: {non_finite}"
+                )
+            }
+            Self::EofWhileParsingAny => f.write_str("EOF while parsing unknown type"),
+            Self::EofWhileParsingKey => f.write_str("EOF while parsing key"),
+            Self::EofWhileParsingValue => f.write_str("EOF while parsing a value"),
+            Self::EofWhileParsingKeyOrValue => f.write_str("EOF while parsing key or value"),
+            Self::EofWhileParsingObject => f.write_str("EOF while parsing an object"),
+            Self::EofWhileParsingSequence => f.write_str("EOF while parsing a sequence"),
+            Self::ExpectedObjectStart => f.write_str("Expected a valid token for object start"),
+            Self::ExpectedSomeValue => f.write_str("Expected some valid value"),
+            Self::ExpectedSomeNonSeqValue => f.write_str("Expected a non-sequence value"),
+            Self::ExpectedSomeIdent => f.write_str("Expected some valid ident"),
+            Self::InvalidBoolean => f.write_str("Tried parsing an invalid boolean"),
+            Self::InvalidChar => f.write_str("Tried parsing an invalid char"),
+            Self::InvalidNumber => f.write_str("Tried parsing an invalid number"),
+            Self::TrailingTokens => f.write_str("Tokens remain after deserializing"),
+            Self::UnexpectedEndOfObject => f.write_str("Unexpected end of object"),
+            Self::UnexpectedEndOfSequence => f.write_str("Unexpected end of sequence"),
+            Self::Unsupported(type_name) => write!(f, "Tried using unsupported type: {type_name}"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
