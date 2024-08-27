@@ -1,5 +1,7 @@
 on:
   push:
+    branches:
+    - main
   pull_request:
   schedule:
     # Run weekly to keep Rust toolchain changes fresh
