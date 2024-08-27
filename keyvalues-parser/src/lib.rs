@@ -13,7 +13,7 @@ pub mod error;
 pub mod text;
 
 /// A Key is simply an alias for `Cow<str>`
-pub type Key<'a> = Cow<'a, str>;
+pub type Key<'text> = Cow<'text, str>;
 
 /// A loosely typed representation of VDF text
 ///
@@ -68,13 +68,13 @@ pub type Key<'a> = Cow<'a, str>;
 /// # Ok::<(), keyvalues_parser::error::Error>(())
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct Vdf<'a> {
-    pub key: Key<'a>,
-    pub value: Value<'a>,
+pub struct Vdf<'text> {
+    pub key: Key<'text>,
+    pub value: Value<'text>,
 }
 
-impl<'a> From<PartialVdf<'a>> for Vdf<'a> {
-    fn from(partial: PartialVdf<'a>) -> Self {
+impl<'text> From<PartialVdf<'text>> for Vdf<'text> {
+    fn from(partial: PartialVdf<'text>) -> Self {
         Self {
             key: partial.key,
             value: partial.value,
@@ -85,13 +85,13 @@ impl<'a> From<PartialVdf<'a>> for Vdf<'a> {
 // TODO: Just store a `Vdf` internally?
 // TODO: don't expose these publicly?
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PartialVdf<'a> {
-    pub key: Key<'a>,
-    pub value: Value<'a>,
-    pub bases: Vec<Cow<'a, str>>,
+pub struct PartialVdf<'text> {
+    pub bases: Vec<Cow<'text, str>>,
+    pub key: Key<'text>,
+    pub value: Value<'text>,
 }
 
-impl<'a> Vdf<'a> {
+impl<'text> Vdf<'text> {
     /// Creates a [`Vdf`] using a provided key and value
     ///
     /// ```
@@ -103,18 +103,19 @@ impl<'a> Vdf<'a> {
     /// // "Much Key"  "Such Wow"
     /// println!("{}", vdf);
     /// ```
-    pub fn new(key: Key<'a>, value: Value<'a>) -> Self {
+    pub fn new(key: Key<'text>, value: Value<'text>) -> Self {
         Self { key, value }
     }
 }
 
-type ObjInner<'a> = BTreeMap<Key<'a>, Vec<Value<'a>>>;
-type ObjInnerPair<'a> = (Key<'a>, Vec<Value<'a>>);
+// TODO: why is this type alias a thing if it's not private but the usage of it inside `Obj` is?
+type ObjInner<'text> = BTreeMap<Key<'text>, Vec<Value<'text>>>;
+type ObjInnerPair<'text> = (Key<'text>, Vec<Value<'text>>);
 
 #[derive(Debug, Clone, Default, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Obj<'a>(pub ObjInner<'a>);
+pub struct Obj<'text>(pub ObjInner<'text>);
 
-impl<'a> Obj<'a> {
+impl<'text> Obj<'text> {
     /// Creates an empty object value
     ///
     /// Internally This is just a [`BTreeMap`] that maps [`Key`]s to a [`Vec`] of [`Value`]s
@@ -157,7 +158,7 @@ impl<'a> Obj<'a> {
     /// // }
     /// println!("{:#?}", inner);
     /// ```
-    pub fn into_inner(self) -> ObjInner<'a> {
+    pub fn into_inner(self) -> ObjInner<'text> {
         self.0
     }
 
@@ -196,13 +197,13 @@ impl<'a> Obj<'a> {
     ///     ]
     /// );
     /// ```
-    pub fn into_vdfs(self) -> IntoVdfs<'a> {
+    pub fn into_vdfs(self) -> IntoVdfs<'text> {
         IntoVdfs::new(self)
     }
 }
 
-impl<'a> FromIterator<ObjInnerPair<'a>> for Obj<'a> {
-    fn from_iter<T: IntoIterator<Item = ObjInnerPair<'a>>>(iter: T) -> Self {
+impl<'text> FromIterator<ObjInnerPair<'text>> for Obj<'text> {
+    fn from_iter<T: IntoIterator<Item = ObjInnerPair<'text>>>(iter: T) -> Self {
         let mut inner = BTreeMap::new();
         for (key, values) in iter {
             inner.insert(key, values);
@@ -212,15 +213,15 @@ impl<'a> FromIterator<ObjInnerPair<'a>> for Obj<'a> {
     }
 }
 
-impl<'a> Deref for Obj<'a> {
-    type Target = ObjInner<'a>;
+impl<'text> Deref for Obj<'text> {
+    type Target = ObjInner<'text>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl<'a> DerefMut for Obj<'a> {
+impl<'text> DerefMut for Obj<'text> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -229,14 +230,14 @@ impl<'a> DerefMut for Obj<'a> {
 /// An iterator over an [`Obj`]'s [`Vdf`] pairs
 ///
 /// Typically created by calling [`Obj::into_vdfs`] on an existing object
-pub struct IntoVdfs<'a> {
+pub struct IntoVdfs<'text> {
     // TODO: can this just store an iterator for the values instead of `.collect()`ing
-    current_entry: Option<ObjInnerPair<'a>>,
-    it: IntoIter<Key<'a>, Vec<Value<'a>>>,
+    current_entry: Option<ObjInnerPair<'text>>,
+    it: IntoIter<Key<'text>, Vec<Value<'text>>>,
 }
 
-impl<'a> IntoVdfs<'a> {
-    fn new(obj: Obj<'a>) -> Self {
+impl<'text> IntoVdfs<'text> {
+    fn new(obj: Obj<'text>) -> Self {
         Self {
             current_entry: None,
             it: obj.into_inner().into_iter(),
@@ -244,8 +245,8 @@ impl<'a> IntoVdfs<'a> {
     }
 }
 
-impl<'a> Iterator for IntoVdfs<'a> {
-    type Item = Vdf<'a>;
+impl<'text> Iterator for IntoVdfs<'text> {
+    type Item = Vdf<'text>;
 
     fn next(&mut self) -> Option<Self::Item> {
         // Iteration will pop the first pair off `current_entry` if it's set and then falls back to
@@ -281,12 +282,12 @@ impl<'a> Iterator for IntoVdfs<'a> {
 /// let value_obj = Value::Obj(Obj::new());
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum Value<'a> {
-    Str(Cow<'a, str>),
-    Obj(Obj<'a>),
+pub enum Value<'text> {
+    Str(Cow<'text, str>),
+    Obj(Obj<'text>),
 }
 
-impl<'a> Value<'a> {
+impl<'text> Value<'text> {
     /// Returns if the current value is the `Str` variant
     ///
     /// ```
@@ -363,7 +364,7 @@ impl<'a> Value<'a> {
     ///     Value::Str(Cow::from("SOME TEXT"))
     /// );
     /// ```
-    pub fn get_mut_str(&mut self) -> Option<&mut Cow<'a, str>> {
+    pub fn get_mut_str(&mut self) -> Option<&mut Cow<'text, str>> {
         if let Self::Str(s) = self {
             Some(s)
         } else {
@@ -386,7 +387,7 @@ impl<'a> Value<'a> {
     /// // })
     /// println!("{:?}", value);
     /// ```
-    pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'a>> {
+    pub fn get_mut_obj(&mut self) -> Option<&mut Obj<'text>> {
         if let Self::Obj(obj) = self {
             Some(obj)
         } else {
@@ -416,7 +417,7 @@ impl<'a> Value<'a> {
     /// let value = Value::Obj(Obj::new());
     /// value.unwrap_str(); // <-- panics
     /// ```
-    pub fn unwrap_str(self) -> Cow<'a, str> {
+    pub fn unwrap_str(self) -> Cow<'text, str> {
         self.expect_str("Called `unwrap_str` on a `Value::Obj` variant")
     }
 
@@ -442,12 +443,12 @@ impl<'a> Value<'a> {
     /// let value = Value::Str(Cow::from("D'Oh"));
     /// value.unwrap_obj(); // <-- panics
     /// ```
-    pub fn unwrap_obj(self) -> Obj<'a> {
+    pub fn unwrap_obj(self) -> Obj<'text> {
         self.expect_obj("Called `unwrap_obj` on a `Value::Str` variant")
     }
 
     /// Refer to [Value::unwrap_str]. Same situation, but with a custom message
-    pub fn expect_str(self, msg: &str) -> Cow<'a, str> {
+    pub fn expect_str(self, msg: &str) -> Cow<'text, str> {
         if let Self::Str(s) = self {
             s
         } else {
@@ -456,7 +457,7 @@ impl<'a> Value<'a> {
     }
 
     /// Refer to [Value::unwrap_obj]. Same situation, but with a custom message
-    pub fn expect_obj(self, msg: &str) -> Obj<'a> {
+    pub fn expect_obj(self, msg: &str) -> Obj<'text> {
         if let Self::Obj(obj) = self {
             obj
         } else {

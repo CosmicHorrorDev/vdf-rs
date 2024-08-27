@@ -167,6 +167,7 @@ parse_test_generator!(
     snapshot_test_parse_and_render,
     basic,
     comments,
+    compact,
     unquoted_strings,
     special_characters,
     null_byte
