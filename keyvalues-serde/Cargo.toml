@@ -18,7 +18,6 @@ serde.workspace = true
 [dev-dependencies]
 criterion.workspace = true
 insta.workspace = true
-maplit.workspace = true
 pretty_assertions.workspace = true
 serde = { workspace = true, features = ["derive"] }
 
