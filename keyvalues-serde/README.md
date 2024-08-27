@@ -12,15 +12,18 @@ makes it easy to deal with VDF text files using strongly typed Rust structures.
 
 ## Installation
 
-Just add the following to your `Cargo.toml`
+Just add the library to your `Cargo.toml`
 
-```toml
-[dependencies]
-keyvalues-serde = "0.1.0"
-serde = { version = "1.0.0", features = ["derive"] }
+```console
+$ cargo add keyvalues-serde
 ```
 
 ## Quickstart
+
+```console
+$ cargo add keyvalues-serde
+$ cargo add serde --features derive
+```
 
 ```rust
 use serde::Deserialize;

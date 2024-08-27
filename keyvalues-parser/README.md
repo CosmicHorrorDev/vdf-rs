@@ -19,9 +19,8 @@ text.
 
 Just add the library to your `Cargo.toml`
 
-```toml
-[dependencies]
-keyvalues-parser = "0.1.0"
+```console
+$ cargo add keyvalues-parser
 ```
 
 ## Quickstart
