@@ -5,7 +5,12 @@ use crate::{
     Key, Obj, PartialVdf, Value, Vdf,
 };
 
-// TODO: rename `PartialVdf` to `TopLevelVdf`
+// TODO: rename `PartialVdf` to `TopLevelVdf` and have it hold a `Vdf` instead of flattening it out
+
+// TODO: add tests for
+// - lingering bytes
+// - base macro running up on stuff
+// - base macro followed by nothing
 
 pub fn parse(s: &str) -> Result<PartialVdf> {
     parse_(s, true)
@@ -19,9 +24,16 @@ pub fn parse_(s: &str, escape_chars: bool) -> Result<PartialVdf> {
     let bases = bases.into_iter().map(Cow::Borrowed).collect();
     let Vdf { key, value } = parse_pair(&mut chars, escape_chars)?;
 
-    // TODO: ensure that there aren't any tokens left
+    eat_comments_whitespace_and_newlines(&mut chars)?;
+    // Some VDF files are terminated with a null byte. Just C things I guess :shrug:
+    let _ = chars.next_if_eq('\x00');
+    eat_comments_whitespace_and_newlines(&mut chars)?;
 
-    Ok(PartialVdf { bases, key, value })
+    if chars.peek().is_some() {
+        Err(Error::Todo) // Lingering bytes
+    } else {
+        Ok(PartialVdf { bases, key, value })
+    }
 }
 
 fn parse_macros<'text>(chars: &mut CharIter<'text>) -> Result<Vec<&'text str>> {
@@ -46,7 +58,7 @@ fn parse_maybe_macro<'text>(
     }
 
     if !eat_whitespace(chars) {
-        todo!();
+        return Err(Error::Todo);
     }
 
     let macro_ = parse_quoted_raw_or_unquoted_string(chars)?;
@@ -57,7 +69,7 @@ fn parse_maybe_macro<'text>(
     if eat_newlines(chars) {
         Ok(Some(()))
     } else {
-        todo!("err");
+        Err(Error::Todo)
     }
 }
 
@@ -80,6 +92,12 @@ fn parse_quoted_raw_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text 
 
 fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text str> {
     let start_idx = chars.index();
+
+    match chars.next().ok_or(Error::Todo)? {
+        '"' | '{' | '}' | ' ' | '\t' | '\r' | '\n' => return Err(Error::Todo),
+        _ => {}
+    }
+
     loop {
         match chars.peek() {
             // The wiki page just states that an unquoted string ends with ", {, }, or any
@@ -88,8 +106,11 @@ fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text st
             Some('"' | '{' | '}' | ' ' | '\t' | '\r' | '\n') => {
                 let s = chars.original_str();
                 let end_idx = chars.index();
-                return Ok(&s[start_idx..end_idx]);
+                break Ok(&s[start_idx..end_idx]);
             }
+            // TODO: this isn't always an error right? An unquoted string could run up to the end
+            // e.g. `foo bar`
+            None => break Err(Error::Todo),
             _ => _ = chars.next(),
         }
     }
@@ -329,6 +350,11 @@ impl<'text> CharIter<'text> {
             *elem = self.next();
         }
         arr
+    }
+
+    #[must_use]
+    fn next_if_eq(&mut self, c: char) -> bool {
+        self.next_n_if_eq([c])
     }
 
     #[must_use]
