@@ -1,5 +1,5 @@
 #![no_main]
-use keyvalues_parser::{error::Result, Vdf};
+use keyvalues_parser::Vdf;
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|input: (bool, &str)| {
