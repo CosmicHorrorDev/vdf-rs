@@ -18,3 +18,9 @@ fn issue_54() {
     let vdf_text = lots_of_escapes(20_000);
     Vdf::parse(&vdf_text).unwrap();
 }
+
+#[test]
+fn raw_no_newline() {
+    let vdf_text = "no newline";
+    Vdf::parse(vdf_text).unwrap();
+}

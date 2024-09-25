@@ -124,14 +124,11 @@ fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text st
             // The wiki page just states that an unquoted string ends with ", {, }, or any
             // whitespace which I feel is likely missing several cases, but for now I will follow
             // that information
-            Some('"' | '{' | '}' | ' ' | '\t' | '\r' | '\n') => {
+            None | Some('"' | '{' | '}' | ' ' | '\t' | '\r' | '\n') => {
                 let s = chars.original_str();
                 let end_idx = chars.index();
                 break Ok(&s[start_idx..end_idx]);
             }
-            // TODO: this isn't always an error right? An unquoted string could run up to the end
-            // e.g. `foo bar`
-            None => break Err(Error::Todo),
             _ => _ = chars.next(),
         }
     }
