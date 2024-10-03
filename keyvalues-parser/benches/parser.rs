@@ -1,7 +1,12 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use std::{fs, hint::black_box, path::Path};
+
+use divan::{bench, counter::BytesCount, Bencher};
 use keyvalues_parser::Vdf;
 
-use std::{fs, path::Path};
+fn main() {
+    // Run registered benchmarks
+    divan::main();
+}
 
 fn read_app_info() -> Result<String, std::io::Error> {
     let vdf_path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -11,24 +16,21 @@ fn read_app_info() -> Result<String, std::io::Error> {
     fs::read_to_string(vdf_path)
 }
 
-pub fn parse_throughput(c: &mut Criterion) {
+#[bench]
+pub fn parse(bencher: Bencher) {
     let vdf_text = read_app_info().unwrap();
 
-    let mut group = c.benchmark_group("parse throughput");
-    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
-    group.bench_function("parse", |b| b.iter(|| Vdf::parse(black_box(&vdf_text))));
-    group.finish();
+    let bytes = BytesCount::of_str(&vdf_text);
+    bencher.counter(bytes).bench(|| {
+        Vdf::parse(black_box(&vdf_text)).unwrap();
+    });
 }
 
-pub fn render_throughput(c: &mut Criterion) {
+#[bench]
+pub fn render(bencher: Bencher) {
     let vdf_text = read_app_info().unwrap();
     let vdf = Vdf::parse(&vdf_text).unwrap();
 
-    let mut group = c.benchmark_group("render throughput");
-    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
-    group.bench_function("render", |b| b.iter(|| vdf.to_string()));
-    group.finish();
+    let bytes = BytesCount::of_str(&vdf_text);
+    bencher.counter(bytes).bench(|| vdf.to_string())
 }
-
-criterion_group!(throughput, parse_throughput, render_throughput);
-criterion_main!(throughput);
