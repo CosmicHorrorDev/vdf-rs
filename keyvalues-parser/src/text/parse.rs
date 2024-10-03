@@ -1,4 +1,4 @@
-use std::{borrow::Cow, str::CharIndices};
+use std::{borrow::Cow, str::Chars};
 
 use crate::{
     error::{Error, Result},
@@ -311,10 +311,10 @@ fn eat_newlines(chars: &mut CharIter<'_>) -> bool {
     ate
 }
 
-/// Convenience wrapper around `CharIndices`
+/// Convenience wrapper around `Chars`
 #[derive(Clone)]
 struct CharIter<'text> {
-    it: CharIndices<'text>,
+    it: Chars<'text>,
     idx: usize,
     text: &'text str,
 }
@@ -322,7 +322,7 @@ struct CharIter<'text> {
 impl<'text> CharIter<'text> {
     fn new(text: &'text str) -> Self {
         Self {
-            it: text.char_indices(),
+            it: text.chars(),
             idx: 0,
             text,
         }
@@ -402,8 +402,8 @@ impl Iterator for CharIter<'_> {
     type Item = char;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let (idx, c) = self.it.next()?;
-        self.idx = idx + c.len_utf8();
+        let c = self.it.next()?;
+        self.idx += c.len_utf8();
         Some(c)
     }
 }
