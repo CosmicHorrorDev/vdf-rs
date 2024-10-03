@@ -1,10 +1,15 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
+use std::{fs, hint::black_box, path::Path};
+
+use divan::{bench, counter::BytesCount, Bencher};
 use keyvalues_serde::{from_str, to_string};
 use serde::{Deserialize, Serialize};
 
-use std::{fs, path::Path};
-
 mod types;
+
+fn main() {
+    // Run registered benchmarks.
+    divan::main();
+}
 
 fn read_app_info() -> Result<String, std::io::Error> {
     let vdf_path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -28,36 +33,46 @@ where
     to_string(black_box(t)).unwrap()
 }
 
-pub fn de(c: &mut Criterion) {
+fn setup_deserialize() -> (String, BytesCount) {
     let vdf_text = read_app_info().unwrap();
-
-    let mut group = c.benchmark_group("de");
-    group.throughput(Throughput::Bytes(vdf_text.len() as u64));
-    group.bench_function("all owned", |b| {
-        b.iter(|| from_str_helper::<types::AppInfo>(&vdf_text))
-    });
-    group.bench_function("all borrowed", |b| {
-        b.iter(|| from_str_helper::<types::AppInfoBorrow>(&vdf_text))
-    });
-    group.bench_function("extract single", |b| {
-        b.iter(|| from_str_helper::<types::AppInfoExtract>(&vdf_text))
-    });
-    group.finish();
+    let bytes = BytesCount::of_str(&vdf_text);
+    (vdf_text, bytes)
 }
 
-// It doesn't really make sense to reserialize just the extracted content
-pub fn ser(c: &mut Criterion) {
+#[bench]
+pub fn deserialize_all_owned(bencher: Bencher) {
+    let (vdf_text, bytes) = setup_deserialize();
+    bencher
+        .counter(bytes)
+        .bench(|| from_str_helper::<types::AppInfo>(black_box(&vdf_text)))
+}
+
+#[bench]
+pub fn deserialize_all_borrowed(bencher: Bencher) {
+    let (vdf_text, bytes) = setup_deserialize();
+    bencher
+        .counter(bytes)
+        .bench(|| from_str_helper::<types::AppInfoBorrow>(black_box(&vdf_text)))
+}
+
+#[bench]
+pub fn deserialize_extract_single(bencher: Bencher) {
+    let (vdf_text, bytes) = setup_deserialize();
+    bencher
+        .counter(bytes)
+        .bench(|| from_str_helper::<types::AppInfoExtract>(black_box(&vdf_text)))
+}
+
+// It doesn't really make sense to reserialize anything other than the full content
+#[bench]
+pub fn serialize(bencher: Bencher) {
     let vdf_text = read_app_info().unwrap();
     let app_info_all: types::AppInfo = from_str_helper(&vdf_text);
-    let ser_len = to_string_helper::<types::AppInfo>(&app_info_all).len();
 
-    let mut group = c.benchmark_group("ser");
-    group.throughput(Throughput::Bytes(ser_len as u64));
-    group.bench_function("all", |b| {
-        b.iter(|| to_string_helper::<types::AppInfo>(&app_info_all))
-    });
-    group.finish();
+    let serialized = to_string_helper::<types::AppInfo>(&app_info_all);
+    let bytes = BytesCount::of_str(&serialized);
+
+    bencher
+        .counter(bytes)
+        .bench(|| to_string_helper::<types::AppInfo>(&app_info_all))
 }
-
-criterion_group!(throughput, de, ser);
-criterion_main!(throughput);
