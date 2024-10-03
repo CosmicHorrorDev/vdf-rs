@@ -11,7 +11,7 @@ exclude = [
 ]
 
 [workspace.dependencies]
-criterion = { version = "0.5.1", default-features = false }
+divan = { version = "0.1.14", default-features = false }
 insta = "1.39.0"
 pretty_assertions = "1.4.0"
 serde = "1.0.209"

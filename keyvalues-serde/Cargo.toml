@@ -16,7 +16,7 @@ keyvalues-parser = { path = "../keyvalues-parser", version = "0.2.0" }
 serde.workspace = true
 
 [dev-dependencies]
-criterion.workspace = true
+divan.workspace = true
 insta.workspace = true
 pretty_assertions.workspace = true
 serde = { workspace = true, features = ["derive"] }

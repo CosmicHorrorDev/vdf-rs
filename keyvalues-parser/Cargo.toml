@@ -17,7 +17,7 @@ pest = "2.7"
 pest_derive = "2.7"
 
 [dev-dependencies]
-criterion.workspace = true
+divan.workspace = true
 insta.workspace = true
 pretty_assertions.workspace = true
 
