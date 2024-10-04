@@ -1,6 +1,6 @@
-use std::{fs, hint::black_box, path::Path};
+use std::{hint::black_box, time::Duration};
 
-use divan::{bench, counter::BytesCount, Bencher};
+use divan::{bench, counter::BytesCount, Bencher, Divan};
 use keyvalues_serde::{from_str, to_string};
 use serde::{Deserialize, Serialize};
 
@@ -8,71 +8,48 @@ mod types;
 
 fn main() {
     // Run registered benchmarks.
-    divan::main();
+    Divan::from_args()
+        .min_time(Duration::from_millis(200))
+        .main();
 }
 
-fn read_app_info() -> Result<String, std::io::Error> {
-    let vdf_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("tests")
-        .join("assets")
-        .join("app_info.vdf");
-    fs::read_to_string(vdf_path)
-}
-
-fn from_str_helper<'de, T>(s: &'de str) -> T
+fn expect_str<T>(s: &'static str) -> T
 where
-    T: Deserialize<'de>,
+    T: Deserialize<'static>,
 {
-    from_str(black_box(s)).unwrap()
+    from_str(s).unwrap()
 }
 
-fn to_string_helper<T>(t: &T) -> String
+fn expect_to_string<T>(t: &T) -> String
 where
     T: Serialize,
 {
-    to_string(black_box(t)).unwrap()
+    to_string(t).unwrap()
 }
 
-fn setup_deserialize() -> (String, BytesCount) {
-    let vdf_text = read_app_info().unwrap();
-    let bytes = BytesCount::of_str(&vdf_text);
-    (vdf_text, bytes)
-}
+static APP_INFO: &str = include_str!("../tests/assets/app_info.vdf");
 
-#[bench]
-pub fn deserialize_all_owned(bencher: Bencher) {
-    let (vdf_text, bytes) = setup_deserialize();
-    bencher
-        .counter(bytes)
-        .bench(|| from_str_helper::<types::AppInfo>(black_box(&vdf_text)))
-}
-
-#[bench]
-pub fn deserialize_all_borrowed(bencher: Bencher) {
-    let (vdf_text, bytes) = setup_deserialize();
-    bencher
-        .counter(bytes)
-        .bench(|| from_str_helper::<types::AppInfoBorrow>(black_box(&vdf_text)))
-}
-
-#[bench]
-pub fn deserialize_extract_single(bencher: Bencher) {
-    let (vdf_text, bytes) = setup_deserialize();
-    bencher
-        .counter(bytes)
-        .bench(|| from_str_helper::<types::AppInfoExtract>(black_box(&vdf_text)))
+#[bench(
+    name = "deserialize as type",
+    bytes_count = APP_INFO.len(),
+    types = [types::AppInfoFullOwned, types::AppInfoFullBorrowed<'static>, types::AppInfoSingleNested],
+)]
+pub fn deserialize_as_type<T>() -> T
+where
+    T: Deserialize<'static>,
+{
+    expect_str::<T>(black_box(APP_INFO))
 }
 
 // It doesn't really make sense to reserialize anything other than the full content
-#[bench]
-pub fn serialize(bencher: Bencher) {
-    let vdf_text = read_app_info().unwrap();
-    let app_info_all: types::AppInfo = from_str_helper(&vdf_text);
+#[bench(name = "serialize as AppInfo")]
+pub fn serialize_as_app_info(bencher: Bencher) {
+    let app_info_all: types::AppInfoFullOwned = expect_str(APP_INFO);
 
-    let serialized = to_string_helper::<types::AppInfo>(&app_info_all);
+    let serialized = expect_to_string::<types::AppInfoFullOwned>(&app_info_all);
     let bytes = BytesCount::of_str(&serialized);
 
     bencher
         .counter(bytes)
-        .bench(|| to_string_helper::<types::AppInfo>(&app_info_all))
+        .bench(|| expect_to_string::<types::AppInfoFullOwned>(black_box(&app_info_all)))
 }
