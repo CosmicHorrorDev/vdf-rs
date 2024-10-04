@@ -6,7 +6,7 @@ pub type Id = u64;
 
 // Representation of the app_info file
 #[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoBorrow<'a> {
+pub struct AppInfoFullBorrowed<'a> {
     #[serde(borrow)]
     common: CommonBorrow<'a>,
     #[serde(borrow)]
@@ -109,7 +109,7 @@ pub struct BranchBorrow<'a> {
 
 // Representation of the app_info file
 #[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfo {
+pub struct AppInfoFullOwned {
     common: Common,
     config: AppInfoConfig,
     #[serde(rename = "depot")]
@@ -198,7 +198,7 @@ pub struct Branch {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoExtract {
+pub struct AppInfoSingleNested {
     branches: BranchesExtract,
 }
 
