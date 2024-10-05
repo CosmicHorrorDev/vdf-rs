@@ -346,11 +346,11 @@ impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Tuple Variant"))
     }
 
     fn end(self) -> Result<()> {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Tuple Variant"))
     }
 }
 
@@ -404,10 +404,10 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     where
         T: ?Sized + Serialize,
     {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Struct Variant"))
     }
 
     fn end(self) -> Result<()> {
-        Err(Error::Unsupported("Enum Variant"))
+        Err(Error::Unsupported("Enum Struct Variant"))
     }
 }
