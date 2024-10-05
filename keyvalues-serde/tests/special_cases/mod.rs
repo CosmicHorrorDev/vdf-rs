@@ -1,3 +1,7 @@
+use std::{borrow::Cow, collections::HashMap};
+
+use crate::utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Container};
+
 use insta::{assert_debug_snapshot, assert_snapshot};
 use keyvalues_serde::{
     from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
@@ -5,12 +9,6 @@ use keyvalues_serde::{
 };
 use pretty_assertions::assert_eq;
 use serde::Deserialize;
-
-use std::{borrow::Cow, collections::HashMap};
-
-mod utils;
-
-use utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Container};
 
 // TODO: what happens if you try to serialize a hashmap without providing a key?
 

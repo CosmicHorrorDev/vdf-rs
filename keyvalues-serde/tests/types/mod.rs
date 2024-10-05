@@ -1,12 +1,10 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
-
-mod utils;
-
-use utils::{
+use crate::utils::{
     read_asset_file, test_vdf_deserialization, test_vdf_serialization, BoxedResult, Container,
 };
+
+use serde::{Deserialize, Serialize};
 
 // Helper that generates a test to ensure that the contents within `file_name` deserialize to
 // `test_val` and vice-versa with serialization
