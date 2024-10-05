@@ -1,8 +1,11 @@
 use insta::assert_snapshot;
-use keyvalues_serde::{error::Result, from_str};
+use keyvalues_serde::{error::Result, from_str, to_string};
 use serde::Deserialize;
 
-use std::{collections::HashMap, fmt};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fmt,
+};
 
 mod utils;
 
@@ -41,6 +44,12 @@ test_snapshot_de!(
 );
 
 test_snapshot_de!(obj_when_wanting_str, Container<String>, "obj_container.vdf");
+
+#[test]
+fn missing_top_level_key() {
+    // TODO: clean up error type, so we can compare
+    let _err = to_string(&BTreeMap::<(), ()>::new()).unwrap_err();
+}
 
 #[test]
 fn incorrect_seq_length() -> BoxedResult<()> {

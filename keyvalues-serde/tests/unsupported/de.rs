@@ -1,12 +1,10 @@
-use std::collections::BTreeMap;
+use crate::utils::Container;
 
-use keyvalues_serde::{from_str, to_string, Error, Result};
+use keyvalues_serde::{from_str, Error, Result};
 use serde::Deserialize;
 
-mod utils;
-
-use utils::Container;
-
+// It doesn't matter what the input text is, just that we match most of the structure other than
+// the invalid type
 const DUMMY_TEXT: &str = r#"
 "Container"
 {
@@ -22,27 +20,23 @@ macro_rules! check {
     };
 }
 
-// It doesn't matter what the input text is, just that we match most of the structure other than
-// the invalid type
 #[test]
-fn invalid_types() {
+fn bytes() {
     let bytes: Result<Container<&[u8]>> = from_str(DUMMY_TEXT);
     check!(bytes, "Bytes");
+}
 
-    // TODO: how do we get serde to call `.deserialize_byte_buf()`
-
+#[test]
+fn unit() {
     let unit_type: Result<Container<()>> = from_str(DUMMY_TEXT);
     check!(unit_type, "Unit");
+}
 
+#[test]
+fn unit_struct() {
     #[derive(Deserialize, Debug)]
     struct Unit;
 
     let unit_struct: Result<Container<Unit>> = from_str(DUMMY_TEXT);
     check!(unit_struct, "Unit Struct");
-}
-
-#[test]
-fn missing_top_level_key() {
-    // TODO: clean up error type, so we can compare
-    let _err = to_string(&BTreeMap::<(), ()>::new()).unwrap_err();
 }
