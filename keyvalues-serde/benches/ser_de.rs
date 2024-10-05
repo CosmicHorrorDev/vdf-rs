@@ -27,29 +27,31 @@ where
     to_string(t).unwrap()
 }
 
-static APP_INFO: &str = include_str!("../tests/assets/app_info.vdf");
+static VDF_TEXT: &str = include_str!("../tests/assets/controller_generic_wasd.vdf");
 
 #[bench(
-    name = "deserialize as type",
-    bytes_count = APP_INFO.len(),
-    types = [types::AppInfoFullOwned, types::AppInfoFullBorrowed<'static>, types::AppInfoSingleNested],
+    bytes_count = VDF_TEXT.len(),
+    types = [types::FullStructOwned, types::FullStructBorrowed, types::SingleField],
 )]
-pub fn deserialize_as_type<T>() -> T
+pub fn deserialize<T>() -> T
 where
     T: Deserialize<'static>,
 {
-    expect_str::<T>(black_box(APP_INFO))
+    expect_str(black_box(VDF_TEXT))
 }
 
-// It doesn't really make sense to reserialize anything other than the full content
-#[bench(name = "serialize as AppInfo")]
-pub fn serialize_as_app_info(bencher: Bencher) {
-    let app_info_all: types::AppInfoFullOwned = expect_str(APP_INFO);
+// It doesn't really make sense to reserialize `SingleField`
+#[bench(types = [types::FullStructOwned, types::FullStructBorrowed])]
+pub fn serialize<T>(bencher: Bencher)
+where
+    T: Deserialize<'static> + Serialize + Sync,
+{
+    let app_info_all: T = expect_str(VDF_TEXT);
 
-    let serialized = expect_to_string::<types::AppInfoFullOwned>(&app_info_all);
+    let serialized = expect_to_string(&app_info_all);
     let bytes = BytesCount::of_str(&serialized);
 
     bencher
         .counter(bytes)
-        .bench(|| expect_to_string::<types::AppInfoFullOwned>(black_box(&app_info_all)))
+        .bench(|| expect_to_string(black_box(&app_info_all)))
 }
