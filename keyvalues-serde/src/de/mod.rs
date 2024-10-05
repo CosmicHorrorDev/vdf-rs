@@ -324,7 +324,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         //  ```
         //  where each of these variants are equally valid for trying to determine "1".
         match self.next() {
-            Some(Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
+            Some(Token::Key(s) | Token::Str(s)) => visitor.visit_enum(s.into_deserializer()),
             Some(_) => Err(Error::ExpectedSomeValue),
             None => Err(Error::EofWhileParsingValue),
         }
