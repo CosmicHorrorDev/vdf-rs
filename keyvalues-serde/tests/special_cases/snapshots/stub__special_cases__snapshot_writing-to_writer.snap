@@ -1,9 +1,8 @@
 ---
-source: keyvalues-serde/tests/special_cases.rs
+source: keyvalues-serde/tests/special_cases/mod.rs
 expression: "std::str::from_utf8(&buf)?"
 ---
 "Container"
 {
 	"inner"	"123"
 }
-

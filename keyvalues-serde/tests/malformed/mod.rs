@@ -1,15 +1,13 @@
-use insta::assert_snapshot;
-use keyvalues_serde::{error::Result, from_str, to_string};
-use serde::Deserialize;
-
 use std::{
     collections::{BTreeMap, HashMap},
     fmt,
 };
 
-mod utils;
-
 use crate::utils::{read_asset_file, BoxedResult, Container};
+
+use insta::assert_snapshot;
+use keyvalues_serde::{error::Result, from_str, to_string};
+use serde::Deserialize;
 
 // Helper macro that generates the boilerplate for snapshotting a deserialization error backed by a
 // file
@@ -74,6 +72,7 @@ fn parsing_obj_as_sequence() {
 }
 
 #[derive(Deserialize, Debug)]
+#[allow(dead_code)] // used for snapshotting
 pub struct Pair {
     pub first: String,
     pub second: String,
