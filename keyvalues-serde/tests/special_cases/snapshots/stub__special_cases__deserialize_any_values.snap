@@ -1,5 +1,5 @@
 ---
-source: keyvalues-serde/tests/special_cases.rs
+source: keyvalues-serde/tests/special_cases/mod.rs
 expression: any_holder
 ---
 AnyHolder {

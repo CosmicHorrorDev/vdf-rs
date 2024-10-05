@@ -1,0 +1,5 @@
+---
+source: keyvalues-serde/tests/malformed/mod.rs
+expression: err.to_string()
+---
+missing field `first`

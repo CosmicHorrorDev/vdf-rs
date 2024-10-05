@@ -1,7 +1,5 @@
 ---
-source: keyvalues-serde/tests/malformed.rs
-assertion_line: 28
+source: keyvalues-serde/tests/malformed/mod.rs
 expression: err.to_string()
-
 ---
 Tried parsing an invalid char
