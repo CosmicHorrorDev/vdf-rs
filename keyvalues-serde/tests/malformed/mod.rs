@@ -92,6 +92,18 @@ fn invalid_bool() {
     snapshot_de_err::<Container<bool>>("invalid_bool", INVALID_BOOL_TEXT);
 }
 
+#[test]
+fn invalid_int() {
+    let res: Result<Container<i32>> = from_str(ZERO_LEN_CHAR_TEXT);
+    insta::assert_snapshot!(res.unwrap_err(), @"Tried parsing an invalid number");
+}
+
+#[test]
+fn invalid_float() {
+    let res: Result<Container<f32>> = from_str(ZERO_LEN_CHAR_TEXT);
+    insta::assert_snapshot!(res.unwrap_err(), @"Tried parsing an invalid number");
+}
+
 const ZERO_LEN_CHAR_TEXT: &str = r#"
 "Container"
 {
@@ -111,4 +123,10 @@ fn invalid_chars() {
     let name_base = "invalid_chars";
     snapshot_de_err::<Container<char>>(&format!("{}-zero_len", name_base), ZERO_LEN_CHAR_TEXT);
     snapshot_de_err::<Container<char>>(&format!("{}-two_len", name_base), TWO_LEN_CHAR_TEXT);
+}
+
+#[test]
+fn non_finite_float() {
+    let err = to_string(&Container::new(f32::INFINITY)).unwrap_err();
+    insta::assert_snapshot!(err, @"Only finite f32 values are allowed. Instead got: inf");
 }
