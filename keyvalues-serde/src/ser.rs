@@ -117,6 +117,16 @@ where
     Ok(s)
 }
 
+macro_rules! forward_serialize_as_str {
+    ( $( ( $method:ident, $ty:ty ) ),* $(,)? ) => {
+        $(
+            fn $method(self, v: $ty) -> Result<()> {
+                self.serialize_str(&v.to_string())
+            }
+        )*
+    }
+}
+
 impl<'a> ser::Serializer for &'a mut Serializer {
     type Ok = ();
 
@@ -130,52 +140,27 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     type SerializeStruct = Self;
     type SerializeStructVariant = Self;
 
+    forward_serialize_as_str!(
+        (serialize_i8, i8),
+        (serialize_i16, i16),
+        (serialize_i32, i32),
+        (serialize_i64, i64),
+        (serialize_i128, i128),
+        (serialize_u8, u8),
+        (serialize_u16, u16),
+        (serialize_u32, u32),
+        (serialize_u64, u64),
+        (serialize_u128, u128),
+        (serialize_char, char),
+    );
+
+    fn serialize_str(self, v: &str) -> Result<()> {
+        self.tokens.push(NaiveToken::str(v));
+        Ok(())
+    }
+
     fn serialize_bool(self, v: bool) -> Result<()> {
-        self.serialize_str(if v { "1" } else { "0" })
-    }
-
-    fn serialize_i8(self, v: i8) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_i16(self, v: i16) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_i32(self, v: i32) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_i64(self, v: i64) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_i128(self, v: i128) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u8(self, v: u8) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u16(self, v: u16) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u32(self, v: u32) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u64(self, v: u64) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_u128(self, v: u128) -> Result<()> {
-        self.serialize_str(&v.to_string())
-    }
-
-    fn serialize_char(self, v: char) -> Result<()> {
-        self.serialize_str(&v.to_string())
+        self.serialize_i8(v as i8)
     }
 
     fn serialize_f32(self, v: f32) -> Result<()> {
@@ -192,11 +177,6 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         // Note: I believe floats in VDF are considered f32 so even when you use an f64 it will get
         // converted to an f32 when serialized
         self.serialize_f32(v as f32)
-    }
-
-    fn serialize_str(self, v: &str) -> Result<()> {
-        self.tokens.push(NaiveToken::str(v));
-        Ok(())
     }
 
     fn serialize_bytes(self, _v: &[u8]) -> Result<()> {
@@ -279,7 +259,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeTupleVariant> {
-        Err(Error::Unsupported("Enum Tuple Variant"))
+        Ok(self)
     }
 
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
@@ -303,7 +283,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         _variant: &'static str,
         _len: usize,
     ) -> Result<Self::SerializeStructVariant> {
-        Err(Error::Unsupported("Enum Struct Variant"))
+        Ok(self)
     }
 }
 
