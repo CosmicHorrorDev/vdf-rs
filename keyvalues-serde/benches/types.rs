@@ -1,213 +1,219 @@
 use serde::{Deserialize, Serialize};
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 pub type Id = u64;
 
-// Representation of the app_info file
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoFullBorrowed<'a> {
-    #[serde(borrow)]
-    common: CommonBorrow<'a>,
-    #[serde(borrow)]
-    config: AppInfoConfigBorrow<'a>,
-    #[serde(borrow, rename = "depot")]
-    depots: Vec<DepotBorrow<'a>>,
-    #[serde(borrow)]
-    branches: BranchesBorrow<'a>,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct SingleField {
+    game: String,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CommonBorrow<'a> {
-    name: &'a str,
-    #[serde(rename = "type")]
-    app_type: &'a str,
-    parent: Id,
-    oslist: &'a str,
-    osarch: &'a str,
-    icon: &'a str,
-    logo: &'a str,
-    logo_small: &'a str,
-    clienticon: &'a str,
-    clienttga: &'a str,
-    #[serde(rename = "ReleaseState")]
-    release_state: &'a str,
-    // Not actually sure what this would map since it's empty
-    #[serde(borrow)]
-    associations: HashMap<&'a str, &'a str>,
-    gameid: Id,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FullStructOwned {
+    version: Id,
+    game: String,
+    title: String,
+    description: String,
+    controller_type: String,
+    localization: BTreeMap<Local, Localization>,
+    #[serde(rename = "group")]
+    groups: Vec<Group>,
+    preset: Preset,
+    settings: Settings,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoConfigBorrow<'a> {
-    installdir: &'a str,
+// Duplicate definition with fields manually set up to borrow. Generics don't cut it because
+// `#[serde(borrow)]` requires some lifetime on the field, so you can't borrow fields that are used
+// for owned things. This is also why we sometimes have to give structs some specific lifetime
+// annotation even though it's all `'static` ;-;
+#[derive(Debug, Deserialize, Serialize)]
+pub struct FullStructBorrowed {
+    version: Id,
+    game: &'static str,
+    title: &'static str,
+    description: &'static str,
+    controller_type: &'static str,
     #[serde(borrow)]
-    launch: HashMap<Id, LaunchBorrow<'a>>,
+    localization: BTreeMap<Local, LocalizationBorrowed<'static>>,
+    #[serde(borrow, rename = "group")]
+    groups: Vec<GroupBorrowed<'static>>,
+    #[serde(borrow)]
+    preset: PresetBorrowed<'static>,
+    settings: Settings,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct LaunchBorrow<'a> {
-    executable: &'a str,
-    #[serde(rename = "type")]
-    launch_type: &'a str,
-    #[serde(borrow)]
-    config: LaunchConfigBorrow<'a>,
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "lowercase")]
+pub enum Local {
+    Brazilian,
+    Bulgarian,
+    Czech,
+    Danish,
+    Dutch,
+    English,
+    Finnish,
+    French,
+    German,
+    Greek,
+    Hungarian,
+    Italian,
+    Japanese,
+    Koreana,
+    Polish,
+    Portuguese,
+    Romanian,
+    Russian,
+    SChinese,
+    Spanish,
+    Swedish,
+    Turkish,
+    Ukrainian,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct LaunchConfigBorrow<'a> {
-    oslist: &'a str,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Localization {
+    title: String,
+    description: Option<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct DepotBorrow<'a> {
-    id: Id,
-    name: &'a str,
-    #[serde(borrow)]
-    config: DepotConfigBorrow<'a>,
-    manifests: ManifestBorrow,
-    maxsize: Option<u64>,
-    depotfromapp: Option<Id>,
-    #[serde(borrow)]
-    encryptedmanifests: Option<EncryptedManifestBorrow<'a>>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct DepotConfigBorrow<'a> {
-    oslist: &'a str,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct ManifestBorrow {
-    public: u64,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct EncryptedManifestBorrow<'a> {
-    #[serde(borrow)]
-    experimental: HashMap<&'a str, &'a str>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct BranchesBorrow<'a> {
-    #[serde(borrow)]
-    public: BranchBorrow<'a>,
-    #[serde(borrow)]
-    experimental: BranchBorrow<'a>,
-    #[serde(borrow)]
-    unstable: BranchBorrow<'a>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct BranchBorrow<'a> {
-    buildid: Id,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LocalizationBorrowed<'a> {
+    title: &'a str,
     #[serde(borrow)]
     description: Option<&'a str>,
-    pwdrequired: Option<bool>,
-    timeupdated: u64,
 }
 
-// Representation of the app_info file
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoFullOwned {
-    common: Common,
-    config: AppInfoConfig,
-    #[serde(rename = "depot")]
-    depots: Vec<Depot>,
-    branches: Branches,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Group {
+    id: Id,
+    mode: Mode,
+    inputs: BTreeMap<InputKind, Input>,
+    gameactions: Option<Gameactions>,
+    settings: Option<GroupSettings>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Common {
-    name: String,
-    #[serde(rename = "type")]
-    app_type: String,
-    parent: Id,
-    oslist: String,
-    osarch: String,
-    icon: String,
-    logo: String,
-    logo_small: String,
-    clienticon: String,
-    clienttga: String,
-    #[serde(rename = "ReleaseState")]
-    release_state: String,
-    // Not actually sure what this would map since it's empty
-    associations: HashMap<String, String>,
-    gameid: Id,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct GroupBorrowed<'a> {
+    id: Id,
+    mode: Mode,
+    #[serde(borrow)]
+    inputs: BTreeMap<InputKind, InputBorrowed<'a>>,
+    gameactions: Option<Gameactions>,
+    settings: Option<GroupSettings>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoConfig {
-    installdir: String,
-    launch: HashMap<Id, Launch>,
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+enum Mode {
+    AbsoluteMouse,
+    Dpad,
+    Flickstick,
+    FourButtons,
+    JoystickMouse,
+    Switches,
+    Trigger,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Launch {
-    executable: String,
-    #[serde(rename = "type")]
-    launch_type: String,
-    config: LaunchConfig,
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+#[serde(rename_all = "snake_case")]
+enum InputKind {
+    ButtonA,
+    ButtonB,
+    ButtonX,
+    ButtonY,
+    ButtonBackLeft,
+    ButtonBackRight,
+    ButtonEscape,
+    ButtonMenu,
+    Click,
+    DpadNorth,
+    DpadSouth,
+    DpadEast,
+    DpadWest,
+    Edge,
+    LeftBumper,
+    RightBumper,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct LaunchConfig {
-    oslist: String,
+#[derive(Debug, Deserialize, Serialize)]
+struct Input {
+    activators: BTreeMap<ActivatorKind, Activator>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Depot {
+#[derive(Debug, Deserialize, Serialize)]
+struct InputBorrowed<'a> {
+    #[serde(borrow)]
+    activators: BTreeMap<ActivatorKind, ActivatorBorrowed<'a>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+enum ActivatorKind {
+    #[serde(rename = "Double_Press")]
+    DoublePress,
+    #[serde(rename = "Full_Press")]
+    FullPress,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Activator {
+    bindings: Bindings,
+    settings: Option<ActivatorSettings>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct ActivatorBorrowed<'a> {
+    #[serde(borrow)]
+    bindings: BindingsBorrowed<'a>,
+    settings: Option<ActivatorSettings>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Bindings {
+    binding: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct BindingsBorrowed<'a> {
+    binding: &'a str,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct ActivatorSettings {
+    haptic_intensity: Option<u64>,
+    repeat_rate: Option<u64>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct Gameactions {}
+
+#[derive(Debug, Deserialize, Serialize)]
+struct GroupSettings {
+    button_dist: Option<u64>,
+    button_size: Option<u64>,
+    doubletap_max_duration: Option<u64>,
+    edge_binding_radius: Option<u64>,
+    requires_click: Option<bool>,
+    sensitivity: Option<u64>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Preset {
     id: Id,
     name: String,
-    config: DepotConfig,
-    manifests: Manifest,
-    maxsize: Option<u64>,
-    depotfromapp: Option<Id>,
-    encryptedmanifests: Option<EncryptedManifest>,
+    group_source_bindings: BTreeMap<Id, String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct DepotConfig {
-    oslist: String,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct PresetBorrowed<'a> {
+    id: Id,
+    name: &'a str,
+    #[serde(borrow)]
+    group_source_bindings: BTreeMap<Id, &'a str>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Manifest {
-    public: u64,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct EncryptedManifest {
-    experimental: HashMap<String, String>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Branches {
-    public: Branch,
-    experimental: Branch,
-    unstable: Branch,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct Branch {
-    buildid: Id,
-    description: Option<String>,
-    pwdrequired: Option<bool>,
-    timeupdated: u64,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct AppInfoSingleNested {
-    branches: BranchesExtract,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct BranchesExtract {
-    public: BranchExtract,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct BranchExtract {
-    buildid: Id,
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Settings {
+    left_trackpad_mode: u64,
+    right_trackpad_mode: u64,
 }

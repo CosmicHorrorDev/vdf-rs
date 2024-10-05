@@ -1,50 +1,58 @@
 # Benchmarks
 
-The benchmarks cover parsing, rendering, serializing, and deserializing the
-`keyvalues-parser/tests/app_info.vdf` and `keyvalues-serde/tests/app_info.vdf`
-files. These files are identical and represent a slightly modified app info
-output from `steamcmd`. The only modifications are some structural changes that
-make (de)serializing sane (In practice you would do this modification to the
-`Vdf` representation before deserializing).
+_Disclaimer: These benchmarks exist solely to give a general idea of various
+performance numbers. These are not rigorous and should not be used for
+comparing similar projects_
+
+The benchmarks cover parsing, rendering, serializing, and deserializing a
+`<STEAM>/debian-installation/controller_base/templates/controller_generic_wasd.vdf`
+file from my steam install. This is a fairly large (20 KiB) VDF file that
+contains varying structures, types, nesting, etc.
 
 All of the following results were from running on a Linux machine with a Ryzen
 7 3700. You can run all the benchmarks by running either `cargo bench` from the
-project directory.
+project directory
 
 ## `keyvalues-parser`
 
-| Name | Description |
+| Name | ? |
 | :---: | :--- |
-| `parse` | Parses an `app_info.vdf` file |
-| `render` | Renders a parsed `app_info.vdf` to a `String` |
+| `parse` | Parsing the file |
+| `render` | Rendering the parsed file back to a `String` |
 
 ```text
-Timer precision: 20 ns
-parser     fastest       │ slowest       │ median        │ mean          │ samples │ iters
-├─ parse   23.82 µs      │ 38.58 µs      │ 24.77 µs      │ 27.87 µs      │ 100     │ 100
-│          110.3 MB/s    │ 68.16 MB/s    │ 106.1 MB/s    │ 94.35 MB/s    │         │
-╰─ render  16.7 µs       │ 31.31 µs      │ 16.86 µs      │ 17.55 µs      │ 100     │ 100
-           157.4 MB/s    │ 83.97 MB/s    │ 155.9 MB/s    │ 149.8 MB/s    │         │
+parser     fastest       │ slowest       │ median        │ mean          │ samples
+├─ parse   110.8 µs      │ 202.3 µs      │ 112.3 µs      │ 113.5 µs      │ 1759
+│          180.2 MB/s    │ 98.74 MB/s    │ 177.8 MB/s    │ 175.9 MB/s    │
+╰─ render  113.8 µs      │ 161.7 µs      │ 116.9 µs      │ 117.3 µs      │ 1702
+           167.1 MB/s    │ 117.6 MB/s    │ 162.6 MB/s    │ 162.2 MB/s    │
 ```
 
 ## `keyvalues-serde`
 
-| Name |  Description |
+Deserializes and serializes the file to various flavors of Rust types
+
+| Type | ? |
 | :---: | :--- |
-| `deserialize_all_borrowed` | Deserializes an `app_info` file to a struct with borrowed data types |
-| `deserialize_all_owned` | Deserializes an `app_info` file to a struct with owned data types |
-| `deserialize_extract_single` | Extracts a single nested value from an `app_info` file |
-| `serialize` | Serializes a struct representing an `app_info` file |
+| `FullStructOwned` | A `struct` using owned `String` types internally that represents _all_ of the information present in the file
+| `FullStructBorrowed` | The same as `FullStructOwned`, but the `struct` uses `&str` types and `#[serde(borrow)]` to support "zero-copy" (de)serialization where possible |
+| `SingleField` | A `struct` consisting of only a single simple field ignoring all of the other data in the file |
+
+_Spoilers: Both using borrowed data and ignoring nearly all of the data present
+while have a pretty minimal impact compared to the naïve approach_
 
 ```text
-Timer precision: 20 ns
-ser_de                         fastest       │ slowest       │ median        │ mean          │ samples │ iters
-├─ deserialize_all_borrowed    38.59 µs      │ 76.47 µs      │ 41.22 µs      │ 47.25 µs      │ 100     │ 100
-│                              68.14 MB/s    │ 34.38 MB/s    │ 63.79 MB/s    │ 55.65 MB/s    │         │
-├─ deserialize_all_owned       57.13 µs      │ 150.2 µs      │ 59.77 µs      │ 63.14 µs      │ 100     │ 100
-│                              46.02 MB/s    │ 17.5 MB/s     │ 43.99 MB/s    │ 41.64 MB/s    │         │
-├─ deserialize_extract_single  51.67 µs      │ 105 µs        │ 76.06 µs      │ 67.85 µs      │ 100     │ 100
-│                              50.89 MB/s    │ 25.02 MB/s    │ 34.57 MB/s    │ 38.76 MB/s    │         │
-╰─ serialize                   51.21 µs      │ 122.1 µs      │ 63.96 µs      │ 73.15 µs      │ 100     │ 100
-                               50.19 MB/s    │ 21.05 MB/s    │ 40.19 MB/s    │ 35.14 MB/s    │         │
+ser_de                    fastest       │ slowest       │ median        │ mean          │ samples
+├─ deserialize                          │               │               │               │
+│  ├─ FullStructBorrowed  210.6 µs      │ 400.5 µs      │ 216.5 µs      │ 218.1 µs      │ 910
+│  │                      94.85 MB/s    │ 49.88 MB/s    │ 92.28 MB/s    │ 91.57 MB/s    │
+│  ├─ FullStructOwned     214.4 µs      │ 255.7 µs      │ 218.7 µs      │ 220 µs        │ 898
+│  │                      93.16 MB/s    │ 78.11 MB/s    │ 91.33 MB/s    │ 90.81 MB/s    │
+│  ╰─ SingleField         200.9 µs      │ 240.5 µs      │ 206.7 µs      │ 207.5 µs      │ 963
+│                         99.44 MB/s    │ 83.07 MB/s    │ 96.64 MB/s    │ 96.28 MB/s    │
+╰─ serialize                            │               │               │               │
+   ├─ FullStructBorrowed  260.9 µs      │ 497.1 µs      │ 277.7 µs      │ 276.4 µs      │ 714
+   │                      72.85 MB/s    │ 38.24 MB/s    │ 68.45 MB/s    │ 68.76 MB/s    │
+   ╰─ FullStructOwned     263.4 µs      │ 298.7 µs      │ 279.3 µs      │ 277.7 µs      │ 711
+                          72.15 MB/s    │ 63.64 MB/s    │ 68.04 MB/s    │ 68.43 MB/s    │
 ```

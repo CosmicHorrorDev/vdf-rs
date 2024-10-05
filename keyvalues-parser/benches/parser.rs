@@ -10,16 +10,16 @@ fn main() {
         .main();
 }
 
-static APP_INFO: &str = include_str!("../tests/assets/app_info.vdf");
+static VDF_TEXT: &str = include_str!("../tests/assets/controller_generic_wasd.vdf");
 
-#[bench(bytes_count = APP_INFO.len())]
+#[bench(bytes_count = VDF_TEXT.len())]
 pub fn parse() {
-    Vdf::parse(black_box(APP_INFO)).unwrap();
+    Vdf::parse(black_box(VDF_TEXT)).unwrap();
 }
 
 #[bench]
 pub fn render(bencher: Bencher) {
-    let vdf = Vdf::parse(APP_INFO).unwrap();
+    let vdf = Vdf::parse(VDF_TEXT).unwrap();
     let rendered = vdf.to_string();
     let bytes = BytesCount::of_str(&rendered);
 
