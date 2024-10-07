@@ -5,8 +5,9 @@ use keyvalues_parser::Vdf;
 
 fn main() {
     // Run registered benchmarks
-    Divan::from_args()
+    Divan::default()
         .min_time(Duration::from_millis(200))
+        .config_with_args()
         .main();
 }
 
