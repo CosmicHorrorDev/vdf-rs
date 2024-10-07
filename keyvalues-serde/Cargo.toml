@@ -9,7 +9,7 @@ authors = ["Cosmic <CosmicHorrorDev@pm.me>"]
 keywords = ["keyvalues", "vdf", "steam", "serde"]
 categories.workspace = true
 description = "(De)serialize VDF text with serde"
-homepage = "https://github.com/CosmicHorrorDev/vdf-rs"
+homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-serde"
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
