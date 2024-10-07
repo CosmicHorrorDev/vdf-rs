@@ -9,7 +9,7 @@ authors = ["Cosmic <CosmicHorrorDev@pm.me>"]
 keywords = ["keyvalues", "vdf", "steam", "parser"]
 categories.workspace = true
 description = "A parser/renderer for vdf text"
-homepage = "https://github.com/CosmicHorrorDev/vdf-rs"
+homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-parser"
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dev-dependencies]
