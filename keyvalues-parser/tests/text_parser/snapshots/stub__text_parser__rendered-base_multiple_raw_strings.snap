@@ -1,8 +1,6 @@
 ---
-source: keyvalues-parser/tests/text_parser.rs
-assertion_line: 145
+source: keyvalues-parser/tests/text_parser/mod.rs
 expression: rendered
-
 ---
 #base "one_base.res"
 #base "../another_base.vdf"
@@ -12,4 +10,3 @@ expression: rendered
 {
 	"Unquoted\non\escaped\text"	"And\some\value"
 }
-

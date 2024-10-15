@@ -1,0 +1,23 @@
+---
+source: keyvalues-parser/tests/text_parser/mod.rs
+expression: "VdfDef::from(vdf.clone())"
+---
+VdfDef {
+    key: "OuterKey",
+    value: Obj(
+        ObjDef(
+            {
+                "SequenceKey": [
+                    Str(
+                        "SequenceVal",
+                    ),
+                    Obj(
+                        ObjDef(
+                            {},
+                        ),
+                    ),
+                ],
+            },
+        ),
+    ),
+}

@@ -1,11 +1,8 @@
 ---
-source: keyvalues-parser/tests/text_parser.rs
-assertion_line: 109
+source: keyvalues-parser/tests/text_parser/mod.rs
 expression: rendered
-
 ---
 "Some\text\here"
 {
 	"more\text\here"	"and\here"
 }
-
