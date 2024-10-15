@@ -20,25 +20,28 @@ fn parse_invalid(contents: &str) -> BoxedResult<()> {
 }
 
 macro_rules! gen_fuzzer_tests {
-    ( $test_fn:ident, $( $name:ident ),* ) => {
+    ( $test_fn:ident, $( ( $name:ident, $input:expr ) ),* $(,)? ) => {
         $(
             #[test]
             fn $name() -> BoxedResult<()> {
-                let contents = include_str!(
-                    concat!("fuzzer_regression_assets/", stringify!($name))
-                );
+                let contents = $input;
                 $test_fn(contents)
             }
         )*
     };
 }
 
-gen_fuzzer_tests!(parse_valid, valid_1, valid_2, valid_3);
+gen_fuzzer_tests!(
+    parse_valid,
+    (unqoted_backslash_key, r#"\ """#),
+    (escaped_chars, r#""" "\r\\\n\t\"""#),
+);
+
 gen_fuzzer_tests!(
     parse_invalid,
-    invalid_1,
-    invalid_2,
-    invalid_3,
-    invalid_4,
-    invalid_5
+    (empty, ""),
+    (partial_map, "a{\n\"\""),
+    (macrolike_key_then_map, "#basefoo{}"),
+    (macrolike_key_then_str, "#base no_vdf"),
+    (trailing_bytes, "foo {}\n\ntrailing bytes"),
 );
