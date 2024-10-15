@@ -1,8 +1,6 @@
 ---
-source: keyvalues-parser/tests/text_parser.rs
-assertion_line: 94
+source: keyvalues-parser/tests/text_parser/mod.rs
 expression: rendered
-
 ---
 "Outer Key"
 {
@@ -11,4 +9,3 @@ expression: rendered
 	{
 	}
 }
-

@@ -1,0 +1,7 @@
+---
+source: keyvalues-parser/tests/text_parser/mod.rs
+expression: rendered
+---
+"Key"
+{
+}

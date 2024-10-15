@@ -1,5 +1,5 @@
 ---
-source: keyvalues-parser/tests/text_parser.rs
+source: keyvalues-parser/tests/text_parser/mod.rs
 expression: "PartialVdfDef::from(vdf.clone())"
 ---
 PartialVdfDef {
@@ -10,6 +10,8 @@ PartialVdfDef {
         ),
     ),
     bases: [
-        "some/base.vdf",
+        "one_base.res",
+        "../another_base.vdf",
+        "other\\path\\sep.pop",
     ],
 }

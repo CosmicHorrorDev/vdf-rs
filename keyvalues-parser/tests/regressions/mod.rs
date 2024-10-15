@@ -2,6 +2,8 @@ use std::iter;
 
 use keyvalues_parser::Vdf;
 
+mod fuzzer;
+
 // The parser could hit a stack overflow when dealing with a string containing a large amount of
 // escape sequences. This happened in the wild from a VDF file that contained a large JSON blob in
 // a string that required a lot of escapes
