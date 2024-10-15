@@ -1,8 +1,6 @@
 ---
-source: keyvalues-parser/tests/text_parser.rs
-assertion_line: 127
+source: keyvalues-parser/tests/text_parser/mod.rs
 expression: rendered
-
 ---
 #base "one_base.res"
 #base "../another_base.vdf"
@@ -11,4 +9,3 @@ expression: rendered
 "Key"
 {
 }
-

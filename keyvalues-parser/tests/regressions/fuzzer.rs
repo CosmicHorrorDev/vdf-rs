@@ -31,17 +31,25 @@ macro_rules! gen_fuzzer_tests {
     };
 }
 
-gen_fuzzer_tests!(
-    parse_valid,
-    (unqoted_backslash_key, r#"\ """#),
-    (escaped_chars, r#""" "\r\\\n\t\"""#),
-);
+mod valid {
+    use super::*;
 
-gen_fuzzer_tests!(
-    parse_invalid,
-    (empty, ""),
-    (partial_map, "a{\n\"\""),
-    (macrolike_key_then_map, "#basefoo{}"),
-    (macrolike_key_then_str, "#base no_vdf"),
-    (trailing_bytes, "foo {}\n\ntrailing bytes"),
-);
+    gen_fuzzer_tests!(
+        parse_valid,
+        (unqoted_backslash_key, r#"\ """#),
+        (escaped_chars, r#""" "\r\\\n\t\"""#),
+    );
+}
+
+mod invalid {
+    use super::*;
+
+    gen_fuzzer_tests!(
+        parse_invalid,
+        (empty, ""),
+        (partial_map, "a{\n\"\""),
+        (macrolike_key_then_map, "#basefoo{}"),
+        (macrolike_key_then_str, "#base no_vdf"),
+        (trailing_bytes, "foo {}\n\ntrailing bytes"),
+    );
+}
