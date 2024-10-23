@@ -220,7 +220,7 @@ impl<'a> Deref for Obj<'a> {
     }
 }
 
-impl<'a> DerefMut for Obj<'a> {
+impl DerefMut for Obj<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

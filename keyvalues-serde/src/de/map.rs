@@ -28,7 +28,7 @@ impl<'a, 'de> ObjEater<'a, 'de> {
     }
 }
 
-impl<'de, 'a> MapAccess<'de> for ObjEater<'a, 'de> {
+impl<'de> MapAccess<'de> for ObjEater<'_, 'de> {
     type Error = Error;
 
     fn next_key_seed<K>(&mut self, seed: K) -> Result<Option<K::Value>>
