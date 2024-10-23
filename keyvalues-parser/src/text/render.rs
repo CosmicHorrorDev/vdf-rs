@@ -75,13 +75,13 @@ fn write_obj(
     Ok(())
 }
 
-impl<'a> fmt::Display for PartialVdf<'a> {
+impl fmt::Display for PartialVdf<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self._render(f, RenderType::Raw)
     }
 }
 
-impl<'a> PartialVdf<'a> {
+impl PartialVdf<'_> {
     // TODO: do we really want to return a crate error here? It will always be a formatting error
     pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
         self._render(writer, RenderType::Raw).map_err(Into::into)
@@ -111,13 +111,13 @@ impl<'a> PartialVdf<'a> {
     }
 }
 
-impl<'a> fmt::Display for Vdf<'a> {
+impl fmt::Display for Vdf<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_indented(f, 0, RenderType::Escaped)
     }
 }
 
-impl<'a> Vdf<'a> {
+impl Vdf<'_> {
     pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
         write!(writer, "{}", self).map_err(Into::into)
     }
@@ -145,13 +145,13 @@ impl<'a> Vdf<'a> {
     }
 }
 
-impl<'a> fmt::Display for Value<'a> {
+impl fmt::Display for Value<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.write_indented(f, 0, RenderType::Escaped)
     }
 }
 
-impl<'a> Value<'a> {
+impl Value<'_> {
     fn write_indented(
         &self,
         writer: &mut impl Write,

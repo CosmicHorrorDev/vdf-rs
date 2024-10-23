@@ -77,7 +77,7 @@ impl<'a> Deref for TokenStream<'a> {
     }
 }
 
-impl<'a> DerefMut for TokenStream<'a> {
+impl DerefMut for TokenStream<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

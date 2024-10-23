@@ -221,7 +221,7 @@ impl<'text> Deref for Obj<'text> {
     }
 }
 
-impl<'text> DerefMut for Obj<'text> {
+impl DerefMut for Obj<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

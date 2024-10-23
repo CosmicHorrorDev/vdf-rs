@@ -136,7 +136,7 @@ impl<'de> Deref for Deserializer<'de> {
 }
 
 // TODO: almost none of these should be `pub`
-impl<'de> DerefMut for Deserializer<'de> {
+impl DerefMut for Deserializer<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.tokens
     }
@@ -152,7 +152,7 @@ macro_rules! forward_string_to_parse {
     }
 }
 
-impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
+impl<'de> de::Deserializer<'de> for &mut Deserializer<'de> {
     type Error = Error;
 
     fn deserialize_any<V: Visitor<'de>>(self, visitor: V) -> Result<V::Value> {

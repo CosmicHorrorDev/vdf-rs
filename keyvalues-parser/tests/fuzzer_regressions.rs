@@ -5,7 +5,7 @@ type BoxedResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 // Mimics the behavior of the parse fuzzer test for regressions testing
 fn parse_valid(contents: &str) -> BoxedResult<()> {
-    let parsed = Vdf::parse(&contents).expect("Input has to be valid here");
+    let parsed = Vdf::parse(contents).expect("Input has to be valid here");
     let vdf_text = parsed.to_string();
     let reparsed = Vdf::parse(&vdf_text)?;
     assert_eq!(parsed, reparsed);
@@ -15,7 +15,7 @@ fn parse_valid(contents: &str) -> BoxedResult<()> {
 
 // Checks that we return an error instead of panicking or hanging
 fn parse_invalid(contents: &str) -> BoxedResult<()> {
-    Vdf::parse(&contents).unwrap_err();
+    Vdf::parse(contents).unwrap_err();
     Ok(())
 }
 
