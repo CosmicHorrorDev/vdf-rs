@@ -14,7 +14,7 @@ fn get_version<'a>(controller_mappings: &'a Vdf<'a>) -> Option<&'a str> {
         .value
         .get_obj()?
         .get("version")?
-        .get(0)?
+        .first()?
         .get_str()
 }
 

@@ -73,7 +73,7 @@ impl<'a, 'de> SeqEater<'a, 'de> {
     }
 }
 
-impl<'de, 'a> SeqAccess<'de> for SeqEater<'a, 'de> {
+impl<'de> SeqAccess<'de> for SeqEater<'_, 'de> {
     type Error = Error;
 
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
@@ -96,7 +96,7 @@ pub struct SingleValueEater<'a, 'de: 'a> {
     finished: bool,
 }
 
-impl<'de, 'a> SingleValueEater<'a, 'de> {
+impl<'de> SingleValueEater<'_, 'de> {
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
     where
         T: DeserializeSeed<'de>,
@@ -121,7 +121,7 @@ pub struct SetLengthEater<'a, 'de: 'a> {
     remaining: usize,
 }
 
-impl<'de, 'a> SetLengthEater<'a, 'de> {
+impl<'de> SetLengthEater<'_, 'de> {
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
     where
         T: DeserializeSeed<'de>,
@@ -157,7 +157,7 @@ pub struct VariableLengthEater<'a, 'de: 'a> {
     de: &'a mut Deserializer<'de>,
 }
 
-impl<'de, 'a> VariableLengthEater<'a, 'de> {
+impl<'de> VariableLengthEater<'_, 'de> {
     fn next_element_seed<T>(&mut self, seed: T) -> Result<Option<T::Value>>
     where
         T: DeserializeSeed<'de>,
