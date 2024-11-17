@@ -17,7 +17,14 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub enum Error {
     RenderError(fmt::Error),
     RawRenderError { invalid_char: char },
-    Todo,
+    LingeringBytes,
+    InvalidMacro,
+    MissingTopLevelPair,
+    EoiParsingString,
+    ExpectedUnquotedString,
+    InvalidEscapedCharacter,
+    EoiParsingMap,
+    InvalidComment,
 }
 
 impl From<fmt::Error> for Error {
@@ -34,7 +41,16 @@ impl fmt::Display for Error {
                 f,
                 "Encountered invalid character in raw string: {invalid_char:?}"
             ),
-            Self::Todo => write!(f, "TODO"),
+            Self::LingeringBytes => f.write_str("Bytes remained after parsed pair"),
+            Self::InvalidMacro => f.write_str("Invalid macro"),
+            Self::MissingTopLevelPair => f.write_str("Missing top-level pair"),
+            Self::EoiParsingString => {
+                f.write_str("Encountered the end-of-input while pasing a string")
+            }
+            Self::ExpectedUnquotedString => f.write_str("Expected unquoted string"),
+            Self::InvalidEscapedCharacter => f.write_str("Invalid escaped string character"),
+            Self::EoiParsingMap => f.write_str("Encountered the end-of-input while pasing a map"),
+            Self::InvalidComment => f.write_str("Invalid character in comment"),
         }
     }
 }

@@ -51,7 +51,7 @@ pub fn parse_(s: &str, escape_chars: bool) -> Result<PartialVdf> {
     eat_comments_whitespace_and_newlines(&mut chars)?;
 
     if chars.peek().is_some() {
-        Err(Error::Todo) // Lingering bytes
+        Err(Error::LingeringBytes)
     } else {
         Ok(PartialVdf { bases, key, value })
     }
@@ -79,7 +79,7 @@ fn parse_maybe_macro<'text>(
     }
 
     if !eat_whitespace(chars) {
-        return Err(Error::Todo);
+        return Err(Error::InvalidMacro);
     }
 
     let macro_ = parse_quoted_raw_or_unquoted_string(chars)?;
@@ -90,7 +90,7 @@ fn parse_maybe_macro<'text>(
     if eat_newlines(chars) {
         Ok(Some(()))
     } else {
-        Err(Error::Todo)
+        Err(Error::MissingTopLevelPair)
     }
 }
 
@@ -106,7 +106,7 @@ fn parse_quoted_raw_or_unquoted_string<'text>(chars: &mut CharIter<'text>) -> Re
 fn parse_quoted_raw_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text str> {
     assert!(chars.ensure_next('"'));
     let start_idx = chars.index();
-    while chars.next().ok_or(Error::Todo)? != '"' {}
+    while chars.next().ok_or(Error::EoiParsingString)? != '"' {}
     let end_idx = chars.index() - '"'.len_utf8();
     Ok(&chars.original_str()[start_idx..end_idx])
 }
@@ -114,8 +114,8 @@ fn parse_quoted_raw_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text 
 fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> Result<&'text str> {
     let start_idx = chars.index();
 
-    match chars.next().ok_or(Error::Todo)? {
-        '"' | '{' | '}' | ' ' | '\t' | '\r' | '\n' => return Err(Error::Todo),
+    match chars.next().ok_or(Error::EoiParsingString)? {
+        '"' | '{' | '}' | ' ' | '\t' | '\r' | '\n' => return Err(Error::ExpectedUnquotedString),
         _ => {}
     }
 
@@ -158,7 +158,7 @@ fn parse_quoted_string<'text>(
 
     let start_idx = chars.index();
     loop {
-        let peeked = chars.peek().ok_or(Error::Todo)?;
+        let peeked = chars.peek().ok_or(Error::EoiParsingString)?;
         // We only care about potential escaped characters if `escape_chars` is set. Otherwise we
         // only break on " for a quoted string
         if peeked == '"' || (peeked == '\\' && escape_chars) {
@@ -171,23 +171,23 @@ fn parse_quoted_string<'text>(
     let text_chunk = &chars.original_str()[start_idx..end_idx];
     // If our string contains escaped characters then it has to be a `Cow::Owned` otherwise it can
     // be `Cow::Borrowed`
-    let key = if chars.peek().ok_or(Error::Todo)? == '"' {
+    let key = if chars.peek().ok_or(Error::EoiParsingString)? == '"' {
         assert!(chars.ensure_next('"'));
         Cow::Borrowed(text_chunk)
     } else {
         assert!(chars.peek().unwrap() == '\\');
         let mut escaped = text_chunk.to_owned();
         loop {
-            let ch = chars.next().ok_or(Error::Todo)?;
+            let ch = chars.next().ok_or(Error::InvalidEscapedCharacter)?;
             match ch {
                 '"' => break Cow::Owned(escaped),
-                '\\' => match chars.next().ok_or(Error::Todo)? {
+                '\\' => match chars.next().ok_or(Error::InvalidEscapedCharacter)? {
                     'n' => escaped.push('\n'),
                     'r' => escaped.push('\r'),
                     't' => escaped.push('\t'),
                     '\\' => escaped.push('\\'),
                     '\"' => escaped.push('\"'),
-                    _ => return Err(Error::Todo),
+                    _ => return Err(Error::InvalidEscapedCharacter),
                 },
                 regular => escaped.push(regular),
             }
@@ -217,7 +217,7 @@ fn parse_obj<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> Result<O
 
     let mut obj = Obj::new();
 
-    while chars.peek().ok_or(Error::Todo)? != '}' {
+    while chars.peek().ok_or(Error::EoiParsingMap)? != '}' {
         let Vdf { key, value } = parse_pair(chars, escape_chars)?;
         obj.0.entry(key).or_default().push(value);
 
@@ -266,13 +266,13 @@ fn eat_comments(chars: &mut CharIter<'_>) -> Result<bool> {
                     chars.unwrap_next();
                     match chars.next() {
                         Some('\n') => break,
-                        _ => return Err(Error::Todo),
+                        _ => return Err(Error::InvalidComment),
                     }
                 }
                 None | Some('\n') => break,
                 // Various control characters
                 Some('\u{00}'..='\u{08}' | '\u{0A}'..='\u{1F}' | '\u{7F}') => {
-                    return Err(Error::Todo)
+                    return Err(Error::InvalidComment);
                 }
                 _ => _ = chars.unwrap_next(),
             }
