@@ -35,9 +35,24 @@ impl std::error::Error for RenderError {}
 /// An alias for `Result` with an [`Error`]
 pub type ParseResult<T> = std::result::Result<T, ParseError>;
 
+#[derive(Clone, Debug)]
+pub struct ParseError {
+    pub kind: ParseErrorKind,
+    pub span: Span,
+    line: String,
+}
+
+impl fmt::Display for ParseError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        todo!();
+    }
+}
+
+impl std::error::Error for ParseError {}
+
 /// Errors encountered while parsing VDF text
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum ParseError {
+pub enum ParseErrorKind {
     LingeringBytes,
     InvalidMacro,
     MissingTopLevelPair,
@@ -48,7 +63,7 @@ pub enum ParseError {
     InvalidComment,
 }
 
-impl fmt::Display for ParseError {
+impl fmt::Display for ParseErrorKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::LingeringBytes => f.write_str("Bytes remained after parsed pair"),
@@ -65,4 +80,20 @@ impl fmt::Display for ParseError {
     }
 }
 
-impl std::error::Error for ParseError {}
+#[derive(Clone, Debug)]
+pub enum Span {
+    Single(usize),
+    Run { index: usize, len: usize },
+}
+
+impl Span {
+    pub(crate) fn run_with_len(index: usize, len: usize) -> Self {
+        Span::Run { index, len }
+    }
+}
+
+impl From<usize> for Span {
+    fn from(index: usize) -> Self {
+        Self::Single(index)
+    }
+}
