@@ -3,7 +3,7 @@
 // TODO: figure this out before the next breaking release
 #![allow(clippy::large_enum_variant)]
 
-use keyvalues_parser::error::Error as ParserError;
+use keyvalues_parser::error::ParseError;
 use serde::{de, ser};
 
 use std::{
@@ -18,7 +18,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug)]
 pub enum Error {
     Message(String),
-    Parse(ParserError),
+    Parse(ParseError),
     Io(io::Error),
     NonFiniteFloat(f32),
     EofWhileParsingAny,
@@ -64,8 +64,8 @@ impl From<ParseFloatError> for Error {
     }
 }
 
-impl From<ParserError> for Error {
-    fn from(e: ParserError) -> Self {
+impl From<ParseError> for Error {
+    fn from(e: ParseError) -> Self {
         Self::Parse(e)
     }
 }
