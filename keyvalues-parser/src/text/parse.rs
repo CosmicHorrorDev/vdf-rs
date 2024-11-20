@@ -1,7 +1,7 @@
 use std::{borrow::Cow, str::Chars};
 
 use crate::{
-    error::{ParseError, ParseErrorKind, ParseResult, Span},
+    error::{LineCol, ParseError, ParseErrorInner, ParseResult, Span},
     Key, Obj, PartialVdf, Value, Vdf,
 };
 
@@ -51,7 +51,7 @@ pub fn parse_(s: &str, escape_chars: bool) -> ParseResult<PartialVdf> {
     eat_comments_whitespace_and_newlines(&mut chars)?;
 
     if chars.peek().is_some() {
-        Err(chars.err(ParseErrorKind::LingeringBytes, 0.into()))
+        Err(chars.err(ParseErrorInner::LingeringBytes, chars.index()..))
     } else {
         Ok(PartialVdf { bases, key, value })
     }
@@ -74,12 +74,18 @@ fn parse_maybe_macro<'text>(
     chars: &mut CharIter<'text>,
     macros: &mut Vec<&'text str>,
 ) -> ParseResult<Option<()>> {
+    // FIXME: this should also support `#include` too
     if !chars.next_n_if_eq(['#', 'b', 'a', 's', 'e']) {
         return Ok(None);
     }
 
     if !eat_whitespace(chars) {
-        return Err(chars.err(ParseErrorKind::InvalidMacro, 0.into()));
+        let start_idx = chars.index();
+        let err_span: Span<_> = match chars.next() {
+            None => (start_idx..).into(),
+            Some(_) => (start_idx..=start_idx).into(),
+        };
+        return Err(chars.err(ParseErrorInner::ExpectedWhitespace, err_span));
     }
 
     let macro_ = parse_quoted_raw_or_unquoted_string(chars)?;
@@ -90,7 +96,7 @@ fn parse_maybe_macro<'text>(
     if eat_newlines(chars) {
         Ok(Some(()))
     } else {
-        Err(chars.err(ParseErrorKind::MissingTopLevelPair, 0.into()))
+        Err(chars.err(ParseErrorInner::ExpectedNewlineAfterMacro, chars.index()..))
     }
 }
 
@@ -110,22 +116,24 @@ fn parse_quoted_raw_string<'text>(chars: &mut CharIter<'text>) -> ParseResult<&'
     let start_idx = chars.index();
     while chars
         .next()
-        .ok_or_else(|| chars.err(ParseErrorKind::EoiParsingString, 0.into()))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
         != '"'
     {}
     let end_idx = chars.index() - '"'.len_utf8();
     Ok(&chars.original_str()[start_idx..end_idx])
 }
 
+// FIXME: This is often called as the fall-through for alternations. Cleanup the error types that
+// get returned
 fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> ParseResult<&'text str> {
     let start_idx = chars.index();
 
     match chars
         .next()
-        .ok_or_else(|| chars.err(ParseErrorKind::EoiParsingString, 0.into()))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
     {
         '"' | '{' | '}' | ' ' | '\t' | '\r' | '\n' => {
-            return Err(chars.err(ParseErrorKind::ExpectedUnquotedString, 0.into()))
+            return Err(chars.err(ParseErrorInner::ExpectedUnquotedString, 0..))
         }
         _ => {}
     }
@@ -165,13 +173,14 @@ fn parse_quoted_string<'text>(
     chars: &mut CharIter<'text>,
     escape_chars: bool,
 ) -> ParseResult<Key<'text>> {
+    let str_start_index = chars.index();
     assert!(chars.ensure_next('"'));
 
     let start_idx = chars.index();
     loop {
         let peeked = chars
             .peek()
-            .ok_or_else(|| chars.err(ParseErrorKind::EoiParsingString, 0.into()))?;
+            .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, str_start_index..))?;
         // We only care about potential escaped characters if `escape_chars` is set. Otherwise we
         // only break on " for a quoted string
         if peeked == '"' || (peeked == '\\' && escape_chars) {
@@ -186,7 +195,7 @@ fn parse_quoted_string<'text>(
     // be `Cow::Borrowed`
     let key = if chars
         .peek()
-        .ok_or_else(|| chars.err(ParseErrorKind::EoiParsingString, 0.into()))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
         == '"'
     {
         assert!(chars.ensure_next('"'));
@@ -195,21 +204,27 @@ fn parse_quoted_string<'text>(
         assert!(chars.peek().unwrap() == '\\');
         let mut escaped = text_chunk.to_owned();
         loop {
+            let err_span_start = chars.index();
             let ch = chars
                 .next()
-                .ok_or_else(|| chars.err(ParseErrorKind::InvalidEscapedCharacter, 0.into()))?;
+                .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, str_start_index..))?;
+            let err_span_end = chars.index();
             match ch {
                 '"' => break Cow::Owned(escaped),
-                '\\' => match chars
-                    .next()
-                    .ok_or_else(|| chars.err(ParseErrorKind::InvalidEscapedCharacter, 0.into()))?
-                {
+                '\\' => match chars.next().ok_or_else(|| {
+                    chars.err(ParseErrorInner::EoiParsingString, str_start_index..)
+                })? {
                     'n' => escaped.push('\n'),
                     'r' => escaped.push('\r'),
                     't' => escaped.push('\t'),
                     '\\' => escaped.push('\\'),
                     '\"' => escaped.push('\"'),
-                    _ => return Err(chars.err(ParseErrorKind::InvalidEscapedCharacter, 0.into())),
+                    invalid => {
+                        return Err(chars.err(
+                            ParseErrorInner::InvalidEscapedCharacter { invalid },
+                            err_span_start..=err_span_end,
+                        ));
+                    }
                 },
                 regular => escaped.push(regular),
             }
@@ -237,6 +252,7 @@ fn parse_value<'text>(
 }
 
 fn parse_obj<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> ParseResult<Obj<'text>> {
+    let err_span_start = chars.index();
     assert!(chars.ensure_next('{'));
     eat_comments_whitespace_and_newlines(chars)?;
 
@@ -244,7 +260,7 @@ fn parse_obj<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> ParseRes
 
     while chars
         .peek()
-        .ok_or_else(|| chars.err(ParseErrorKind::EoiParsingMap, 0.into()))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingMap, err_span_start..))?
         != '}'
     {
         let Vdf { key, value } = parse_pair(chars, escape_chars)?;
@@ -295,13 +311,13 @@ fn eat_comments(chars: &mut CharIter<'_>) -> ParseResult<bool> {
                     chars.unwrap_next();
                     match chars.next() {
                         Some('\n') => break,
-                        _ => return Err(chars.err(ParseErrorKind::InvalidComment, 0.into())),
+                        _ => return Err(chars.err(ParseErrorInner::InvalidComment, 0..)),
                     }
                 }
                 None | Some('\n') => break,
                 // Various control characters
                 Some('\u{00}'..='\u{08}' | '\u{0A}'..='\u{1F}' | '\u{7F}') => {
-                    return Err(chars.err(ParseErrorKind::InvalidComment, 0.into()));
+                    return Err(chars.err(ParseErrorInner::InvalidComment, 0..));
                 }
                 _ => _ = chars.unwrap_next(),
             }
@@ -426,9 +442,104 @@ impl<'text> CharIter<'text> {
         arr
     }
 
+    /// Emit an error given its kind and span
+    ///
+    /// We don't keep track of line/col during parsing to keep the happy path fast. Instead we track
+    /// indices into the original string and only translate them to line/col on error while we still
+    /// have access to the original text
     #[must_use]
-    fn err(&self, kind: ParseErrorKind, span: Span) -> ParseError {
-        todo!();
+    fn err(&self, inner: ParseErrorInner, index_span: impl Into<Span<usize>>) -> ParseError {
+        let index_span = index_span.into();
+
+        let (start, end) = index_span.clone().into_inner();
+        assert!(start <= end.unwrap_or(start), "No backwards error span");
+
+        let mut chars = self.original_str().char_indices();
+        let mut line_col = LineCol::default();
+        let mut current_line_start = 0;
+
+        // Resolve the line/col for the start of the span and find the start of the line
+        let mut last_index = 0;
+        let mut last_c = '\0';
+        let (error_lines_start, error_span_start) = loop {
+            let Some((i, c)) = chars.next() else {
+                break (current_line_start, line_col);
+            };
+            last_index = i;
+            last_c = c;
+
+            if i >= start {
+                break (current_line_start, line_col);
+            }
+
+            if c == '\n' {
+                current_line_start = i + '\n'.len_utf8();
+                line_col.col = 1;
+                line_col.line += 1;
+            } else {
+                line_col.col += 1;
+            }
+        };
+
+        // TODO: needs cleanup
+        let (error_lines_end, error_span_end) = if let Some(end) = end {
+            // Resolve the line/col for the end of the span and maybe we happened to be at the end of
+            // the final line
+            let (maybe_error_lines_end, error_span_end) = if last_index >= end {
+                let maybe_error_lines_end = (last_c == '\n').then_some(current_line_start);
+                (maybe_error_lines_end, line_col)
+            } else {
+                loop {
+                    let Some((i, c)) = chars.next() else {
+                        break (None, line_col);
+                    };
+                    last_index = i;
+
+                    if c == '\n' {
+                        current_line_start = i + '\n'.len_utf8();
+                        line_col.line += 1;
+                    } else {
+                        line_col.col += 1;
+                    }
+
+                    if i >= end {
+                        let maybe_error_lines_end = (c == '\n').then_some(current_line_start);
+                        break (maybe_error_lines_end, line_col);
+                    }
+                }
+            };
+
+            // Find the end of the last error line
+            let error_lines_end = maybe_error_lines_end.unwrap_or_else(|| loop {
+                match chars.next() {
+                    Some((i, '\n')) => break i,
+                    Some((i, _)) => last_index = i,
+                    None => break last_index,
+                }
+            });
+            dbg!(error_lines_end);
+
+            (Some(error_lines_end), Some(error_span_end))
+        } else {
+            (None, None)
+        };
+
+        let lines_start = error_lines_start;
+        let display_span = Span::new(error_span_start, error_span_end);
+        // TODO: use `Span::slice` here
+        let lines = match error_lines_end {
+            Some(end) => &self.original_str()[error_lines_start..=end],
+            None => &self.original_str()[error_lines_start..],
+        }
+        .to_owned();
+
+        ParseError {
+            inner,
+            index_span,
+            display_span,
+            lines,
+            lines_start,
+        }
     }
 }
 
