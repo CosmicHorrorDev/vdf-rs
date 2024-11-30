@@ -106,7 +106,13 @@ fn parse_quoted_raw_or_unquoted_string<'text>(
     if chars.peek() == Some('"') {
         parse_quoted_raw_string(chars)
     } else {
-        parse_unquoted_string(chars)
+        parse_unquoted_string(chars).map_err(|(kind, span)| {
+            let kind = match kind {
+                InvalidUnquotedString::Eoi => ParseErrorInner::EoiExpectedMacroPath,
+                InvalidUnquotedString::InvalidChar => ParseErrorInner::InvalidMacroPath,
+            };
+            chars.err(kind, span)
+        })
     }
 }
 
@@ -116,24 +122,32 @@ fn parse_quoted_raw_string<'text>(chars: &mut CharIter<'text>) -> ParseResult<&'
     let start_idx = chars.index();
     while chars
         .next()
-        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingQuotedString, start_idx..))?
         != '"'
     {}
     let end_idx = chars.index() - '"'.len_utf8();
     Ok(&chars.original_str()[start_idx..end_idx])
 }
 
-// FIXME: This is often called as the fall-through for alternations. Cleanup the error types that
-// get returned
-fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> ParseResult<&'text str> {
+// Unquoted strings are often used as the fallthrough for various alternations. This can lead to
+// confusing error messages when treating them with a global error type, so instead we force a
+// vague local error that gets translated and bubbled up depending on where it's called
+enum InvalidUnquotedString {
+    Eoi,
+    InvalidChar,
+}
+
+fn parse_unquoted_string<'text>(
+    chars: &mut CharIter<'text>,
+) -> Result<&'text str, (InvalidUnquotedString, Span<usize>)> {
     let start_idx = chars.index();
 
     match chars
         .next()
-        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
+        .ok_or((InvalidUnquotedString::Eoi, (0..).into()))?
     {
         '"' | '{' | '}' | ' ' | '\t' | '\r' | '\n' => {
-            return Err(chars.err(ParseErrorInner::ExpectedUnquotedString, 0..))
+            return Err((InvalidUnquotedString::InvalidChar, (0..).into()));
         }
         _ => {}
     }
@@ -154,19 +168,23 @@ fn parse_unquoted_string<'text>(chars: &mut CharIter<'text>) -> ParseResult<&'te
 }
 
 fn parse_pair<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> ParseResult<Vdf<'text>> {
-    let key = parse_string(chars, escape_chars)?;
+    let key = if chars.peek() == Some('"') {
+        parse_quoted_string(chars, escape_chars)
+    } else {
+        match parse_unquoted_string(chars) {
+            Ok(s) => Ok(Cow::Borrowed(s)),
+            Err((kind, span)) => {
+                let kind = match kind {
+                    InvalidUnquotedString::Eoi => ParseErrorInner::EoiExpectedPairKey,
+                    InvalidUnquotedString::InvalidChar => ParseErrorInner::InvalidPairKey,
+                };
+                Err(chars.err(kind, span))
+            }
+        }
+    }?;
     eat_comments_whitespace_and_newlines(chars)?;
     let value = parse_value(chars, escape_chars)?;
     Ok(Vdf { key, value })
-}
-
-fn parse_string<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> ParseResult<Key<'text>> {
-    if chars.peek() == Some('"') {
-        parse_quoted_string(chars, escape_chars)
-    } else {
-        let s = parse_unquoted_string(chars)?;
-        Ok(Cow::Borrowed(s))
-    }
 }
 
 fn parse_quoted_string<'text>(
@@ -180,7 +198,7 @@ fn parse_quoted_string<'text>(
     loop {
         let peeked = chars
             .peek()
-            .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, str_start_index..))?;
+            .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingQuotedString, str_start_index..))?;
         // We only care about potential escaped characters if `escape_chars` is set. Otherwise we
         // only break on " for a quoted string
         if peeked == '"' || (peeked == '\\' && escape_chars) {
@@ -195,7 +213,7 @@ fn parse_quoted_string<'text>(
     // be `Cow::Borrowed`
     let key = if chars
         .peek()
-        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, 0..))?
+        .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingQuotedString, str_start_index..))?
         == '"'
     {
         assert!(chars.ensure_next('"'));
@@ -204,15 +222,13 @@ fn parse_quoted_string<'text>(
         assert!(chars.peek().unwrap() == '\\');
         let mut escaped = text_chunk.to_owned();
         loop {
-            let err_span_start = chars.index();
-            let ch = chars
-                .next()
-                .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingString, str_start_index..))?;
-            let err_span_end = chars.index();
+            let ch = chars.next().ok_or_else(|| {
+                chars.err(ParseErrorInner::EoiParsingQuotedString, str_start_index..)
+            })?;
             match ch {
                 '"' => break Cow::Owned(escaped),
                 '\\' => match chars.next().ok_or_else(|| {
-                    chars.err(ParseErrorInner::EoiParsingString, str_start_index..)
+                    chars.err(ParseErrorInner::EoiParsingQuotedString, str_start_index..)
                 })? {
                     'n' => escaped.push('\n'),
                     'r' => escaped.push('\r'),
@@ -220,6 +236,10 @@ fn parse_quoted_string<'text>(
                     '\\' => escaped.push('\\'),
                     '\"' => escaped.push('\"'),
                     invalid => {
+                        // Backtrack to reconstruct the error span since this is a hot loop and we
+                        // don't want to track a span for every character
+                        let err_span_end = chars.index() - invalid.len_utf8();
+                        let err_span_start = err_span_end - '\\'.len_utf8();
                         return Err(chars.err(
                             ParseErrorInner::InvalidEscapedCharacter { invalid },
                             err_span_start..=err_span_end,
@@ -243,10 +263,20 @@ fn parse_value<'text>(
             let obj = parse_obj(chars, escape_chars)?;
             Value::Obj(obj)
         }
-        _ => {
-            let s = parse_string(chars, escape_chars)?;
+        Some('"') => {
+            let s = parse_quoted_string(chars, escape_chars)?;
             Value::Str(s)
         }
+        _ => match parse_unquoted_string(chars) {
+            Ok(s) => Value::Str(Cow::Borrowed(s)),
+            Err((kind, span)) => {
+                let kind = match kind {
+                    InvalidUnquotedString::Eoi => ParseErrorInner::EoiExpectedPairValue,
+                    InvalidUnquotedString::InvalidChar => ParseErrorInner::InvalidPairValue,
+                };
+                return Err(chars.err(kind, span));
+            }
+        },
     };
     Ok(value)
 }
@@ -260,9 +290,12 @@ fn parse_obj<'text>(chars: &mut CharIter<'text>, escape_chars: bool) -> ParseRes
 
     while chars
         .peek()
+        // TODO: Switch error to Expected pair key or end of map
         .ok_or_else(|| chars.err(ParseErrorInner::EoiParsingMap, err_span_start..))?
         != '}'
     {
+        // TODO: assert that the error isn't eoi parsing key because that should be represented in
+        // the error above
         let Vdf { key, value } = parse_pair(chars, escape_chars)?;
         obj.0.entry(key).or_default().push(value);
 
@@ -308,16 +341,26 @@ fn eat_comments(chars: &mut CharIter<'_>) -> ParseResult<bool> {
         loop {
             match chars.peek() {
                 Some('\r') => {
+                    let err_index = chars.index();
                     chars.unwrap_next();
                     match chars.next() {
                         Some('\n') => break,
-                        _ => return Err(chars.err(ParseErrorInner::InvalidComment, 0..)),
+                        _ => {
+                            return Err(chars.err(
+                                ParseErrorInner::CommentControlCharacter,
+                                err_index..=err_index,
+                            ))
+                        }
                     }
                 }
                 None | Some('\n') => break,
                 // Various control characters
                 Some('\u{00}'..='\u{08}' | '\u{0A}'..='\u{1F}' | '\u{7F}') => {
-                    return Err(chars.err(ParseErrorInner::InvalidComment, 0..));
+                    let err_index = chars.index();
+                    return Err(chars.err(
+                        ParseErrorInner::CommentControlCharacter,
+                        err_index..=err_index,
+                    ));
                 }
                 _ => _ = chars.unwrap_next(),
             }
@@ -445,15 +488,17 @@ impl<'text> CharIter<'text> {
     /// Emit an error given its kind and span
     ///
     /// We don't keep track of line/col during parsing to keep the happy path fast. Instead we track
-    /// indices into the original string and only translate them to line/col on error while we still
-    /// have access to the original text
+    /// indices into the original string and only translate them to line/col and resolve the full
+    /// lines that the error lies on when we go to emit the error while we still have access to the
+    /// original text
     #[must_use]
     fn err(&self, inner: ParseErrorInner, index_span: impl Into<Span<usize>>) -> ParseError {
         let index_span = index_span.into();
 
         let (start, end) = index_span.clone().into_inner();
-        assert!(start <= end.unwrap_or(start), "No backwards error span");
 
+        // TODO: switch this to be peekable, so that we can peek instead of breaking so eagerly?
+        // Hopefully that removes the need to manually track `last_index` and `last_c`
         let mut chars = self.original_str().char_indices();
         let mut line_col = LineCol::default();
         let mut current_line_start = 0;
@@ -481,8 +526,8 @@ impl<'text> CharIter<'text> {
             }
         };
 
-        // TODO: needs cleanup
-        let (error_lines_end, error_span_end) = if let Some(end) = end {
+        let maybe_end = end.map(|end| {
+            assert!(start <= end, "No backwards error span");
             // Resolve the line/col for the end of the span and maybe we happened to be at the end of
             // the final line
             let (maybe_error_lines_end, error_span_end) = if last_index >= end {
@@ -517,21 +562,19 @@ impl<'text> CharIter<'text> {
                     None => break last_index,
                 }
             });
-            dbg!(error_lines_end);
 
-            (Some(error_lines_end), Some(error_span_end))
-        } else {
-            (None, None)
+            (error_lines_end, error_span_end)
+        });
+        let (error_lines_end, error_span_end) = match maybe_end {
+            Some((lines, span)) => (Some(lines), Some(span)),
+            None => (None, None),
         };
 
         let lines_start = error_lines_start;
         let display_span = Span::new(error_span_start, error_span_end);
-        // TODO: use `Span::slice` here
-        let lines = match error_lines_end {
-            Some(end) => &self.original_str()[error_lines_start..=end],
-            None => &self.original_str()[error_lines_start..],
-        }
-        .to_owned();
+        let lines = Span::new(error_lines_start, error_lines_end)
+            .slice(self.original_str())
+            .to_owned();
 
         ParseError {
             inner,

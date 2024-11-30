@@ -3,7 +3,7 @@
 // TODO: move most of this into a `parse` module?
 
 use std::{
-    fmt::{self, Write},
+    fmt,
     ops::{RangeFrom, RangeInclusive},
 };
 
@@ -117,9 +117,7 @@ impl fmt::Display for ParseError {
             } else {
                 0
             };
-            let padding_before = on_start_line
-                .then(|| " ".repeat(num_before))
-                .unwrap_or_default();
+            let padding_before = " ".repeat(num_before);
 
             let (num_after, append_extra_arrow) = if let Some(display_end) = display_end {
                 let num_after = line.len().checked_sub(display_end.col).unwrap();
@@ -195,7 +193,7 @@ pub enum ParseErrorInner {
     /// assert_eq!(err.inner(), ParseErrorInner::ExpectedNewlineAfterMacro);
     /// # print!("{err}");
     /// let expected = r#"
-    /// error: Expected newline after macro
+    /// error: Expected newline after macro definition
     /// at: 1:25 to the end of input
     /// 1 | #base robot_standard.pop
     ///   |                         ^
@@ -210,18 +208,25 @@ pub enum ParseErrorInner {
     /// ```
     /// # use keyvalues_parser::{Vdf, error::ParseErrorInner};
     /// let err = Vdf::parse("key \"incomplete ...").unwrap_err();
-    /// assert_eq!(err.inner(), ParseErrorInner::EoiParsingString);
+    /// assert_eq!(err.inner(), ParseErrorInner::EoiParsingQuotedString);
     /// # print!("{err}");
     /// let expected = r#"
-    /// error: Encountered the end of input while parsing a string
+    /// error: Encountered the end of input while parsing a quoted string
     /// at: 1:5 to the end of input
     /// 1 | key "incomplete ...
     ///   |     ^^^^^^^^^^^^^^^^
     /// "#.trim_start();
     /// assert_eq!(err.to_string(), expected);
     /// ```
-    EoiParsingString,
-    ExpectedUnquotedString,
+    EoiParsingQuotedString,
+    EoiExpectedMacroPath,
+    InvalidMacroPath,
+    // TODO: remove this error variant in favor of a MissingTopLevelPair and
+    //       ExpectedPairKeyOrMapClose
+    EoiExpectedPairKey,
+    InvalidPairKey,
+    EoiExpectedPairValue,
+    InvalidPairValue,
     /// Encountered an invalid escape character in a quoted string
     ///
     /// # Example
@@ -261,25 +266,72 @@ pub enum ParseErrorInner {
     /// assert_eq!(err.to_string(), expected);
     /// ```
     EoiParsingMap,
+    /// Encountered an invalid control character while parsing a comment
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Vdf, error::ParseErrorInner};
+    /// let err = Vdf::parse("// Only valid before a newline -> \r uh oh").unwrap_err();
+    /// assert_eq!(err.inner(), ParseErrorInner::CommentControlCharacter);
+    /// # print!("{err}");
+    /// let expected = r#"
+    /// error: Encountered an invalid control character while parsing a comment
+    /// at: 1:35
+    /// 1 | // Only valid before a newline ->   uh oh
+    ///   |                                   ^
+    /// "#.trim_start();
+    /// assert_eq!(err.to_string(), expected);
+    /// ```
+    // TODO: pretty up the display of `\r` akin to how we did in sd?
     // TODO: store the invalid character
-    InvalidComment,
+    CommentControlCharacter,
 }
 
+pub enum Component {
+    MacroPath,
+    PairKey,
+    PairValue,
+}
+
+// TODO: can we group together the pairs of EoiExpected* and Invalid* to store a kind of
+// macro/key/value
 impl fmt::Display for ParseErrorInner {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::LingeringBytes => f.write_str("Found bytes after the top-level pair"),
             Self::ExpectedWhitespace => f.write_str("Expected whitespace"),
-            Self::ExpectedNewlineAfterMacro => f.write_str("Expected newline after macro"),
-            Self::EoiParsingString => {
-                f.write_str("Encountered the end of input while parsing a string")
+            Self::ExpectedNewlineAfterMacro => {
+                f.write_str("Expected newline after macro definition")
             }
-            Self::ExpectedUnquotedString => f.write_str("Expected unquoted string"),
+            Self::EoiExpectedMacroPath => {
+                f.write_str("Found the end of input while looking for a macro path")
+            }
+            Self::InvalidMacroPath => {
+                f.write_str("Encountered an invalid character while parsing a macro path")
+            }
+            Self::EoiExpectedPairKey => {
+                f.write_str("Encountered the end of input while looking for a pair's key")
+            }
+            Self::InvalidPairKey => {
+                f.write_str("Encountered an invalid character while looking for a pair's key")
+            }
+            Self::EoiExpectedPairValue => {
+                f.write_str("Encountered the end of input while looking for a pair's key")
+            }
+            Self::InvalidPairValue => {
+                f.write_str("Encountered an invalid character while looking for a pair's key")
+            }
+            Self::EoiParsingQuotedString => {
+                f.write_str("Encountered the end of input while parsing a quoted string")
+            }
             Self::InvalidEscapedCharacter { invalid } => {
                 write!(f, "Invalid escaped string character \\{invalid}")
             }
             Self::EoiParsingMap => f.write_str("Encountered the end of input while parsing a map"),
-            Self::InvalidComment => f.write_str("Invalid character in comment"),
+            Self::CommentControlCharacter => {
+                f.write_str("Encountered an invalid control character while parsing a comment")
+            }
         }
     }
 }
