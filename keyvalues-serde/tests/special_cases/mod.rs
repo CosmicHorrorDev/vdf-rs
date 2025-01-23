@@ -4,8 +4,8 @@ use crate::utils::{read_asset_file, test_vdf_deserialization, BoxedResult, Conta
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 use keyvalues_serde::{
-    from_str, from_str_with_key, to_string, to_string_with_key, to_writer, to_writer_with_key,
-    Error,
+    from_str, from_str_raw, from_str_with_key, to_string, to_string_with_key, to_writer,
+    to_writer_with_key, Error,
 };
 use pretty_assertions::assert_eq;
 use serde::Deserialize;
@@ -137,6 +137,21 @@ fn borrowed_escaped_string() -> BoxedResult<()> {
 
     assert_eq!(vdf, Container::new(Cow::from("tab\tseparated")));
     Ok(())
+}
+
+#[test]
+fn raw_escaped_string() -> BoxedResult<()> {
+    let vdf_text = read_asset_file("raw_string.vdf")?;
+    let vdf: RawString = from_str_raw(&vdf_text)?;
+
+    assert_eq!(vdf.unescaped_str_key, vec!["str\\a\\bvalue"]);
+    Ok(())
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+struct RawString {
+    #[serde(rename = "str\\key")]
+    pub unescaped_str_key: Vec<String>,
 }
 
 #[derive(Deserialize, Debug, PartialEq)]

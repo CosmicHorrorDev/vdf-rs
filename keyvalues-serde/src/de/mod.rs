@@ -45,6 +45,17 @@ pub fn from_str_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'
     from_vdf_with_key(vdf)
 }
 
+/// Attempts to deserialize a string of VDF text to some type T, without parsing escape sequences
+pub fn from_str_raw<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
+    from_str_raw_with_key(s).map(|(t, _)| t)
+}
+
+/// The same as [`raw_from_str()`], but also returns the top level VDF key
+pub fn from_str_raw_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'a>)> {
+    let vdf = Vdf::parse_raw(s)?;
+    from_vdf_with_key(vdf)
+}
+
 pub fn from_vdf<'a, T: Deserialize<'a>>(vdf: Vdf<'a>) -> Result<T> {
     from_vdf_with_key(vdf).map(|(t, _)| t)
 }
