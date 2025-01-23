@@ -17,8 +17,8 @@ pub use keyvalues_parser as parser;
 
 #[doc(inline)]
 pub use de::{
-    from_reader, from_reader_with_key, from_str, from_str_with_key, from_vdf, from_vdf_with_key,
-    Deserializer,
+    from_reader, from_reader_with_key, from_str, from_str_raw, from_str_raw_with_key,
+    from_str_with_key, from_vdf, from_vdf_with_key, Deserializer,
 };
 #[doc(inline)]
 pub use error::{Error, Result};
