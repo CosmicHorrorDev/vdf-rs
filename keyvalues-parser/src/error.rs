@@ -1,7 +1,5 @@
 //! All error information for parsing and rendering
 
-// TODO: move most of this into a `parse` module?
-
 use std::{
     fmt,
     ops::{RangeFrom, RangeInclusive},
@@ -272,6 +270,20 @@ pub enum ParseErrorInner {
     ///
     /// ```
     /// # use keyvalues_parser::{Vdf, error::ParseErrorInner};
+    /// let err = Vdf::parse("// \0 is invalid").unwrap_err();
+    /// assert_eq!(err.inner(), ParseErrorInner::CommentControlCharacter);
+    /// # print!("{err}");
+    /// let expected = "
+    /// error: Encountered an invalid control character while parsing a comment
+    /// at: 1:4
+    /// 1 | // \0 is invalid
+    ///   |    ^
+    /// ".trim_start();
+    /// assert_eq!(err.to_string(), expected);
+    /// ```
+    ///
+    /// ```
+    /// # use keyvalues_parser::{Vdf, error::ParseErrorInner};
     /// let err = Vdf::parse("// Only valid before a newline -> \r uh oh").unwrap_err();
     /// assert_eq!(err.inner(), ParseErrorInner::CommentControlCharacter);
     /// # print!("{err}");
@@ -294,8 +306,6 @@ pub enum Component {
     PairValue,
 }
 
-// TODO: can we group together the pairs of EoiExpected* and Invalid* to store a kind of
-// macro/key/value
 impl fmt::Display for ParseErrorInner {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
