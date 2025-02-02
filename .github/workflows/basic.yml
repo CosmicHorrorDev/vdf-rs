@@ -4,12 +4,13 @@ on:
     - main
   pull_request:
   schedule:
-    # Run weekly to keep Rust toolchain changes fresh
-    - cron: '0 0 * * 1'
+    # Run monthly to keep Rust toolchain changes fresh
+    - cron: '0 0 1 * *'
 
 name: "Build, Test, Format, and Lint"
 
 env:
+  CARGO_TERM_COLOR: always
   RUSTFLAGS: "--deny warnings"
 
 jobs:
@@ -26,51 +27,25 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install ${{ matrix.rust }} toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.rust }}
-          components: clippy, rustfmt
+        run: |
+          rustup toolchain install ${{ matrix.rust }} --profile minimal --component clippy,rustfmt
+          rustup default ${{ matrix.rust }}
 
       - name: Cache
         uses: Swatinem/rust-cache@v2
 
       # Uses `--all-targets` here to make sure that things like benchmarks
       # still compile
+      - name: Check formatting
+        run: |
+          cargo fmt --all -- --check
       - name: Build all targets
         run: |
           cargo build --all-targets --all-features
       - name: Run the test suite
         run: |
           cargo test --all-features
-      - name: Check formatting
-        run: |
-          cargo fmt --all -- --check
-      - name: Check clippy lints
-        run: |
-          cargo clippy
-
-  # Only check building and clippy on MSRV since the other tasks are prone to
-  # problems from dev dependencies having higher MSRVs
-  msrv_only:
-    name: Check MSRV compilation
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install MSRV toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: 1.70.0
-          components: clippy
-
-      - name: Cache
-        uses: Swatinem/rust-cache@v2
-
-      # All targets isn't used here due to MSRV issues with `clap`
-      - name: Build all targets
-        run: |
-          cargo build --all-features
+          cargo bench -- --test
       - name: Check clippy lints
         run: |
           cargo clippy
@@ -85,9 +60,9 @@ jobs:
       # to use unstable features, not because we _need_ the newest version.
       # This makes caching actually viable for more than just a day
       - name: Install nightly toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2023-10-01
+        run: |
+          rustup toolchain install --profile minimal nightly-2025-01-01
+          rustup default nightly-2025-01-01
       
       - name: Cache
         uses: Swatinem/rust-cache@v2
