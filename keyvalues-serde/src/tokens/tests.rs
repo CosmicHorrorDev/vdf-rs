@@ -79,20 +79,6 @@ fn invalid_vdf_nested_seq() {
 }
 
 #[test]
-fn invalid_vdf_obj_key() {
-    let naive_token_stream = NaiveTokenStream(vec![
-        NaiveToken::str("outer"),
-        NaiveToken::ObjBegin,
-        NaiveToken::ObjBegin,
-        NaiveToken::ObjEnd,
-        NaiveToken::ObjEnd,
-    ]);
-
-    // TODO: clean up error type, so we can compare
-    let _err = Vdf::try_from(&naive_token_stream).unwrap_err();
-}
-
-#[test]
 fn invalid_vdf_seq_key() {
     let naive_token_stream = NaiveTokenStream(vec![
         NaiveToken::str("outer"),

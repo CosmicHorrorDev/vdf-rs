@@ -60,23 +60,26 @@ impl<'a> TryFrom<&'a NaiveTokenStream> for Vdf<'a> {
         where
             I: Iterator<Item = &'a NaiveToken>,
         {
-            let maybe_token = tokens.next();
-            if let Some(NaiveToken::Str(s)) = maybe_token {
-                let key = Cow::from(s);
+            let key = match tokens.peek() {
+                Some(NaiveToken::Str(s)) => {
+                    // Pop off the peeked token
+                    let _ = tokens.next().unwrap();
+                    Cow::from(s)
+                }
+                // Infer an empty key when we see an obj while expecting a key
+                Some(NaiveToken::ObjBegin) => Cow::from(""),
+                other => {
+                    // TODO: this shouldn't really be a custom error, but we need a better base
+                    // error type
+                    return Err(Error::custom(format!("Expected key, found: {other:?}")));
+                }
+            };
 
-                let res = process_values(tokens)?;
-                tokens = res.0;
-                let values = res.1;
+            let res = process_values(tokens)?;
+            tokens = res.0;
+            let values = res.1;
 
-                Ok((tokens, key, values))
-            } else {
-                // TODO: this shouldn't really be a custom error, but we need a better base error
-                // type
-                Err(Error::custom(format!(
-                    "Expected key, found: {:?}",
-                    maybe_token
-                )))
-            }
+            Ok((tokens, key, values))
         }
 
         fn process_values<'a, I>(mut tokens: Peekable<I>) -> Result<(Peekable<I>, Vec<Value<'a>>)>
