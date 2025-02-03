@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeMap, HashMap},
-    fmt,
-};
+use std::{collections::HashMap, fmt};
 
 use crate::utils::{read_asset_file, BoxedResult, Container};
 
@@ -42,12 +39,6 @@ test_snapshot_de!(
 );
 
 test_snapshot_de!(obj_when_wanting_str, Container<String>, "obj_container.vdf");
-
-#[test]
-fn missing_top_level_key() {
-    // TODO: clean up error type, so we can compare
-    let _err = to_string(&BTreeMap::<(), ()>::new()).unwrap_err();
-}
 
 #[test]
 fn incorrect_seq_length() -> BoxedResult<()> {

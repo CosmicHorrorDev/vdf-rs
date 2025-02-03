@@ -1,0 +1,8 @@
+---
+source: keyvalues-serde/tests/regression_tests/mod.rs
+expression: serialized
+---
+""
+{
+	"a"	"0"
+}
