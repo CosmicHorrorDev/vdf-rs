@@ -24,3 +24,10 @@ name = "parse"
 path = "fuzz_targets/parse.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "error_invariants"
+path = "fuzz_targets/error_invariants.rs"
+test = false
+doc = false
+bench = false

@@ -65,7 +65,7 @@ pub type Key<'text> = Cow<'text, str>;
 /// //     "Inner Key" "Inner Value"
 /// // }
 /// println!("{}", parsed);
-/// # Ok::<(), keyvalues_parser::error::Error>(())
+/// # Ok::<(), keyvalues_parser::error::ParseError>(())
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct Vdf<'text> {
