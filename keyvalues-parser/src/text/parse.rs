@@ -542,6 +542,7 @@ impl<'text> CharIter<'text> {
 
                     if c == '\n' {
                         current_line_start = i + '\n'.len_utf8();
+                        line_col.col = 1;
                         line_col.line += 1;
                     } else {
                         line_col.col += 1;
@@ -559,6 +560,8 @@ impl<'text> CharIter<'text> {
                 match chars.next() {
                     Some((i, '\n')) => break i,
                     Some((i, _)) => last_index = i,
+                    // FIXME if we run up to the EOI trying to find the end of the error line then
+                    // we should have it be `None` instead of the final index
                     None => break last_index,
                 }
             });

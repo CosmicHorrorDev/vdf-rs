@@ -40,6 +40,8 @@ pub type ParseResult<T> = std::result::Result<T, ParseError>;
 
 #[derive(Clone, Debug)]
 pub struct ParseError {
+    // TODO: move resolving the error into here and just pass in the original string instead of
+    // having all of these be `pub(crate)` and constructing the error outside of this module
     pub(crate) inner: ParseErrorInner,
     pub(crate) index_span: Span<usize>,
     pub(crate) display_span: Span<LineCol>,
@@ -364,6 +366,7 @@ impl fmt::Display for LineCol {
     }
 }
 
+// TODO: Hide internals so that we can make changes without breaking the public API later
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Span<T> {
     Inclusive(RangeInclusive<T>),
