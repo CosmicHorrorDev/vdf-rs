@@ -49,6 +49,10 @@ jobs:
       - name: Check clippy lints
         run: |
           cargo clippy
+      - name: Check docs
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc
 
   nightly_only:
     name: Nightly only tasks
