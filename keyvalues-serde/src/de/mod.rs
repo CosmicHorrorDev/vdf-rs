@@ -50,7 +50,7 @@ pub fn from_str_raw<'a, T: Deserialize<'a>>(s: &'a str) -> Result<T> {
     from_str_raw_with_key(s).map(|(t, _)| t)
 }
 
-/// The same as [`raw_from_str()`], but also returns the top level VDF key
+/// The same as [`from_str_raw()`], but also returns the top level VDF key
 pub fn from_str_raw_with_key<'a, T: Deserialize<'a>>(s: &'a str) -> Result<(T, Key<'a>)> {
     let vdf = Vdf::parse_raw(s)?;
     from_vdf_with_key(vdf)
