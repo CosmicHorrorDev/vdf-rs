@@ -54,9 +54,15 @@ jobs:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc
 
-  nightly_only:
-    name: Nightly only tasks
+  fuzz:
+    name:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        fuzzer:
+          - '--fuzz-dir=keyvalues-parser/fuzz parse'
+          - '--fuzz-dir=keyvalues-serde/fuzz serde'
+
     steps:
       - uses: actions/checkout@v4
 
@@ -71,11 +77,7 @@ jobs:
       - name: Cache
         uses: Swatinem/rust-cache@v2
 
-      # Actually check the fuzzers so that they don't break silently
-      - name: Check parser fuzzers
+      - name: Run fuzzer
         run: |
-          cargo check --manifest-path keyvalues-parser/fuzz/Cargo.toml
-
-      - name: Check ser de fuzzers
-        run: |
-          cargo check --manifest-path keyvalues-serde/fuzz/Cargo.toml
+          cargo --locked install cargo-fuzz
+          cargo --locked fuzz run --jobs=4 ${{ matrix.fuzzer }} -- -max_total_time=120 -timeout=30
