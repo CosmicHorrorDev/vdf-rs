@@ -1,0 +1,11 @@
+// a
+"Outer Key"  // b
+{
+	// c
+	"Seq Key"	"Str Val"
+	"Seq Key"
+	{
+		// d
+	}
+}
+// e
