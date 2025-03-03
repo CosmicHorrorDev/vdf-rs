@@ -1,6 +1,9 @@
 use std::fmt::{self, Write};
 
-use crate::{error::Error, Obj, PartialVdf, Value, Vdf};
+use crate::{
+    error::{RenderError, RenderResult},
+    Obj, PartialVdf, Value, Vdf,
+};
 
 fn multiple_char(c: char, amount: usize) -> String {
     std::iter::repeat(c).take(amount).collect()
@@ -83,13 +86,13 @@ impl fmt::Display for PartialVdf<'_> {
 
 impl PartialVdf<'_> {
     // TODO: do we really want to return a crate error here? It will always be a formatting error
-    pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+    pub fn render(&self, writer: &mut impl Write) -> RenderResult<()> {
         self._render(writer, RenderType::Raw).map_err(Into::into)
     }
 
-    pub fn render_raw(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+    pub fn render_raw(&self, writer: &mut impl Write) -> RenderResult<()> {
         match self.find_invalid_raw_char() {
-            Some(invalid_char) => Err(Error::RawRenderError { invalid_char }),
+            Some(invalid_char) => Err(RenderError::RawRenderError { invalid_char }),
             None => self._render(writer, RenderType::Raw).map_err(Into::into),
         }
     }
@@ -118,13 +121,13 @@ impl fmt::Display for Vdf<'_> {
 }
 
 impl Vdf<'_> {
-    pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+    pub fn render(&self, writer: &mut impl Write) -> RenderResult<()> {
         write!(writer, "{}", self).map_err(Into::into)
     }
 
-    pub fn render_raw(&self, writer: &mut impl Write) -> crate::error::Result<()> {
+    pub fn render_raw(&self, writer: &mut impl Write) -> RenderResult<()> {
         match self.find_invalid_raw_char() {
-            Some(invalid_char) => Err(Error::RawRenderError { invalid_char }),
+            Some(invalid_char) => Err(RenderError::RawRenderError { invalid_char }),
             None => self
                 .write_indented(writer, 0, RenderType::Raw)
                 .map_err(Into::into),
