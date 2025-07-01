@@ -342,7 +342,7 @@ impl<'text> Value<'text> {
     ///     println!("value obj: {:?}", obj);
     /// }
     /// ```
-    pub fn get_obj(&self) -> Option<&Obj> {
+    pub fn get_obj(&self) -> Option<&Obj<'_>> {
         if let Self::Obj(obj) = self {
             Some(obj)
         } else {

@@ -29,15 +29,15 @@ impl<'a> Vdf<'a> {
     }
 }
 
-pub fn raw_parse(s: &str) -> Result<PartialVdf> {
+pub fn raw_parse(s: &str) -> Result<PartialVdf<'_>> {
     parse_(s, false)
 }
 
-pub fn escaped_parse(s: &str) -> Result<PartialVdf> {
+pub fn escaped_parse(s: &str) -> Result<PartialVdf<'_>> {
     parse_(s, true)
 }
 
-pub fn parse_(s: &str, escape_chars: bool) -> Result<PartialVdf> {
+pub fn parse_(s: &str, escape_chars: bool) -> Result<PartialVdf<'_>> {
     let mut chars = CharIter::new(s);
 
     let bases = parse_macros(&mut chars)?;
