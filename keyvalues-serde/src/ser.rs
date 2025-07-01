@@ -80,7 +80,7 @@ where
     }
 
     let vdf = Vdf::try_from(&serializer.tokens)?;
-    write!(writer, "{}", vdf)?;
+    write!(writer, "{vdf}")?;
 
     Ok(())
 }

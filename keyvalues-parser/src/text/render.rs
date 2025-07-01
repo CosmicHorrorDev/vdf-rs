@@ -96,7 +96,7 @@ impl PartialVdf<'_> {
 
     fn _render(&self, writer: &mut impl Write, render_type: RenderType) -> fmt::Result {
         for base in &self.bases {
-            writeln!(writer, "#base \"{}\"", base)?;
+            writeln!(writer, "#base \"{base}\"")?;
         }
 
         if !self.bases.is_empty() {
@@ -119,7 +119,7 @@ impl fmt::Display for Vdf<'_> {
 
 impl Vdf<'_> {
     pub fn render(&self, writer: &mut impl Write) -> crate::error::Result<()> {
-        write!(writer, "{}", self).map_err(Into::into)
+        write!(writer, "{self}").map_err(Into::into)
     }
 
     pub fn render_raw(&self, writer: &mut impl Write) -> crate::error::Result<()> {
