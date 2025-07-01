@@ -1,5 +1,3 @@
-use std::iter;
-
 use keyvalues_parser::Vdf;
 
 mod fuzzer;
