@@ -1,15 +1,6 @@
 [workspace]
 resolver = "2"
-
-members = [
-    "keyvalues-serde",
-    "keyvalues-parser",
-]
-
-exclude = [
-    "parse-vdf-file",
-]
-
+members = ["keyvalues-serde", "keyvalues-parser"]
 package.categories = ["encoding", "parser-implementations", "config"]
 
 [workspace.dependencies]
