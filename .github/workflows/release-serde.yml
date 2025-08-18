@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Sanity check test run
         run: |
           cargo test --all-features --manifest-path keyvalues-serde/Cargo.toml
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Publish serde library
         run: |
           cargo publish --manifest-path keyvalues-serde/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}
