@@ -24,7 +24,7 @@ jobs:
           - beta
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install ${{ matrix.rust }} toolchain
         run: |
@@ -64,7 +64,7 @@ jobs:
           - '--fuzz-dir=keyvalues-serde/fuzz serde'
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # Pin to a specific nightly version since we only want it for being able
       # to use unstable features, not because we _need_ the newest version.
