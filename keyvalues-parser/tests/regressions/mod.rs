@@ -4,11 +4,11 @@ use keyvalues_parser::Vdf;
 
 mod fuzzer;
 
-// The parser could hit a stack overflow when dealing with a string containing a large amount of
-// escape sequences. This happened in the wild from a VDF file that contained a large JSON blob in
-// a string that required a lot of escapes
+// issue: #54 -- The parser could hit a stack overflow when dealing with a string containing a
+// large amount of escape sequences. This happened in the wild from a VDF file that contained a
+// large JSON blob in a string that required a lot of escapes
 #[test]
-fn issue_54() {
+fn lots_of_escapes_doesnt_stack_overflow() {
     // Generates strings e.g. `lots_of_escaped(2)` gives `"" "\"\""`
     fn lots_of_escapes(num_escaped: usize) -> String {
         iter::once("\"\" \"")
