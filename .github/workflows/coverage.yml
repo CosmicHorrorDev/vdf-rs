@@ -13,7 +13,7 @@ jobs:
         uses: dtolnay/rust-toolchain@master
         with:
           # Nightly needed for `cargo-llvm`'s `--doctests` flag
-          toolchain: nightly-2024-04-20
+          toolchain: nightly-2025-09-01
           components: llvm-tools-preview
       - name: Install cargo-llvm-cov
         uses: taiki-e/install-action@cargo-llvm-cov

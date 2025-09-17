@@ -71,8 +71,8 @@ jobs:
       # This makes caching actually viable for more than just a day
       - name: Install nightly toolchain
         run: |
-          rustup toolchain install --profile minimal nightly-2025-01-01
-          rustup default nightly-2025-01-01
+          rustup toolchain install --profile minimal nightly-2025-09-01
+          rustup default nightly-2025-09-01
       
       - name: Cache
         uses: Swatinem/rust-cache@v2
