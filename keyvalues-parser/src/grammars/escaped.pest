@@ -19,8 +19,11 @@ value = _{ quoted_string | obj | unquoted_string }
 obj = { "{" ~ pairs ~ "}" }
 
 quoted_string = ${ "\"" ~ quoted_inner ~ "\"" }
-quoted_inner = @{ (!("\"" | "\\") ~ ANY)* ~ (escape ~ quoted_inner)? }
-escape = @{ "\\" ~ ("\"" | "\\" | "n" | "r" | "t") }
+quoted_inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "n" | "r" | "t")
+}
 
 unquoted_string = @{ unquoted_char+ }
 // The wiki page just states that an unquoted string ends with ", {, }, or any
