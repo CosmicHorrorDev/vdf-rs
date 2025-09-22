@@ -3,7 +3,7 @@ use super::*;
 use pest::Parser as _;
 pub type PestError = pest::error::Error<Rule>;
 struct Parser;
-crate::common_parsing!(Parser, Rule, true);
+common_parsing!(Parser, Rule, true);
 #[allow(dead_code, non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Rule {
