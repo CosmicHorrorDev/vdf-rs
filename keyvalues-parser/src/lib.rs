@@ -86,9 +86,9 @@ impl<'text> From<PartialVdf<'text>> for Vdf<'text> {
 // TODO: don't expose these publicly?
 #[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct PartialVdf<'text> {
-    pub bases: Vec<Cow<'text, str>>,
     pub key: Key<'text>,
     pub value: Value<'text>,
+    pub bases: Vec<Cow<'text, str>>,
 }
 
 impl<'text> Vdf<'text> {

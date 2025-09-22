@@ -9,23 +9,23 @@ The benchmarks cover parsing, rendering, serializing, and deserializing a
 file from my steam install. This is a fairly large (20 KiB) VDF file that
 contains varying structures, types, nesting, etc.
 
-All of the following results were from running on a Linux machine with a Ryzen
-7 3700. You can run all the benchmarks by running either `cargo bench` from the
-project directory
+All of the following results were from running on a Linux machine with a
+`i5-1135G7 @ 4.20 GHz` CPU. You can run all the benchmarks by running
+`cargo bench` from the project directory.
 
 ## `keyvalues-parser`
 
-| Name | ? |
+| Name | Description |
 | :---: | :--- |
-| `parse` | Parsing the file |
-| `render` | Rendering the parsed file back to a `String` |
+| `parse` | Parses a `controller_generic_wasd.vdf` file |
+| `render` | Renders a parsed `controller_generic_wasd.vdf` to a `String` |
 
 ```text
 parser     fastest       │ slowest       │ median        │ mean          │ samples
-├─ parse   110.8 µs      │ 202.3 µs      │ 112.3 µs      │ 113.5 µs      │ 1759
-│          180.2 MB/s    │ 98.74 MB/s    │ 177.8 MB/s    │ 175.9 MB/s    │
-╰─ render  113.8 µs      │ 161.7 µs      │ 116.9 µs      │ 117.3 µs      │ 1702
-           167.1 MB/s    │ 117.6 MB/s    │ 162.6 MB/s    │ 162.2 MB/s    │
+├─ parse   489.3 µs      │ 816.2 µs      │ 495.2 µs      │ 500.3 µs      │ 5995
+│          40.83 MB/s    │ 24.48 MB/s    │ 40.34 MB/s    │ 39.93 MB/s    │
+╰─ render  76.04 µs      │ 151.7 µs      │ 78.04 µs      │ 78.79 µs      │ 38015
+           250.2 MB/s    │ 125.4 MB/s    │ 243.7 MB/s    │ 241.4 MB/s    │
 ```
 
 ## `keyvalues-serde`
@@ -44,15 +44,15 @@ while have a pretty minimal impact compared to the naïve approach_
 ```text
 ser_de                    fastest       │ slowest       │ median        │ mean          │ samples
 ├─ deserialize                          │               │               │               │
-│  ├─ FullStructBorrowed  210.6 µs      │ 400.5 µs      │ 216.5 µs      │ 218.1 µs      │ 910
-│  │                      94.85 MB/s    │ 49.88 MB/s    │ 92.28 MB/s    │ 91.57 MB/s    │
-│  ├─ FullStructOwned     214.4 µs      │ 255.7 µs      │ 218.7 µs      │ 220 µs        │ 898
-│  │                      93.16 MB/s    │ 78.11 MB/s    │ 91.33 MB/s    │ 90.81 MB/s    │
-│  ╰─ SingleField         200.9 µs      │ 240.5 µs      │ 206.7 µs      │ 207.5 µs      │ 963
-│                         99.44 MB/s    │ 83.07 MB/s    │ 96.64 MB/s    │ 96.28 MB/s    │
+│  ├─ FullStructBorrowed  553.3 µs      │ 781.7 µs      │ 563 µs        │ 569.7 µs      │ 5256
+│  │                      36.1 MB/s     │ 25.56 MB/s    │ 35.49 MB/s    │ 35.07 MB/s    │
+│  ├─ FullStructOwned     559.2 µs      │ 702 µs        │ 568.8 µs      │ 576.5 µs      │ 5184
+│  │                      35.73 MB/s    │ 28.46 MB/s    │ 35.13 MB/s    │ 34.65 MB/s    │
+│  ╰─ SingleField         545.8 µs      │ 907.1 µs      │ 558.6 µs      │ 563.5 µs      │ 5323
+│                         36.6 MB/s     │ 22.02 MB/s    │ 35.77 MB/s    │ 35.46 MB/s    │
 ╰─ serialize                            │               │               │               │
-   ├─ FullStructBorrowed  260.9 µs      │ 497.1 µs      │ 277.7 µs      │ 276.4 µs      │ 714
-   │                      72.85 MB/s    │ 38.24 MB/s    │ 68.45 MB/s    │ 68.76 MB/s    │
-   ╰─ FullStructOwned     263.4 µs      │ 298.7 µs      │ 279.3 µs      │ 277.7 µs      │ 711
-                          72.15 MB/s    │ 63.64 MB/s    │ 68.04 MB/s    │ 68.43 MB/s    │
+   ├─ FullStructBorrowed  155.5 µs      │ 244.9 µs      │ 162.2 µs      │ 168.2 µs      │ 16952
+   │                      122.2 MB/s    │ 77.61 MB/s    │ 117.2 MB/s    │ 113 MB/s      │
+   ╰─ FullStructOwned     156.2 µs      │ 234.1 µs      │ 173.2 µs      │ 176.8 µs      │ 16897
+                          121.6 MB/s    │ 81.2 MB/s     │ 109.7 MB/s    │ 107.4 MB/s    │
 ```
