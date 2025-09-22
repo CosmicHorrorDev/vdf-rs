@@ -76,7 +76,7 @@ fn generate_file(parser: Parser) -> String {
         use pest::Parser as _;
         pub type PestError = pest::error::Error<Rule>;
         struct Parser;
-        crate::common_parsing!(Parser, Rule, #is_escaped);
+        common_parsing!(Parser, Rule, #is_escaped);
         #expanded_tokens
     };
     let mut file = syn::parse_file(&file.to_string()).unwrap();

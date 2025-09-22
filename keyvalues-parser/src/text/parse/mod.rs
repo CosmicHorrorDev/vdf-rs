@@ -17,7 +17,6 @@ mod raw {
 
 // unfortunate hack to re-use most of the code that consumes the pest parser produced by our two
 // separate grammars :/
-#[macro_export]
 macro_rules! common_parsing {
     ($parser:ty, $rule:ty, $parse_escaped:expr) => {
         /// Attempts to parse VDF text to a [`Vdf`]
@@ -146,6 +145,9 @@ macro_rules! common_parsing {
         }
     };
 }
+
+// expose ^^ macro to the rest of the crate
+pub(crate) use common_parsing;
 
 pub use escaped::{parse as escaped_parse, PestError as EscapedPestError};
 pub use raw::{parse as raw_parse, PestError as RawPestError};
