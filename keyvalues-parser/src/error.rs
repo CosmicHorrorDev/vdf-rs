@@ -2,6 +2,8 @@
 
 use std::fmt;
 
+use crate::text::parse::{EscapedPestError, RawPestError};
+
 /// Just a type alias for `Result` with a [`Error`]
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -15,13 +17,26 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// Currently the two variants are parse errors which currently only occurs when `pest` encounters
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
+    EscapedParseError(EscapedPestError),
+    RawParseError(RawPestError),
     RenderError(fmt::Error),
     RawRenderError { invalid_char: char },
-    Todo,
 }
 
-impl From<fmt::Error> for Error {
-    fn from(e: fmt::Error) -> Self {
+impl From<EscapedPestError> for Error {
+    fn from(e: EscapedPestError) -> Self {
+        Self::EscapedParseError(e)
+    }
+}
+
+impl From<RawPestError> for Error {
+    fn from(e: RawPestError) -> Self {
+        Self::RawParseError(e)
+    }
+}
+
+impl From<std::fmt::Error> for Error {
+    fn from(e: std::fmt::Error) -> Self {
         Self::RenderError(e)
     }
 }
@@ -29,12 +44,13 @@ impl From<fmt::Error> for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::EscapedParseError(e) => write!(f, "Failed parsing input Error: {e}"),
+            Self::RawParseError(e) => write!(f, "Failed parsing input Error: {e}"),
             Self::RenderError(e) => write!(f, "Failed rendering input Error: {e}"),
             Self::RawRenderError { invalid_char } => write!(
                 f,
                 "Encountered invalid character in raw string: {invalid_char:?}"
             ),
-            Self::Todo => write!(f, "TODO"),
         }
     }
 }

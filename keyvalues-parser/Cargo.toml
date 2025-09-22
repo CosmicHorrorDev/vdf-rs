@@ -12,6 +12,9 @@ description = "A parser/renderer for vdf text"
 homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-parser"
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
+[dependencies]
+pest = "2.7"
+
 [dev-dependencies]
 divan.workspace = true
 insta.workspace = true
