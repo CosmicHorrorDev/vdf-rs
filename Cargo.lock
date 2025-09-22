@@ -161,8 +161,11 @@ dependencies = [
  "divan",
  "insta",
  "pest",
- "pest_derive",
+ "pest_generator",
  "pretty_assertions",
+ "prettyplease",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -212,16 +215,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pest_derive"
-version = "2.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc58706f770acb1dbd0973e6530a3cff4746fb721207feb3a8a6064cd0b6c663"
-dependencies = [
- "pest",
- "pest_generator",
-]
-
-[[package]]
 name = "pest_generator"
 version = "2.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -255,6 +248,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "prettyplease"
+version = "0.2.37"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
+dependencies = [
+ "proc-macro2",
+ "syn",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,9 +268,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.37"
+version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
+checksum = "1885c039570dc00dcb4ff087a89e185fd56bae234ddc7f056a945bf36467248d"
 dependencies = [
  "proc-macro2",
 ]

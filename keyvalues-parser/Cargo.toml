@@ -13,14 +13,19 @@ homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-parser
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
-# TODO: switch parsing to `nom`
 pest = "2.7"
-pest_derive = "2.7"
 
 [dev-dependencies]
 divan.workspace = true
 insta.workspace = true
+pest_generator = "2.7.15"
 pretty_assertions.workspace = true
+prettyplease = "0.2.37"
+quote = "1.0.40"
+
+[dev-dependencies.syn]
+version = "2.0.106"
+features = ["extra-traits"]
 
 [[bench]]
 name = "parser"

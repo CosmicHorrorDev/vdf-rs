@@ -1,18 +1,23 @@
-// Due to Pest generating variants that are all uppercase
-#![allow(
-    renamed_and_removed_lints,
-    clippy::unknown_clippy_lints,
-    clippy::upper_case_acronyms,
-    clippy::empty_docs
-)]
-
-use pest::{iterators::Pair as PestPair, Parser};
-use pest_derive::Parser;
+use pest::iterators::Pair as PestPair;
 
 use std::borrow::Cow;
 
 use crate::{error::Result, Obj, PartialVdf as Vdf, Value};
 
+// the parser code is formatted using `prettyplease` which differs slightly from `rustfmt`. this
+// indirection is enough to keep `rustfmt` from formatting the generated code until either the
+// `ignore` config option is stable for `rustfmt` _or_ we switch to a different parser library with
+// a less hacky setup :D
+mod escaped {
+    include!("escaped.rs");
+}
+mod raw {
+    include!("raw.rs");
+}
+
+// unfortunate hack to re-use most of the code that consumes the pest parser produced by our two
+// separate grammars :/
+#[macro_export]
 macro_rules! common_parsing {
     ($parser:ty, $rule:ty, $parse_escaped:expr) => {
         /// Attempts to parse VDF text to a [`Vdf`]
@@ -38,13 +43,6 @@ macro_rules! common_parsing {
                 }
             }
         }
-
-        // impl<'a> From<PestPair<'a, $rule>> for Vdf<'a> {
-        //     fn from(full_grammar: PestPair<'a, $rule>) -> Self {
-        //         let (key, value) = parse_pair(full_grammar);
-        //         Self::new(key, value)
-        //     }
-        // }
 
         fn parse_pair(grammar_pair: PestPair<'_, $rule>) -> (Cow<'_, str>, Value<'_>) {
             // Structure: pair
@@ -172,28 +170,4 @@ impl<'a> crate::Vdf<'a> {
     pub fn parse_raw(s: &'a str) -> Result<Self> {
         Ok(crate::Vdf::from(Vdf::parse_raw(s)?))
     }
-}
-
-mod escaped {
-    use super::*;
-
-    #[derive(Parser)]
-    #[grammar = "grammars/escaped.pest"]
-    struct EscapedParser;
-
-    pub type PestError = pest::error::Error<Rule>;
-
-    common_parsing!(EscapedParser, Rule, true);
-}
-
-mod raw {
-    use super::*;
-
-    #[derive(Parser)]
-    #[grammar = "grammars/raw.pest"]
-    struct RawParser;
-
-    pub type PestError = pest::error::Error<Rule>;
-
-    common_parsing!(RawParser, Rule, false);
 }
