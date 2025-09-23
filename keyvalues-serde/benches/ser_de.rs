@@ -28,7 +28,7 @@ where
     to_string(t).unwrap()
 }
 
-static VDF_TEXT: &str = include_str!("../tests/assets/controller_generic_wasd.vdf");
+static VDF_TEXT: &str = include_str!("assets/controller_generic_wasd.vdf");
 
 #[bench(
     bytes_count = VDF_TEXT.len(),
