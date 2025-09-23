@@ -1,7 +1,7 @@
 //! Serialize Rust types to VDF text
 
 use keyvalues_parser::Vdf;
-use serde::{ser, Serialize};
+use serde_core::{ser, Serialize};
 
 use std::io::Write;
 

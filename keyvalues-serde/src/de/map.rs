@@ -1,4 +1,4 @@
-use serde::de::{DeserializeSeed, MapAccess};
+use serde_core::de::{DeserializeSeed, MapAccess};
 
 use crate::{
     de::Deserializer,

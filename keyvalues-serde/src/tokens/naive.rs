@@ -15,7 +15,7 @@ use crate::tokens::Token;
 use crate::{Error, Result};
 
 use keyvalues_parser::{Key, Obj, Value, Vdf};
-use serde::ser::Error as _;
+use serde_core::ser::Error as _;
 
 /// A stream of [`NaiveToken`]s that do not encode what is a key vs a value
 ///

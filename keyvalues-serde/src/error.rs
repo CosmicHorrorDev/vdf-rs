@@ -4,7 +4,7 @@
 #![allow(clippy::large_enum_variant)]
 
 use keyvalues_parser::error::Error as ParserError;
-use serde::{de, ser};
+use serde_core::{de, ser};
 
 use std::{
     fmt, io,

@@ -14,13 +14,13 @@ repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
 keyvalues-parser = { path = "../keyvalues-parser", version = "0.2.0" }
-serde.workspace = true
+serde_core = "1.0.226"
 
 [dev-dependencies]
 divan.workspace = true
 insta.workspace = true
 pretty_assertions.workspace = true
-serde = { workspace = true, features = ["derive"] }
+serde.workspace = true
 
 [[bench]]
 name = "ser_de"
