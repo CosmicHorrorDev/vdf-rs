@@ -22,10 +22,10 @@ project directory
 
 ```text
 parser     fastest       │ slowest       │ median        │ mean          │ samples
-├─ parse   110.8 µs      │ 202.3 µs      │ 112.3 µs      │ 113.5 µs      │ 1759
-│          180.2 MB/s    │ 98.74 MB/s    │ 177.8 MB/s    │ 175.9 MB/s    │
-╰─ render  113.8 µs      │ 161.7 µs      │ 116.9 µs      │ 117.3 µs      │ 1702
-           167.1 MB/s    │ 117.6 MB/s    │ 162.6 MB/s    │ 162.2 MB/s    │
+├─ parse   487.7 µs      │ 991.3 µs      │ 565.6 µs      │ 570.2 µs      │ 5261
+│          40.96 MB/s    │ 20.15 MB/s    │ 35.32 MB/s    │ 35.04 MB/s    │
+╰─ render  79.09 µs      │ 215.8 µs      │ 84.52 µs      │ 85.43 µs      │ 35053
+           240.5 MB/s    │ 88.15 MB/s    │ 225.1 MB/s    │ 222.7 MB/s    │
 ```
 
 ## `keyvalues-serde`
@@ -44,15 +44,15 @@ while have a pretty minimal impact compared to the naïve approach_
 ```text
 ser_de                    fastest       │ slowest       │ median        │ mean          │ samples
 ├─ deserialize                          │               │               │               │
-│  ├─ FullStructBorrowed  210.6 µs      │ 400.5 µs      │ 216.5 µs      │ 218.1 µs      │ 910
-│  │                      94.85 MB/s    │ 49.88 MB/s    │ 92.28 MB/s    │ 91.57 MB/s    │
-│  ├─ FullStructOwned     214.4 µs      │ 255.7 µs      │ 218.7 µs      │ 220 µs        │ 898
-│  │                      93.16 MB/s    │ 78.11 MB/s    │ 91.33 MB/s    │ 90.81 MB/s    │
-│  ╰─ SingleField         200.9 µs      │ 240.5 µs      │ 206.7 µs      │ 207.5 µs      │ 963
-│                         99.44 MB/s    │ 83.07 MB/s    │ 96.64 MB/s    │ 96.28 MB/s    │
+│  ├─ FullStructBorrowed  558.4 µs      │ 993.2 µs      │ 623.6 µs      │ 625.1 µs      │ 4790
+│  │                      35.78 MB/s    │ 20.11 MB/s    │ 32.03 MB/s    │ 31.96 MB/s    │
+│  ├─ FullStructOwned     610.7 µs      │ 991.9 µs      │ 629.9 µs      │ 632.3 µs      │ 4726
+│  │                      32.71 MB/s    │ 20.14 MB/s    │ 31.72 MB/s    │ 31.59 MB/s    │
+│  ╰─ SingleField         598.4 µs      │ 1.144 ms      │ 621.2 µs      │ 622.8 µs      │ 4816
+│                         33.38 MB/s    │ 17.45 MB/s    │ 32.16 MB/s    │ 32.07 MB/s    │
 ╰─ serialize                            │               │               │               │
-   ├─ FullStructBorrowed  260.9 µs      │ 497.1 µs      │ 277.7 µs      │ 276.4 µs      │ 714
-   │                      72.85 MB/s    │ 38.24 MB/s    │ 68.45 MB/s    │ 68.76 MB/s    │
-   ╰─ FullStructOwned     263.4 µs      │ 298.7 µs      │ 279.3 µs      │ 277.7 µs      │ 711
-                          72.15 MB/s    │ 63.64 MB/s    │ 68.04 MB/s    │ 68.43 MB/s    │
+   ├─ FullStructBorrowed  183.9 µs      │ 1.128 ms      │ 194.7 µs      │ 202.3 µs      │ 14721
+   │                      103.3 MB/s    │ 16.84 MB/s    │ 97.63 MB/s    │ 93.96 MB/s    │
+   ╰─ FullStructOwned     176.7 µs      │ 505.2 µs      │ 193.3 µs      │ 194.5 µs      │ 15317
+                          107.5 MB/s    │ 37.62 MB/s    │ 98.32 MB/s    │ 97.73 MB/s    │
 ```
