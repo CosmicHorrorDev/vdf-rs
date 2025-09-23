@@ -11,6 +11,8 @@ categories.workspace = true
 description = "A parser/renderer for vdf text"
 homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-parser"
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
+# benchmarking uses larger assets that end-users dont need
+exclude = ["benches"]
 
 [dependencies]
 pest = "2.7"
