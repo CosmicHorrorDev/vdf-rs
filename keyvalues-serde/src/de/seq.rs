@@ -1,4 +1,4 @@
-use serde::de::{DeserializeSeed, SeqAccess};
+use serde_core::de::{DeserializeSeed, SeqAccess};
 
 use crate::{
     de::Deserializer,

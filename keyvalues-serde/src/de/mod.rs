@@ -4,7 +4,7 @@ mod map;
 mod seq;
 
 use keyvalues_parser::{Key, Vdf};
-use serde::{
+use serde_core::{
     de::{self, DeserializeOwned, IntoDeserializer, Visitor},
     Deserialize,
 };
