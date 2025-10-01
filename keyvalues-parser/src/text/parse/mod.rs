@@ -2,23 +2,63 @@ use std::borrow::Cow;
 
 use crate::{error::Result, Obj, PartialVdf, Value, Vdf};
 
-use pest::iterators::Pair as PestPair;
+use pest::{iterators::Pair as PestPair, Atomicity, RuleType};
 
 // TODO: rename `PartialVdf` to `TopLevelVdf` and have it hold a `Vdf` instead of flattening it out
 
-// the parser code is formatted using `prettyplease` which differs slightly from `rustfmt`. this
-// indirection is enough to keep `rustfmt` from formatting the generated code until either the
-// `ignore` config option is stable for `rustfmt` _or_ we switch to a different parser library with
-// a less hacky setup :D
-mod escaped {
-    include!("escaped.rs");
-}
-mod raw {
-    include!("raw.rs");
-}
+mod escaped;
+mod raw;
 
 pub use escaped::{parse as escaped_parse, PestError as EscapedPestError};
 pub use raw::{parse as raw_parse, PestError as RawPestError};
+
+type BoxedState<'a, R> = Box<pest::ParserState<'a, R>>;
+type ParseResult<'a, R> = pest::ParseResult<BoxedState<'a, R>>;
+
+#[inline]
+fn whitespace<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
+    s.atomic(Atomicity::Atomic, |s| {
+        s.match_string(" ")
+            .or_else(|s| s.match_string("\t"))
+            .or_else(|s| s.match_string("\r"))
+            .or_else(|s| s.match_string("\n"))
+    })
+}
+
+#[inline]
+fn any<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
+    s.skip(1)
+}
+
+fn soi<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
+    s.start_of_input()
+}
+
+#[inline]
+fn comment<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
+    s.atomic(Atomicity::Atomic, |s| {
+        s.sequence(|s| {
+            s.match_string("//").and_then(|s| {
+                s.repeat(|s| {
+                    s.sequence(|s| s.lookahead(false, |s| s.match_string("\n")).and_then(any))
+                })
+            })
+        })
+    })
+}
+
+#[inline]
+fn skip<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
+    if s.atomicity() == Atomicity::NonAtomic {
+        s.sequence(|s| {
+            s.repeat(whitespace).and_then(|s| {
+                s.repeat(|s| s.sequence(|s| comment(s).and_then(|s| s.repeat(whitespace))))
+            })
+        })
+    } else {
+        Ok(s)
+    }
+}
 
 // unfortunate hack to re-use most of the code that consumes the pest parser produced by our two
 // separate grammars :/
