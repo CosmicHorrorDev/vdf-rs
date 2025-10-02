@@ -1,4 +1,4 @@
-// TODO: a lot of these should be moved to integration tests
+// TODO: we can just derive serde stuff under for test specifically
 
 use insta::{assert_debug_snapshot, assert_snapshot};
 

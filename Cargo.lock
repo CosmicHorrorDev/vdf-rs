@@ -114,6 +114,8 @@ dependencies = [
  "insta",
  "pest",
  "pretty_assertions",
+ "serde",
+ "serde_core",
 ]
 
 [[package]]

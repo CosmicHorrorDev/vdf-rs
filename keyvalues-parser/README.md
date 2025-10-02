@@ -63,6 +63,14 @@ being taken
 - Not respecting the ordering of key-value pairs, where the pairs are stored in a `BTreeMap` that sorts the values based on the key
 - Because of limitations in representing sequences, an empty `Vec` of values will be rendered as a missing keyvalue pair
 
+## `serde` support
+
+`Deserialize` is implemented for a handful of traits with the caveat that
+sequences can be problematic when going through the self-describing `serde`
+API's. This is most commonly encountered when trying to `serde(flatten)` to
+something like an `Obj` where it will fail deserializing any field that's _not_
+a sequence (so most of them...).
+
 ## Benchmarks
 
 A set of basic benchmarks can be found in the 
