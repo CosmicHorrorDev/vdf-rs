@@ -8,3 +8,4 @@ divan = { version = "0.1.14", default-features = false }
 insta = "1.39.0"
 pretty_assertions = "1.4.0"
 serde = { version = "1.0.209", features = ["derive"] }
+serde_core = "1.0.226"

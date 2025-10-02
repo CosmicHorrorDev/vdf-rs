@@ -62,6 +62,7 @@ jobs:
         fuzzer:
           - '--fuzz-dir=keyvalues-parser/fuzz parse'
           - '--fuzz-dir=keyvalues-serde/fuzz serde'
+          - '--fuzz-dir=keyvalues-serde/fuzz loosely_typed'
 
     steps:
       - uses: actions/checkout@v5

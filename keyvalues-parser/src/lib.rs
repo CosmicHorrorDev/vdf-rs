@@ -10,6 +10,8 @@ use std::{
 };
 
 pub mod error;
+#[cfg(feature = "serde")]
+mod serde;
 pub mod text;
 
 /// A Key is simply an alias for `Cow<str>`
@@ -269,6 +271,7 @@ impl<'text> Iterator for IntoVdfs<'text> {
     }
 }
 
+// TODO: custom Debug that's more succinct
 /// Enum representing all valid VDF values
 ///
 /// VDF is composed of [`Key`]s and their respective [`Value`]s where this represents the latter. A

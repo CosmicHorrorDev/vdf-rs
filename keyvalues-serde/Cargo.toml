@@ -13,8 +13,12 @@ homepage = "https://github.com/CosmicHorrorDev/vdf-rs/tree/main/keyvalues-serde"
 repository = "https://github.com/CosmicHorrorDev/vdf-rs"
 
 [dependencies]
-keyvalues-parser = { path = "../keyvalues-parser", version = "0.2.0" }
-serde_core = "1.0.226"
+serde_core.workspace = true
+
+[dependencies.keyvalues-parser]
+path = "../keyvalues-parser"
+version = "0.2.1"
+features = ["serde"]
 
 [dev-dependencies]
 divan.workspace = true
