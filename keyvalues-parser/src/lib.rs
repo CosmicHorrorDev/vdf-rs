@@ -12,6 +12,10 @@ use std::{
 pub mod error;
 #[cfg(feature = "serde")]
 mod serde;
+#[deprecated(
+    since = "0.2.2",
+    note = "Not inteneded to be part of the public API. Use the other parser functions instead."
+)]
 pub mod text;
 
 /// A Key is simply an alias for `Cow<str>`
