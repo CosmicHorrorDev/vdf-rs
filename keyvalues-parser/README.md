@@ -2,6 +2,7 @@
 
 [![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
 [![build status](https://img.shields.io/github/actions/workflow/status/CosmicHorrorDev/vdf-rs/basic.yml?branch=main)](https://github.com/CosmicHorrorDev/vdf-rs/actions)
+[![Crates.io](https://img.shields.io/crates/v/keyvalues-parser.svg)](https://crates.io/crates/keyvalues-parser)
 [![Documentation](https://img.shields.io/docsrs/keyvalues-parser/latest)](https://docs.rs/keyvalues-parser/latest/keyvalues_parser/)
 
 `keyvalues-parser` uses [`pest`](https://lib.rs/crates/pest) to parse
