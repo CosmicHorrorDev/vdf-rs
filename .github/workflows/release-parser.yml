@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Sanity check test run
         run: |
           cargo test --all-features --manifest-path keyvalues-parser/Cargo.toml
@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Publish parser library
         run: |
           cargo publish --manifest-path keyvalues-parser/Cargo.toml --token ${{ secrets.CRATES_IO_TOKEN }}
