@@ -22,7 +22,6 @@ publishing at the very least the following checklist should be covered
 
 1. Before Publishing
     - [ ] Bump the version in `Cargo.toml`
-    - [ ] Bump the version in the crate's `README.md`
     - [ ] Run the benchmarks and update the results in `BENCHMARKS.md`
     - [ ] Update the MSRV `$ cargo msrv --min 1.60.0 -- cargo check`
     - [ ] Consult with `cargo-semver-checks`
