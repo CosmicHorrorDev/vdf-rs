@@ -1,14 +1,10 @@
 use super::*;
 
-use pest::Parser as _;
-
 pub type PestError = pest::error::Error<Rule>;
 type BoxedState<'a> = Box<pest::ParserState<'a, Rule>>;
 type ParseResult<'a> = pest::ParseResult<BoxedState<'a>>;
 
-struct Parser;
-
-common_parsing!(Parser, Rule, false);
+common_parsing!(pest_parse, Rule, false);
 
 #[expect(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
@@ -161,27 +157,6 @@ mod rules {
     }
 }
 
-impl pest::Parser<Rule> for Parser {
-    fn parse<'i>(
-        rule: Rule,
-        input: &'i str,
-    ) -> std::result::Result<pest::iterators::Pairs<'i, Rule>, PestError> {
-        pest::state(input, |s| match rule {
-            Rule::WHITESPACE => super::whitespace(s),
-            Rule::COMMENT => super::comment(s),
-            Rule::vdf => rules::vdf(s),
-            Rule::base_macro => rules::base_macro(s),
-            Rule::quoted_raw_string => rules::quoted_raw_string(s),
-            Rule::pairs => rules::pairs(s),
-            Rule::pair => rules::pair(s),
-            Rule::key => rules::key(s),
-            Rule::value => rules::value(s),
-            Rule::obj => rules::obj(s),
-            Rule::quoted_string => rules::quoted_string(s),
-            Rule::quoted_inner => rules::quoted_inner(s),
-            Rule::unquoted_string => rules::unquoted_string(s),
-            Rule::unquoted_char => rules::unquoted_char(s),
-            Rule::EOI => rules::EOI(s),
-        })
-    }
+pub fn pest_parse(input: &str) -> std::result::Result<pest::iterators::Pairs<'_, Rule>, PestError> {
+    pest::state(input, rules::vdf)
 }

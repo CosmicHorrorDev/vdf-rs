@@ -63,10 +63,10 @@ fn skip<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
 // unfortunate hack to re-use most of the code that consumes the pest parser produced by our two
 // separate grammars :/
 macro_rules! common_parsing {
-    ($parser:ty, $rule:ty, $parse_escaped:expr) => {
+    ($parse_fn:ident, $rule:ty, $parse_escaped:expr) => {
         /// Attempts to parse VDF text to a [`Vdf`]
         pub fn parse(s: &str) -> Result<PartialVdf<'_>> {
-            let mut full_grammar = <$parser>::parse(<$rule>::vdf, s)?;
+            let mut full_grammar = $parse_fn(s)?;
 
             // There can be multiple base macros before the initial pair
             let mut bases = Vec::new();
