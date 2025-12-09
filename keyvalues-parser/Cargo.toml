@@ -1,9 +1,9 @@
 [package]
 name = "keyvalues-parser"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-rust-version = "1.80.1"
+rust-version = "1.68.2"
 
 authors = ["Cosmic <CosmicHorrorDev@pm.me>"]
 keywords = ["keyvalues", "vdf", "steam", "parser"]

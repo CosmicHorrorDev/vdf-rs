@@ -1,4 +1,28 @@
-# Version 0.2.1
+# Version 0.2.2 | 2025-12-08
+
+## Feat
+
+- Add limited `Deserialize` impls for `Obj` and `Value` [(#101)]
+  - Limited because VDF doesn't act as a fully self-describing format, so
+    things may fail to deserialize for seemingly benign reasons. Use at your own
+    risk
+
+## Docs
+
+- Add a crates.io badge to the README [(#103)]
+
+## Internal
+
+- Cleanup generated parser code [(#99)] [(#107)]
+- Prune some test/benchmark assets [(#105)]
+
+[(#99)]: https://github.com/CosmicHorrorDev/vdf-rs/pull/99
+[(#101)]: https://github.com/CosmicHorrorDev/vdf-rs/pull/101
+[(#103)]: https://github.com/CosmicHorrorDev/vdf-rs/pull/103
+[(#105)]: https://github.com/CosmicHorrorDev/vdf-rs/pull/105
+[(#107)]: https://github.com/CosmicHorrorDev/vdf-rs/pull/107
+
+# Version 0.2.1 | 2025-09-22
 
 The main headline of this update is significantly slimming down our dependency
 tree. We now depend solely on `pest` (and its transitive deps) :tada:

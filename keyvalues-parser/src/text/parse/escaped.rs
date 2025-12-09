@@ -6,7 +6,7 @@ type ParseResult<'a> = pest::ParseResult<BoxedState<'a>>;
 
 common_parsing!(pest_parse, Rule, true);
 
-#[expect(non_camel_case_types, clippy::upper_case_acronyms)]
+#[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Rule {
     ///End-of-input
@@ -30,7 +30,7 @@ pub enum Rule {
 }
 
 mod rules {
-    #![expect(non_snake_case)]
+    #![allow(non_snake_case)]
 
     use super::{any, skip, soi, whitespace, BoxedState, ParseResult, Rule};
 
