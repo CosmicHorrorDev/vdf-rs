@@ -1,140 +1,62 @@
-// TODO: a lot of this can probably be slimmed down at this point
-// TODO: implement a validate function
-// TODO: make a note that this has invariants that must be upheld, so it is only exposed internally
+// TODO: replace with some kind of iterator that decomposes the original structure instead of using
+// an intermediate layer
 
-mod naive;
+pub(crate) mod naive;
 #[cfg(test)]
 mod tests;
 
 use keyvalues_parser::{Obj, Value, Vdf};
 
-use std::{
-    borrow::Cow,
-    ops::{Deref, DerefMut},
-};
+use std::borrow::Cow;
 
-pub use crate::tokens::naive::{NaiveToken, NaiveTokenStream};
+pub use crate::tokens::naive::NaiveToken;
 
-// I've been struggling to get serde to play nice with using a more complex internal structure in a
-// `Deserializer`. I think the easiest solution I can come up with is to flatten out the `Vdf` into
-// a stream of tokens that serde can consume. In this way the Deserializer can just work on
-// munching through all the tokens instead of trying to mutate a more complex nested structure
-// containing different types
-/// A stream of [`Token`]s representing a [`Vdf`]
-///
-/// I think an example is the easiest way to understand the structure so something like
-///
-/// ```vdf
-/// "Outer Key"
-/// {
-///     "Inner Key" "Inner Value"
-///     "Inner Key"
-///     {
-///     }
-/// }
-/// ```
-///
-/// will be transformed into
-///
-/// ```ron
-/// Vdf(
-///     key: "Outer Key",
-///     value: Obj({
-///         "Inner Key": [
-///             Str("Inner Value"),
-///             Obj({})
-///         ]
-///     })
-/// )
-/// ```
-///
-/// which has the following token stream
-///
-/// ```ron
-/// TokenStream([
-///     Key("Outer Key"),
-///     ObjBegin,
-///     Key("Inner Key"),
-///     SeqBegin,
-///     Str("Inner Value"),
-///     ObjBegin,
-///     ObjEnd,
-///     SeqEnd,
-///     ObjEnd,
-/// )]
-/// ```
-///
-/// So in this way it's a linear sequence of keys and values where the value is either a str or an
-/// object.
-#[derive(Debug, PartialEq, Eq)]
-pub struct TokenStream<'a>(pub Vec<Token<'a>>);
+pub(crate) fn tokens_from_vdf(vdf: Vdf<'_>) -> Vec<Token<'_>> {
+    let Vdf { key, value } = vdf;
 
-impl<'a> Deref for TokenStream<'a> {
-    type Target = Vec<Token<'a>>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
+    let mut tokens = vec![Token::Key(key)];
+    tokens.extend(tokens_from_value(value));
+    tokens
 }
 
-impl DerefMut for TokenStream<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.0
+// TODO: pass through a `&mut Vec<_>` instead of allocating new ones
+fn tokens_from_value(value: Value<'_>) -> Vec<Token<'_>> {
+    let mut tokens = Vec::new();
+
+    match value {
+        Value::Str(s) => tokens.push(Token::Str(s)),
+        Value::Obj(obj) => {
+            tokens.push(Token::ObjBegin);
+            tokens.extend(tokens_from_obj(obj));
+            tokens.push(Token::ObjEnd);
+        }
     }
+
+    tokens
 }
 
-impl<'a> From<Vdf<'a>> for TokenStream<'a> {
-    fn from(vdf: Vdf<'a>) -> Self {
-        let Vdf { key, value } = vdf;
+fn tokens_from_obj(obj: Obj<'_>) -> Vec<Token<'_>> {
+    let mut tokens = Vec::new();
 
-        let mut inner = vec![Token::Key(key)];
-        inner.extend(TokenStream::from(value).0);
+    for (key, values) in obj.into_inner().into_iter() {
+        tokens.push(Token::Key(key));
 
-        Self(inner)
-    }
-}
-
-impl<'a> From<Value<'a>> for TokenStream<'a> {
-    fn from(value: Value<'a>) -> Self {
-        let mut inner = Vec::new();
-
-        match value {
-            Value::Str(s) => inner.push(Token::Str(s)),
-            Value::Obj(obj) => {
-                inner.push(Token::ObjBegin);
-                inner.extend(Self::from(obj).0);
-                inner.push(Token::ObjEnd);
-            }
+        // For ease of use a sequence is only marked when len != 1
+        let num_values = values.len();
+        if num_values != 1 {
+            tokens.push(Token::SeqBegin);
         }
 
-        Self(inner)
-    }
-}
-
-impl<'a> From<Obj<'a>> for TokenStream<'a> {
-    fn from(obj: Obj<'a>) -> Self {
-        let mut inner = Vec::new();
-
-        for (key, values) in obj.into_inner().into_iter() {
-            inner.push(Token::Key(key));
-
-            // For ease of use a sequence is only marked when len != 1
-            let num_values = values.len();
-            if num_values != 1 {
-                inner.push(Token::SeqBegin);
-            }
-
-            for value in values {
-                inner.extend(TokenStream::from(value).0);
-            }
-
-            if num_values != 1 {
-                inner.push(Token::SeqEnd);
-            }
+        for value in values {
+            tokens.extend(tokens_from_value(value));
         }
 
-        Self(inner)
+        if num_values != 1 {
+            tokens.push(Token::SeqEnd);
+        }
     }
+
+    tokens
 }
 
 /// A single VDF token

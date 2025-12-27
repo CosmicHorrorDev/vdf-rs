@@ -1,13 +1,12 @@
 //! Serialize Rust types to VDF text
 
-use keyvalues_parser::Vdf;
 use serde_core::{ser, Serialize};
 
 use std::io::Write;
 
 use crate::{
     error::{Error, Result},
-    tokens::{NaiveToken, NaiveTokenStream},
+    tokens::{naive::vdf_from_naive_tokens, NaiveToken},
 };
 
 /// The struct for serializing Rust values into VDF text
@@ -16,7 +15,7 @@ use crate::{
 /// [`to_writer_with_key()`] can be used instead
 #[derive(Default)]
 pub struct Serializer {
-    tokens: NaiveTokenStream,
+    tokens: Vec<NaiveToken>,
 }
 
 impl Serializer {
@@ -79,7 +78,7 @@ where
         }
     }
 
-    let vdf = Vdf::try_from(&serializer.tokens)?;
+    let vdf = vdf_from_naive_tokens(&serializer.tokens)?;
     write!(writer, "{vdf}")?;
 
     Ok(())
