@@ -20,7 +20,7 @@ use std::{
 use crate::{
     de::{map::ObjEater, seq::SeqBuilder},
     error::{Error, Result},
-    tokens::{Token, TokenStream},
+    tokens::{tokens_from_vdf, Token},
 };
 
 pub fn from_reader<R: Read, T: DeserializeOwned>(rdr: R) -> Result<T> {
@@ -84,7 +84,7 @@ pub struct Deserializer<'de> {
 impl<'de> Deserializer<'de> {
     /// Attempts to create a new VDF deserializer along with returning the top level VDF key
     pub fn new_with_key(vdf: Vdf<'de>) -> Result<(Self, Key<'de>)> {
-        let token_stream = TokenStream::from(vdf);
+        let token_stream = tokens_from_vdf(vdf);
 
         let key = if let Some(Token::Key(key)) = token_stream.first() {
             key.clone()
@@ -92,7 +92,7 @@ impl<'de> Deserializer<'de> {
             unreachable!("Tokenstream must start with key");
         };
 
-        let tokens = token_stream.0.into_iter().peekable();
+        let tokens = token_stream.into_iter().peekable();
         Ok((Self { tokens }, key.clone()))
     }
 

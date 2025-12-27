@@ -2,8 +2,8 @@ use std::borrow::Cow;
 
 use crate::{
     tokens::{
-        naive::{NaiveToken, NaiveTokenStream},
-        Token, TokenStream,
+        naive::{vdf_from_naive_tokens, NaiveToken},
+        tokens_from_vdf, Token,
     },
     Error,
 };
@@ -20,7 +20,7 @@ use keyvalues_parser::{Obj, Value, Vdf};
 // }
 #[test]
 fn vdf_from_token_stream_basics() {
-    let naive_token_stream = NaiveTokenStream(vec![
+    let naive_token_stream = vec![
         NaiveToken::str("outer"),
         NaiveToken::ObjBegin,
         NaiveToken::str("sequence start"),
@@ -32,7 +32,7 @@ fn vdf_from_token_stream_basics() {
         NaiveToken::str("some other inner val"),
         NaiveToken::SeqEnd,
         NaiveToken::ObjEnd,
-    ]);
+    ];
 
     let ideal = {
         let mut sequence_obj = Obj::new();
@@ -56,13 +56,13 @@ fn vdf_from_token_stream_basics() {
         }
     };
 
-    let actual = Vdf::try_from(&naive_token_stream).unwrap();
+    let actual = vdf_from_naive_tokens(&naive_token_stream).unwrap();
     assert_eq!(actual, ideal);
 }
 
 #[test]
 fn invalid_vdf_nested_seq() {
-    let naive_token_stream = NaiveTokenStream(vec![
+    let naive_token_stream = vec![
         NaiveToken::str("outer"),
         NaiveToken::ObjBegin,
         NaiveToken::str("nested sequence"),
@@ -72,24 +72,24 @@ fn invalid_vdf_nested_seq() {
         NaiveToken::SeqEnd,
         NaiveToken::SeqEnd,
         NaiveToken::ObjEnd,
-    ]);
+    ];
 
-    let err = Vdf::try_from(&naive_token_stream).unwrap_err();
+    let err = vdf_from_naive_tokens(&naive_token_stream).unwrap_err();
     assert!(matches!(err, Error::ExpectedSomeNonSeqValue), "{err:?}");
 }
 
 #[test]
 fn invalid_vdf_seq_key() {
-    let naive_token_stream = NaiveTokenStream(vec![
+    let naive_token_stream = vec![
         NaiveToken::str("outer"),
         NaiveToken::ObjBegin,
         NaiveToken::SeqBegin,
         NaiveToken::SeqEnd,
         NaiveToken::ObjEnd,
-    ]);
+    ];
 
     // TODO: clean up error type, so we can compare
-    let _err = Vdf::try_from(&naive_token_stream).unwrap_err();
+    let _err = vdf_from_naive_tokens(&naive_token_stream).unwrap_err();
 }
 
 #[test]
@@ -104,10 +104,10 @@ fn token_stream_from_vdf() {
 }
         "#;
     let vdf = Vdf::parse(s).unwrap();
-    let token_stream = TokenStream::from(vdf);
+    let token_stream = tokens_from_vdf(vdf);
     assert_eq!(
         token_stream,
-        TokenStream(vec![
+        &[
             Token::Key(Cow::from("Outer Key")),
             Token::ObjBegin,
             Token::Key(Cow::from("Inner Key")),
@@ -117,6 +117,6 @@ fn token_stream_from_vdf() {
             Token::ObjEnd,
             Token::SeqEnd,
             Token::ObjEnd,
-        ])
+        ]
     );
 }
