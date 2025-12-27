@@ -16,6 +16,9 @@ pub mod error;
 mod serde;
 pub mod text;
 
+/// `pest` re-exported for your convenience :)
+pub use pest;
+
 /// A Key is simply an alias for `Cow<str>`
 pub type Key<'text> = Cow<'text, str>;
 
