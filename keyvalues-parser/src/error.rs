@@ -2,7 +2,8 @@
 
 use std::fmt;
 
-use crate::text::parse::{EscapedPestError, RawPestError};
+#[doc(inline)]
+pub use crate::text::parse::{EscapedPestError, RawPestError};
 
 /// Just a type alias for `Result` with a [`Error`]
 pub type Result<T> = std::result::Result<T, Error>;

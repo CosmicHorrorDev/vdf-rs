@@ -9,8 +9,18 @@ use pest::{iterators::Pair as PestPair, Atomicity, RuleType};
 mod escaped;
 mod raw;
 
-pub use escaped::{parse as escaped_parse, PestError as EscapedPestError};
-pub use raw::{parse as raw_parse, PestError as RawPestError};
+pub use escaped::parse as escaped_parse;
+#[deprecated(
+    since = "0.2.3",
+    note = "Moved to `keyvalues_parser::error::EscapedPestError`"
+)]
+pub use escaped::PestError as EscapedPestError;
+pub use raw::parse as raw_parse;
+#[deprecated(
+    since = "0.2.3",
+    note = "Moved to `keyvalues_parser::error::RawPestError`"
+)]
+pub use raw::PestError as RawPestError;
 
 type BoxedState<'a, R> = Box<pest::ParserState<'a, R>>;
 type ParseResult<'a, R> = pest::ParseResult<BoxedState<'a, R>>;
