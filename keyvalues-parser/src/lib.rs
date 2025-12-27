@@ -2,6 +2,7 @@
 #![allow(unknown_lints)]
 #![allow(clippy::result_large_err)]
 // TODO: resolve this ^^
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 use std::{
     borrow::Cow,
@@ -11,6 +12,7 @@ use std::{
 
 pub mod error;
 #[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 mod serde;
 pub mod text;
 
