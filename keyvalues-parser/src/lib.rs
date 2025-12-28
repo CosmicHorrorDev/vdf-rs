@@ -19,6 +19,68 @@ pub mod text;
 /// `pest` re-exported for your convenience :)
 pub use pest;
 
+/// Parse a KeyValues document to a loosely typed representation
+///
+/// This is shorthand for parsing a document with default settings aka `Parser::new().parse(text)`
+pub fn parse<'text>(text: &'text str) -> error::Result<PartialVdf<'text>> {
+    Parser::new().parse(text)
+}
+
+/// A configurable KeyValues parser allowing for adjusting settings before parsing
+#[derive(Clone, Debug, Default)]
+pub struct Parser {
+    literal_special_chars: bool,
+}
+
+impl Parser {
+    /// Constructs a default parser
+    ///
+    /// Currently this consists of:
+    ///
+    /// | Toggle | Description |
+    /// | :---: | :--- |
+    /// | [`Parser::literal_special_chars()`] | Whether to interpret `\` in strings as the start of an escaped special character, or a literal `\` |
+    pub const fn new() -> Self {
+        // same as Default, but const 😏
+        Self {
+            literal_special_chars: false,
+        }
+    }
+
+    /// Toggle how to interpret `\` in strings
+    ///
+    /// By default (`false`) the parser will interpret backslashes (`\`) in strings as the start of
+    /// an escaped special character (e.g. `\\` -> `\`, `\"` -> `"`). When `true` the parser will
+    /// instead interpret backslashes (`\`) as a literal backslash. Commonly seen with
+    /// windows-paths, for instance
+    pub const fn literal_special_chars(mut self, yes: bool) -> Self {
+        self.literal_special_chars = yes;
+        self
+    }
+
+    /// Parse a KeyValues document to a loosely typed representation
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use keyvalues_parser::Parser;
+    /// let vdf = Parser::new()
+    ///     .literal_special_chars(true)
+    ///     .parse(r"InstallDir C:\You\Later")
+    ///     .unwrap();
+    /// assert_eq!(vdf.value.unwrap_str(), r"C:\You\Later");
+    /// ```
+    pub fn parse<'text>(&self, vdf: &'text str) -> error::Result<PartialVdf<'text>> {
+        if self.literal_special_chars {
+            #[expect(deprecated)] // deprecated for thee, but not for me!
+            text::parse::raw_parse(vdf)
+        } else {
+            #[expect(deprecated)] // deprecated for thee, but not for me!
+            text::parse::escaped_parse(vdf)
+        }
+    }
+}
+
 /// A Key is simply an alias for `Cow<str>`
 pub type Key<'text> = Cow<'text, str>;
 
@@ -28,8 +90,8 @@ pub type Key<'text> = Cow<'text, str>;
 ///
 /// ## Parse
 ///
-/// `Vdf`s will generally be created through the use of [`Vdf::parse()`] which takes a string
-/// representing VDF text and attempts to parse it to a `Vdf` representation.
+/// `Vdf`s will generally be created through the use of [`parse()`] or [`Parser::parse()`] which
+/// takes a string representing VDF text and attempts to parse it to a `Vdf` representation.
 ///
 /// ## Mutate
 ///
@@ -43,8 +105,6 @@ pub type Key<'text> = Cow<'text, str>;
 /// ## Example
 ///
 /// ```
-/// use keyvalues_parser::Vdf;
-///
 /// // Parse
 /// let vdf_text = r#"
 /// "Outer Key"
@@ -55,7 +115,7 @@ pub type Key<'text> = Cow<'text, str>;
 ///     }
 /// }
 /// "#;
-/// let mut parsed = Vdf::parse(vdf_text)?;
+/// let mut parsed = keyvalues_parser::parse(vdf_text)?;
 ///
 /// // Mutate: i.e. remove the last "Inner Key" pair
 /// parsed
@@ -80,24 +140,6 @@ pub struct Vdf<'text> {
     pub value: Value<'text>,
 }
 
-impl<'text> From<PartialVdf<'text>> for Vdf<'text> {
-    fn from(partial: PartialVdf<'text>) -> Self {
-        Self {
-            key: partial.key,
-            value: partial.value,
-        }
-    }
-}
-
-// TODO: Just store a `Vdf` internally?
-// TODO: don't expose these publicly?
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct PartialVdf<'text> {
-    pub key: Key<'text>,
-    pub value: Value<'text>,
-    pub bases: Vec<Cow<'text, str>>,
-}
-
 impl<'text> Vdf<'text> {
     /// Creates a [`Vdf`] using a provided key and value
     ///
@@ -113,6 +155,23 @@ impl<'text> Vdf<'text> {
     pub fn new(key: Key<'text>, value: Value<'text>) -> Self {
         Self { key, value }
     }
+}
+
+impl<'text> From<PartialVdf<'text>> for Vdf<'text> {
+    fn from(partial: PartialVdf<'text>) -> Self {
+        Self {
+            key: partial.key,
+            value: partial.value,
+        }
+    }
+}
+
+// TODO: Just store a `Vdf` internally?
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct PartialVdf<'text> {
+    pub key: Key<'text>,
+    pub value: Value<'text>,
+    pub bases: Vec<Cow<'text, str>>,
 }
 
 // TODO: why is this type alias a thing if it's not private but the usage of it inside `Obj` is?
