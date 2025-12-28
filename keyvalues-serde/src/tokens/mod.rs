@@ -15,29 +15,22 @@ pub(crate) fn tokens_from_vdf(vdf: Vdf<'_>) -> Vec<Token<'_>> {
     let Vdf { key, value } = vdf;
 
     let mut tokens = vec![Token::Key(key)];
-    tokens.extend(tokens_from_value(value));
+    push_tokens_from_value(&mut tokens, value);
     tokens
 }
 
-// TODO: pass through a `&mut Vec<_>` instead of allocating new ones
-fn tokens_from_value(value: Value<'_>) -> Vec<Token<'_>> {
-    let mut tokens = Vec::new();
-
+fn push_tokens_from_value<'text>(tokens: &mut Vec<Token<'text>>, value: Value<'text>) {
     match value {
         Value::Str(s) => tokens.push(Token::Str(s)),
         Value::Obj(obj) => {
             tokens.push(Token::ObjBegin);
-            tokens.extend(tokens_from_obj(obj));
+            push_tokens_from_obj(tokens, obj);
             tokens.push(Token::ObjEnd);
         }
     }
-
-    tokens
 }
 
-fn tokens_from_obj(obj: Obj<'_>) -> Vec<Token<'_>> {
-    let mut tokens = Vec::new();
-
+fn push_tokens_from_obj<'text>(tokens: &mut Vec<Token<'text>>, obj: Obj<'text>) {
     for (key, values) in obj.into_inner().into_iter() {
         tokens.push(Token::Key(key));
 
@@ -48,15 +41,13 @@ fn tokens_from_obj(obj: Obj<'_>) -> Vec<Token<'_>> {
         }
 
         for value in values {
-            tokens.extend(tokens_from_value(value));
+            push_tokens_from_value(tokens, value);
         }
 
         if num_values != 1 {
             tokens.push(Token::SeqEnd);
         }
     }
-
-    tokens
 }
 
 /// A single VDF token
