@@ -6,6 +6,12 @@ type ParseResult<'a> = pest::ParseResult<BoxedState<'a>>;
 
 common_parsing!(pest_parse, Rule, true);
 
+/// Attempts to parse VDF text to a [`Vdf`]
+#[deprecated(since = "0.2.3", note = "Moved to `keyvalues_parser::parse()`")]
+pub fn parse(s: &str) -> Result<PartialVdf<'_>> {
+    parse_(s)
+}
+
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum Rule {

@@ -9,17 +9,11 @@ use pest::{iterators::Pair as PestPair, Atomicity, RuleType};
 mod escaped;
 mod raw;
 
+#[expect(deprecated)]
 pub use escaped::parse as escaped_parse;
-#[deprecated(
-    since = "0.2.3",
-    note = "Moved to `keyvalues_parser::error::EscapedPestError`"
-)]
 pub use escaped::PestError as EscapedPestError;
+#[expect(deprecated)]
 pub use raw::parse as raw_parse;
-#[deprecated(
-    since = "0.2.3",
-    note = "Moved to `keyvalues_parser::error::RawPestError`"
-)]
 pub use raw::PestError as RawPestError;
 
 type BoxedState<'a, R> = Box<pest::ParserState<'a, R>>;
@@ -74,8 +68,7 @@ fn skip<R: RuleType>(s: BoxedState<'_, R>) -> ParseResult<'_, R> {
 // separate grammars :/
 macro_rules! common_parsing {
     ($parse_fn:ident, $rule:ty, $parse_escaped:expr) => {
-        /// Attempts to parse VDF text to a [`Vdf`]
-        pub fn parse(s: &str) -> Result<PartialVdf<'_>> {
+        fn parse_(s: &str) -> Result<PartialVdf<'_>> {
             let mut full_grammar = $parse_fn(s)?;
 
             // There can be multiple base macros before the initial pair
@@ -218,10 +211,12 @@ impl<'a> Vdf<'a> {
 impl<'a> PartialVdf<'a> {
     /// Attempts to parse VDF text to a [`Vdf`]
     pub fn parse(s: &'a str) -> Result<Self> {
+        #[expect(deprecated)]
         escaped_parse(s)
     }
 
     pub fn parse_raw(s: &'a str) -> Result<Self> {
+        #[expect(deprecated)]
         raw_parse(s)
     }
 }

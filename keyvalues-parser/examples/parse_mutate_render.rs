@@ -1,4 +1,4 @@
-use keyvalues_parser::Vdf;
+use keyvalues_parser::{parse, Vdf};
 
 use std::{fs, path::Path};
 
@@ -34,7 +34,7 @@ fn update_version(controller_mappings: &mut Vdf, new_version: String) -> Option<
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vdf_text = read_asset_file("parse_mutate_render.vdf")?;
-    let mut controller_mappings = Vdf::parse(&vdf_text)?;
+    let mut controller_mappings = Vdf::from(parse(&vdf_text)?);
 
     // Reading information from VDF:
     // This involves a lot of `Option`s so it's moved inside a function
