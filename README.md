@@ -1,3 +1,10 @@
+> [!IMPORTANT]
+> Moved to codeberg. Issues still open here for people who want to use them :)
+>
+> <https://codeberg.org/CosmicHarper/vdf-rs>
+
+---
+
 # _vdf-rs_
 
 [![codecov](https://codecov.io/gh/CosmicHorrorDev/vdf-rs/branch/main/graph/badge.svg?token=L2FUD0098X)](https://codecov.io/gh/CosmicHorrorDev/vdf-rs)
